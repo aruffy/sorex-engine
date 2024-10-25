@@ -16,6 +16,7 @@ jobs:
 
         - name: Run cppcheck analysis
           run: |
+            mkdir ./artifacts
             bash ./Extras/Cppcheck/Cppcheck.sh --output-file ./artifacts/cppcheck-result.xml
 
         - name: Convert cppcheck result to JUnit format
@@ -24,7 +25,7 @@ jobs:
 
         - name: Upload cppcheck artifacts
           if: always()
-          uses: actions/upload-artifact@v3
+          uses: actions/upload-artifact@v4
           with:
             name: cppcheck-artifacts
             path: |
