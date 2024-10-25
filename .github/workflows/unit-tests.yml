@@ -38,3 +38,9 @@ jobs:
         with:
           name: gtest-result
           path: ./gtest-result.xml
+
+      - name: Publish test report
+        if: always()
+        uses: mikepenz/action-junit-report@v4
+        with:
+          report_paths: '**/gtest-result.xml'
