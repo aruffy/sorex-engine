@@ -12,8 +12,9 @@ list(LENGTH UNITTEST_SOURCE unit_number)
 message(STATUS "[${ENGINE_UNITTEST_TARGET}] Add ${unit_number} unit(s)")
 
 add_executable(${ENGINE_UNITTEST_TARGET} ${UNITTEST_SOURCE})
-target_compile_definitions(${ENGINE_UNITTEST_TARGET}
-                           PRIVATE ${TARGET_PLATFORM}=1)
+target_compile_definitions(
+  ${ENGINE_UNITTEST_TARGET} PRIVATE ${TARGET_PLATFORM}=1
+)
 
 find_package(GTest QUIET)
 
@@ -34,7 +35,8 @@ else()
     PREFIX ${CMAKE_CURRENT_BINARY_DIR}/${GTEST_NAME}
     CMAKE_ARGS -DBUILD_GMOCK=OFF -Dgtest_force_shared_crt=ON
     INSTALL_COMMAND ""
-    TEST_COMMAND "")
+    TEST_COMMAND ""
+  )
 
   ExternalProject_Get_Property(${GTEST_NAME} SOURCE_DIR BINARY_DIR)
   set(GTEST_INCLUDE_DIR "${SOURCE_DIR}/googletest/include")
@@ -72,32 +74,38 @@ else()
     libgtest
     PROPERTIES INTERFACE_INCLUDE_DIRECTORIES "${GTEST_INCLUDE_DIR}"
                INTERFACE_LINK_LIBRARIES "${CMAKE_THREAD_LIBS_INIT}"
-               ${GTEST_IMPORTED_LOCATION})
+               ${GTEST_IMPORTED_LOCATION}
+  )
 
   # define imported library `libgtest_main`
   add_library(libgtest_main IMPORTED STATIC GLOBAL)
   set_target_properties(
     libgtest_main PROPERTIES INTERFACE_LINK_LIBRARIES libgtest
-                             ${GTESTMAIN_IMPORTED_LOCATION})
+                             ${GTESTMAIN_IMPORTED_LOCATION}
+  )
   add_dependencies(libgtest_main ${GTEST_NAME})
 
   add_dependencies(${ENGINE_UNITTEST_TARGET} ${GTEST_NAME})
   set(GTEST_LIBRARIES libgtest libgtest_main)
 endif(GTEST_FOUND)
 
-target_include_directories(${ENGINE_UNITTEST_TARGET}
-                           PRIVATE "${SOREX_ENGINE_DIR}/Include")
-target_include_directories(${ENGINE_UNITTEST_TARGET}
-                           PRIVATE ${GTEST_INCLUDE_DIR})
+target_include_directories(
+  ${ENGINE_UNITTEST_TARGET} PRIVATE "${SOREX_ENGINE_DIR}/Include"
+)
+target_include_directories(
+  ${ENGINE_UNITTEST_TARGET} PRIVATE ${GTEST_INCLUDE_DIR}
+)
 
-# FIXME: libsorex name from variable
 message(
-  STATUS "[${ENGINE_UNITTEST_TARGET}] Link engine library ${ENGINE_TARGET}")
-target_link_libraries(${ENGINE_UNITTEST_TARGET} PRIVATE sorex
-                                                        ${GTEST_LIBRARIES})
+  STATUS "[${ENGINE_UNITTEST_TARGET}] Link engine library ${ENGINE_TARGET}"
+)
+target_link_libraries(
+  ${ENGINE_UNITTEST_TARGET} PRIVATE Sorex::Sorex ${GTEST_LIBRARIES}
+)
 
 set(ENGINE_UNITTEST_NAME "CTest_${ENGINE_UNITTEST_TARGET}")
 add_test(NAME ${ENGINE_UNITTEST_NAME}
-         COMMAND $<TARGET_FILE:${ENGINE_UNITTEST_TARGET}>)
+         COMMAND $<TARGET_FILE:${ENGINE_UNITTEST_TARGET}>
+)
 
 set_property(TEST ${ENGINE_UNITTEST_NAME} PROPERTY LABELS engine)

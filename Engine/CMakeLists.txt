@@ -15,6 +15,7 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 add_library(${ENGINE_TARGET} STATIC "")
+add_library(Sorex::Sorex ALIAS ${ENGINE_TARGET})
 set_target_properties(${ENGINE_TARGET} PROPERTIES LINKER_LANGUAGE CXX)
 
 # ##############################################################################
