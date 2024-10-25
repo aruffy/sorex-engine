@@ -1,0 +1,43 @@
+name: Cppcheck Analysis
+
+on: [pull_request]
+
+permissions:
+  contents: read
+  checks: write
+
+jobs:
+  cppcheck:
+      runs-on: ubuntu-latest
+
+      steps:
+        - name: Set up cppcheck
+          run: |
+            sudo apt-get update && sudo apt-get -y install util-linux cppcheck python3
+
+        - name: Check out the repository
+          uses: actions/checkout@v4
+
+        - name: Run cppcheck analysis
+          run: |
+            mkdir ./artifacts
+            bash ./Extras/Cppcheck/Cppcheck.sh --output-file ./artifacts/cppcheck-result.xml
+
+        - name: Convert cppcheck result to JUnit format
+          run: |
+            python3 ./Extras/Cppcheck/Scripts/cppcheck_conv.py --format junit ./artifacts/cppcheck-result.xml > ./artifacts/cppcheck-junit.xml
+
+        - name: Upload cppcheck artifacts
+          if: always()
+          uses: actions/upload-artifact@v4
+          with:
+            name: cppcheck-artifacts
+            path: |
+              ./artifacts/cppcheck-result.xml
+              ./artifacts/cppcheck-junit.xml
+
+        - name: Publish test report
+          if: always()
+          uses: mikepenz/action-junit-report@v4
+          with:
+            report_paths: '**/artifacts/cppcheck-junit.xml'
