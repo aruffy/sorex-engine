@@ -34,9 +34,6 @@ jobs:
 
         - name: Publish test report
           if: always()
-          uses: dorny/test-reporter@v1
+          uses: mikepenz/action-junit-report@v4
           with:
-            name: Cppcheck Results
-            path: ./artifacts/cppcheck-junit.xml
-            reporter: jest-junit
-            fail-on-error: false
+            report_paths: '**/artifacts/cppcheck-junit.xml'
