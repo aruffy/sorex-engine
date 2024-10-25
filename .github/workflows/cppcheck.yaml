@@ -38,5 +38,5 @@ jobs:
           with:
             name: Cppcheck Results
             path: ./artifacts/cppcheck-junit.xml
-            reporter: cppcheck
+            reporter: jest-junit
             fail-on-error: false
