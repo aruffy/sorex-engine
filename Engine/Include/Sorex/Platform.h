@@ -27,6 +27,8 @@
 
 #pragma once
 
+#include "CMakeSorexExports.h"
+
 namespace Sorex
 {
   /**
@@ -124,30 +126,17 @@ namespace Sorex
 #  define SOREX_COMPILER (::Sorex::ESorexCompiler::CLANG)
 #  define SOREX_COMPILER_CLANG (1)
 #  define SOREX_COMP_VER \
-    (((__clang_major__)*100) + (__clang_minor__ * 10) + __clang_patchlevel__)
+    (((__clang_major__) * 100) + (__clang_minor__ * 10) + __clang_patchlevel__)
 
 #elif defined(__GNUC__)
 #  define SOREX_COMPILER (::Sorex::ESorexCompiler::GNUC)
 #  define SOREX_COMPILER_GNUC (1)
 #  define SOREX_COMP_VER \
-    (((__GNUC__)*100) + (__GNUC_MINOR__ * 10) + __GNUC_PATCHLEVEL__)
+    (((__GNUC__) * 100) + (__GNUC_MINOR__ * 10) + __GNUC_PATCHLEVEL__)
 
 #else
 #  pragma error "Sorex unknown compiler. Abort!"
 #endif
-
-// Windows Settings
-#ifdef SOREX_PLATFORM_WIN32
-#  if defined(SOREX_STATIC_LIB)
-#    define SRX_API
-#  else
-#    if defined(SOREX_EXPORT_API)
-#      define SRX_API __declspec(dllexport)
-#    else
-#      define SRX_API __declspec(dllimport)
-#    endif
-#  endif  // defined(SOREX_STATIC_LIB)
-#endif    // SOREX_PLATFORM == SOREX_PLATFORM_WIN32
 
 // Function signature macros
 #ifdef SOREX_DEBUG_MEDIUM
