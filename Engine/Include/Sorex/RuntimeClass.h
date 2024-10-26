@@ -49,7 +49,7 @@ namespace Sorex
    *
    * TypeInfo
    */
-  struct TypeInfo
+  struct SRX_API TypeInfo
   {
     template<Concept::UnsignedIntegral T>
     struct Hasher
@@ -64,7 +64,7 @@ namespace Sorex
         (sizeof(T) <= sizeof(uint32)) ? T{ 16777619UL } : T{ 1099511628211ULL };
 
   public:
-      static constexpr hash_t MakeHash(StringView view) srx_noexcept
+      static constexpr hash_t MakeHash(StringView view) SRX_NOEXCEPT
       {
         hash_t hash = offset;
         for (auto&& curr : view)
@@ -76,10 +76,10 @@ namespace Sorex
     };
 
 public:
-    explicit srx_consteval TypeInfo(const char* str) srx_noexcept: mName(str) {}
+    explicit SRX_CONSTEVAL TypeInfo(const char* str) SRX_NOEXCEPT: mName(str) {}
 
-    constexpr StringView GetName() const srx_noexcept { return mName; }
-    constexpr hash_t     GetHash() const srx_noexcept
+    constexpr StringView GetName() const SRX_NOEXCEPT { return mName; }
+    constexpr hash_t     GetHash() const SRX_NOEXCEPT
     {
       return Hasher<hash_t>::MakeHash(mName);
     }
@@ -91,19 +91,19 @@ private:
   /**
    * @class RuntimeClass - represent the runtime type of a class.
    */
-  class RuntimeClass final
+  class SRX_API RuntimeClass final
   {
 public:
-    srx_inline RuntimeClass(const TypeInfo&     typeInfo,
-                            const RuntimeClass* base) srx_noexcept
+    SRX_INLINE RuntimeClass(const TypeInfo&     typeInfo,
+                            const RuntimeClass* base) SRX_NOEXCEPT
       : mName(typeInfo.GetName())
       , mHash(typeInfo.GetHash())
       , mBase(base)
     {}
 
-    srx_inline RuntimeClass(StringView          name,
+    SRX_INLINE RuntimeClass(StringView          name,
                             const hash_t        hash,
-                            const RuntimeClass* base) srx_noexcept
+                            const RuntimeClass* base) SRX_NOEXCEPT
       : mName(name)
       , mHash(hash)
       , mBase(base)
@@ -112,26 +112,27 @@ public:
     RuntimeClass(const RuntimeClass&)            = delete;
     RuntimeClass& operator=(const RuntimeClass&) = delete;
 
-    StringView GetName() const srx_noexcept { return mName; }
-    hash_t     GetHash() const srx_noexcept { return mHash; }
+    SRX_NODISCARD StringView GetName() const SRX_NOEXCEPT { return mName; }
+    SRX_NODISCARD hash_t     GetHash() const SRX_NOEXCEPT { return mHash; }
 
-    bool IsA(const RuntimeClass& type) const srx_noexcept;
+    bool IsA(const RuntimeClass& type) const SRX_NOEXCEPT;
 
-    bool operator==(const RuntimeClass& other) const srx_noexcept
+    bool operator==(const RuntimeClass& other) const SRX_NOEXCEPT
     {
       return IsSameType(other);
     }
-    bool operator!=(const RuntimeClass& other) const srx_noexcept
+    bool operator!=(const RuntimeClass& other) const SRX_NOEXCEPT
     {
       return !IsSameType(other);
     }
 
 private:
-    inline const RuntimeClass* GetBaseClass() const srx_noexcept
+    SRX_INLINE const RuntimeClass* GetBaseClass() const SRX_NOEXCEPT
     {
       return mBase;
     }
-    inline bool IsSameType(const RuntimeClass& type) const srx_noexcept
+
+    SRX_INLINE bool IsSameType(const RuntimeClass& type) const SRX_NOEXCEPT
     {
       return this == &type;
     }
@@ -150,21 +151,16 @@ private:
       std::is_polymorphic_v<T>
       && (std::is_same_v<typename T::SorexRttiBase, void>
           || std::is_base_of_v<typename T::SorexRttiBase, T>)
-      && (std::is_abstract_v<T>
-          || requires(T t) {
-               {
-                 T::GetTypeInfo()
-                 } -> std::convertible_to<Sorex::TypeInfo>;
-               {
-                 t.GetRuntimeClass()
-                 } -> std::same_as<const Sorex::RuntimeClass&>;
-             });
+      && (std::is_abstract_v<T> || requires(T t) {
+           { T::GetTypeInfo() } -> std::convertible_to<Sorex::TypeInfo>;
+           { t.GetRuntimeClass() } -> std::same_as<const Sorex::RuntimeClass&>;
+         });
   }
 
   namespace Rtti::Details
   {
     template<Concept::RuntimeClass Class>
-    const RuntimeClass& GetOrCreateRuntimeType() srx_noexcept
+    SRX_API const RuntimeClass& GetOrCreateRuntimeType() SRX_NOEXCEPT
     {
       if constexpr (!std::is_same_v<typename Class::SorexRttiBase, void>)
       {
@@ -182,33 +178,34 @@ private:
   }
 
   template<Concept::RuntimeClass Class>
-  constexpr StringView GetTypeName() srx_noexcept
+  SRX_API SRX_NODISCARD constexpr StringView GetTypeName() SRX_NOEXCEPT
   {
     return Class::GetTypeInfo().GetName();
   }
 
   template<Concept::RuntimeClass Class>
-  constexpr TypeInfo GetTypeInfo() srx_noexcept
+  SRX_API SRX_NODISCARD constexpr TypeInfo GetTypeInfo() SRX_NOEXCEPT
   {
     return Class::GetTypeInfo();
   }
 
   template<Concept::RuntimeClass Class>
-  constexpr const RuntimeClass& GetRuntimeType() srx_noexcept
+  SRX_API SRX_NODISCARD constexpr const RuntimeClass& GetRuntimeType()
+    SRX_NOEXCEPT
   {
     return Rtti::Details::GetOrCreateRuntimeType<Class>();
   }
 
   template<Concept::RuntimeClass DesiredType, Concept::RuntimeClass Type>
-  srx_inline
+  SRX_API SRX_INLINE
     typename std::enable_if<std::is_base_of_v<Type, DesiredType>, bool>::type
-    InstanceOf(const Type& base) srx_noexcept
+    InstanceOf(const Type& base) SRX_NOEXCEPT
   {
     return base.GetRuntimeClass().IsA(GetRuntimeType<DesiredType>());
   }
 
   template<typename Derived, typename Base>
-  srx_nodiscard Derived DynamicCast(Base* base) srx_noexcept
+  SRX_API SRX_NODISCARD SRX_INLINE Derived DynamicCast(Base* base) SRX_NOEXCEPT
   {
     typedef std::remove_cv_t<Base>                           BaseType;
     typedef std::remove_cv_t<std::remove_pointer_t<Derived>> DerivedType;
@@ -233,16 +230,16 @@ private:
                                                                             \
   public:                                                                   \
   typedef void                       SorexRttiBase;                         \
-  static constexpr ::Sorex::TypeInfo GetTypeInfo() srx_noexcept             \
+  static constexpr ::Sorex::TypeInfo GetTypeInfo() SRX_NOEXCEPT             \
   {                                                                         \
     return __sorexTypeInfo;                                                 \
   }                                                                         \
   template<Sorex::Concept::RuntimeClass Class>                              \
-  srx_inline bool IsA() const srx_noexcept                                  \
+  SRX_NODISCARD SRX_INLINE bool IsA() const SRX_NOEXCEPT                    \
   {                                                                         \
     return ::Sorex::InstanceOf<Class>(*this);                               \
   }                                                                         \
-  virtual const ::Sorex::RuntimeClass& GetRuntimeClass() const srx_noexcept \
+  virtual const ::Sorex::RuntimeClass& GetRuntimeClass() const SRX_NOEXCEPT \
   {                                                                         \
     typedef std::remove_const_t<std::remove_pointer_t<decltype(this)>>      \
       ObjectType;                                                           \
@@ -260,12 +257,12 @@ private:
                                                                        \
   public:                                                              \
   typedef BASE                       SorexRttiBase;                    \
-  static constexpr ::Sorex::TypeInfo GetTypeInfo() srx_noexcept        \
+  static constexpr ::Sorex::TypeInfo GetTypeInfo() SRX_NOEXCEPT        \
   {                                                                    \
     return __sorexTypeInfo;                                            \
   }                                                                    \
   virtual const ::Sorex::RuntimeClass& GetRuntimeClass()               \
-    const srx_noexcept                 override                        \
+    const SRX_NOEXCEPT                 override                        \
   {                                                                    \
     typedef std::remove_const_t<std::remove_pointer_t<decltype(this)>> \
       ObjectType;                                                      \

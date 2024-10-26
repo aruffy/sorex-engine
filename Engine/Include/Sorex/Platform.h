@@ -140,23 +140,23 @@ namespace Sorex
 
 // Function signature macros
 #ifdef SOREX_DEBUG_MEDIUM
-#  define srx_inline
+#  define SRX_INLINE
 #else
 #  if defined(SOREX_COMPILER_MSVC) && SOREX_COMP_VER >= 1200
-#    define srx_inline __forceinline
+#    define SRX_INLINE __forceinline
 
 #  elif !defined(__ANDROID__) \
     && (defined(SOREX_COMPILER_GNUC) || defined(SOREX_COMPILER_CLANG))
-#    define srx_inline inline __attribute__((always_inline))
+#    define SRX_INLINE inline __attribute__((always_inline))
 
 #  else
-#    define srx_inline inline
+#    define SRX_INLINE inline
 #  endif
 #endif
 
-#define srx_noexcept noexcept
-#define srx_consteval consteval
-#define srx_nodiscard [[nodiscard]]
+#define SRX_NOEXCEPT noexcept
+#define SRX_CONSTEVAL consteval
+#define SRX_NODISCARD [[nodiscard]]
 
 // Macros
 #ifdef SOREX_COMPILER_MSVC

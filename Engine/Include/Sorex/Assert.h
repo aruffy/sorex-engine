@@ -41,7 +41,9 @@ namespace Sorex::Platform
    *
    * @return 0 - to continue with assert(expr) to terminate application;
    */
-  int OnAssertionFailed(const char* message, const char* file, int line);
+  SRX_API int OnAssertionFailed(const char* message,
+                                const char* file,
+                                int         line) SRX_NOEXCEPT;
 
   /**
    * @brief OnCheckFailed - called when check/verify expression failed.
@@ -51,7 +53,9 @@ namespace Sorex::Platform
    * @param file - file name where  the assertion is used;
    * @param line - line number of the assertion;
    */
-  void OnCheckFailed(const char* message, const char* file, int line);
+  SRX_API void OnCheckFailed(const char* message,
+                             const char* file,
+                             int         line) SRX_NOEXCEPT;
 }
 
 /**
