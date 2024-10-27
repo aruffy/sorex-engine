@@ -18,6 +18,11 @@ jobs:
         - name: Check out the repository
           uses: actions/checkout@v4
 
+        - name: Configure CMake Preset
+          run: |
+            mkdir ./build
+            cmake --preset linux_debug
+
         - name: Run cppcheck analysis
           run: |
             mkdir ./artifacts

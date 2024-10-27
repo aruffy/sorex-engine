@@ -27,6 +27,8 @@
 
 #pragma once
 
+#include "CMakeSorexExports.h"
+
 namespace Sorex
 {
   /**
@@ -124,50 +126,37 @@ namespace Sorex
 #  define SOREX_COMPILER (::Sorex::ESorexCompiler::CLANG)
 #  define SOREX_COMPILER_CLANG (1)
 #  define SOREX_COMP_VER \
-    (((__clang_major__)*100) + (__clang_minor__ * 10) + __clang_patchlevel__)
+    (((__clang_major__) * 100) + (__clang_minor__ * 10) + __clang_patchlevel__)
 
 #elif defined(__GNUC__)
 #  define SOREX_COMPILER (::Sorex::ESorexCompiler::GNUC)
 #  define SOREX_COMPILER_GNUC (1)
 #  define SOREX_COMP_VER \
-    (((__GNUC__)*100) + (__GNUC_MINOR__ * 10) + __GNUC_PATCHLEVEL__)
+    (((__GNUC__) * 100) + (__GNUC_MINOR__ * 10) + __GNUC_PATCHLEVEL__)
 
 #else
 #  pragma error "Sorex unknown compiler. Abort!"
 #endif
 
-// Windows Settings
-#ifdef SOREX_PLATFORM_WIN32
-#  if defined(SOREX_STATIC_LIB)
-#    define SRX_API
-#  else
-#    if defined(SOREX_EXPORT_API)
-#      define SRX_API __declspec(dllexport)
-#    else
-#      define SRX_API __declspec(dllimport)
-#    endif
-#  endif  // defined(SOREX_STATIC_LIB)
-#endif    // SOREX_PLATFORM == SOREX_PLATFORM_WIN32
-
 // Function signature macros
 #ifdef SOREX_DEBUG_MEDIUM
-#  define srx_inline
+#  define SRX_INLINE
 #else
 #  if defined(SOREX_COMPILER_MSVC) && SOREX_COMP_VER >= 1200
-#    define srx_inline __forceinline
+#    define SRX_INLINE __forceinline
 
 #  elif !defined(__ANDROID__) \
     && (defined(SOREX_COMPILER_GNUC) || defined(SOREX_COMPILER_CLANG))
-#    define srx_inline inline __attribute__((always_inline))
+#    define SRX_INLINE inline __attribute__((always_inline))
 
 #  else
-#    define srx_inline inline
+#    define SRX_INLINE inline
 #  endif
 #endif
 
-#define srx_noexcept noexcept
-#define srx_consteval consteval
-#define srx_nodiscard [[nodiscard]]
+#define SRX_NOEXCEPT noexcept
+#define SRX_CONSTEVAL consteval
+#define SRX_NODISCARD [[nodiscard]]
 
 // Macros
 #ifdef SOREX_COMPILER_MSVC

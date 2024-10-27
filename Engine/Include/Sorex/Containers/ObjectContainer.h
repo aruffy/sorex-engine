@@ -40,7 +40,7 @@ namespace Sorex
    * @brief TObjectContainer contains and manages the object by their type.
    */
   template<class Type>
-  class TObjectContainer
+  class SRX_API TObjectContainer
   {
     template<typename T>
     using TEnableIf_IsSubclassType =
@@ -68,17 +68,24 @@ public:
      *
      * @return True if the contanier has the object
      */
-    srx_inline bool Contains(const Type* object) const srx_noexcept;
+    SRX_NODISCARD SRX_INLINE bool Contains(const Type* object) const
+      SRX_NOEXCEPT;
 
     /**
      * @return true if the container is empty
      */
-    bool IsEmpty() const srx_noexcept { return mContainer.empty(); }
+    SRX_NODISCARD bool IsEmpty() const SRX_NOEXCEPT
+    {
+      return mContainer.empty();
+    }
 
     /**
      * @return number of objects that are stored in container
      */
-    size_t GetSize() const srx_noexcept { return mContainer.size(); }
+    SRX_NODISCARD size_t GetSize() const SRX_NOEXCEPT
+    {
+      return mContainer.size();
+    }
 
     /**
      * Move a new object to container. The TObjectContainer owns and manages the
@@ -87,7 +94,7 @@ public:
      * @param object - move object to container
      * @return pointer to the object or NULL if object isn't valid.
      */
-    Type* Add(TUniquePointer<Type>&& object) srx_noexcept;
+    Type* Add(TUniquePointer<Type>&& object) SRX_NOEXCEPT;
 
     /**
      * Create and added new object to container. The TObjectContainer owns and
@@ -107,7 +114,7 @@ public:
      * object wasn't found.
      */
     template<class T, class Enable = SRX_TYPENAME TEnableIf_IsSubclassType<T>>
-    srx_nodiscard TUniquePointer<T> Release(const T* object) srx_noexcept;
+    SRX_NODISCARD TUniquePointer<T> Release(const T* object) SRX_NOEXCEPT;
 
     /**
      * Release the first found object from container by type.
@@ -116,78 +123,78 @@ public:
      * object wasn't found.
      */
     template<class T, class Enable = SRX_TYPENAME TEnableIf_IsSubclassType<T>>
-    srx_nodiscard TUniquePointer<T> Release() srx_noexcept;
+    SRX_NODISCARD TUniquePointer<T> Release() SRX_NOEXCEPT;
 
     /**
      * Remove the object from the container and destroy it
      *
      * @return True if element was deleted
      */
-    bool Remove(const Type* object) srx_noexcept;
+    bool Remove(const Type* object) SRX_NOEXCEPT;
 
     /**
      * Remove all objects with the type from the container and destroy them
      */
     template<class T, class Enable = SRX_TYPENAME TEnableIf_IsSubclassType<T>>
-    void RemoveAll() srx_noexcept;
+    void RemoveAll() SRX_NOEXCEPT;
 
     /**
      * Delete all objects and clear container
      */
-    void Clear() srx_noexcept;
+    void Clear() SRX_NOEXCEPT;
 
     /**
      * @return first found object by type
      */
     template<class T, class Enable = SRX_TYPENAME TEnableIf_IsSubclassType<T>>
-    const T* Get() const srx_noexcept;
+    const T* Get() const SRX_NOEXCEPT;
 
     /**
      * @return first found object by type
      */
     template<class T>
-    SRX_TYPENAME TEnableIf_IsSubclassType<T>* Get() srx_noexcept;
+    SRX_TYPENAME TEnableIf_IsSubclassType<T>* Get() SRX_NOEXCEPT;
 
     /**
      * @return all found object by type
      */
     template<class T, class Enable = SRX_TYPENAME TEnableIf_IsSubclassType<T>>
-    srx_inline void GetAll(TVector<T*>& objects) srx_noexcept;
+    SRX_INLINE void GetAll(TVector<T*>& objects) SRX_NOEXCEPT;
 
     /**
      * @return all found object by type
      */
     template<class T, class Enable = SRX_TYPENAME TEnableIf_IsSubclassType<T>>
-    srx_inline void GetAll(TVector<const T*>& objects) const srx_noexcept;
+    SRX_INLINE void GetAll(TVector<const T*>& objects) const SRX_NOEXCEPT;
 
 private:
     template<class T>
-    void GetAll(TVector<T*>& objects, const RuntimeClass& type) srx_noexcept;
+    void GetAll(TVector<T*>& objects, const RuntimeClass& type) SRX_NOEXCEPT;
     template<class T>
     void GetAll(TVector<const T*>&  objects,
-                const RuntimeClass& type) const srx_noexcept;
+                const RuntimeClass& type) const SRX_NOEXCEPT;
 
-    srx_inline Iterator      Find(const Type* object) srx_noexcept;
-    srx_inline ConstIterator Find(const Type* object) const srx_noexcept;
+    SRX_INLINE Iterator      Find(const Type* object) SRX_NOEXCEPT;
+    SRX_INLINE ConstIterator Find(const Type* object) const SRX_NOEXCEPT;
 
-    srx_inline Iterator      Find(const RuntimeClass& type) srx_noexcept;
-    srx_inline ConstIterator Find(const RuntimeClass& type) const srx_noexcept;
+    SRX_INLINE Iterator      Find(const RuntimeClass& type) SRX_NOEXCEPT;
+    SRX_INLINE ConstIterator Find(const RuntimeClass& type) const SRX_NOEXCEPT;
     template<class T>
-    srx_inline Iterator Find() srx_noexcept;
+    SRX_INLINE Iterator Find() SRX_NOEXCEPT;
 
 private:
     Container mContainer;
   };
 
   template<class Type>
-  srx_inline bool TObjectContainer<Type>::Contains(const Type* object) const
-    srx_noexcept
+  SRX_INLINE bool TObjectContainer<Type>::Contains(const Type* object) const
+    SRX_NOEXCEPT
   {
     return Find(object) != mContainer.cend();
   }
 
   template<class Type>
-  Type* TObjectContainer<Type>::Add(TUniquePointer<Type>&& object) srx_noexcept
+  Type* TObjectContainer<Type>::Add(TUniquePointer<Type>&& object) SRX_NOEXCEPT
   {
     if (!object)
       return nullptr;
@@ -208,8 +215,8 @@ private:
 
   template<class Type>
   template<class T, class Enable>
-  srx_nodiscard TUniquePointer<T> TObjectContainer<Type>::Release(
-    const T* object) srx_noexcept
+  SRX_NODISCARD TUniquePointer<T> TObjectContainer<Type>::Release(
+    const T* object) SRX_NOEXCEPT
   {
     if (auto it = Find(object); it != mContainer.end())
     {
@@ -223,7 +230,7 @@ private:
 
   template<class Type>
   template<class T, class Enable>
-  srx_nodiscard TUniquePointer<T> TObjectContainer<Type>::Release() srx_noexcept
+  SRX_NODISCARD TUniquePointer<T> TObjectContainer<Type>::Release() SRX_NOEXCEPT
   {
     const RuntimeClass& type = GetRuntimeType<T>();
     if (Iterator it = Find(type); it != mContainer.end())
@@ -237,7 +244,7 @@ private:
   }
 
   template<class Type>
-  bool TObjectContainer<Type>::Remove(const Type* object) srx_noexcept
+  bool TObjectContainer<Type>::Remove(const Type* object) SRX_NOEXCEPT
   {
     if (Iterator it = Find(object); it != mContainer.end())
     {
@@ -250,7 +257,7 @@ private:
 
   template<class Type>
   template<class T, class Enable>
-  void TObjectContainer<Type>::RemoveAll() srx_noexcept
+  void TObjectContainer<Type>::RemoveAll() SRX_NOEXCEPT
   {
     const RuntimeClass& cls = GetRuntimeType<T>();
     mContainer.erase(
@@ -263,7 +270,7 @@ private:
   }
 
   template<class Type>
-  void TObjectContainer<Type>::Clear() srx_noexcept
+  void TObjectContainer<Type>::Clear() SRX_NOEXCEPT
   {
     // NOTE: we must delete all object in reverse order.
     // In this case we guarantee that injected dependencies work properly during
@@ -276,7 +283,7 @@ private:
 
   template<class Type>
   template<class T, class Enable>
-  const T* TObjectContainer<Type>::Get() const srx_noexcept
+  const T* TObjectContainer<Type>::Get() const SRX_NOEXCEPT
   {
     if (ConstIterator it = Find(GetRuntimeType<T>()); it != mContainer.cend())
       return static_cast<T*>(it->get());
@@ -287,7 +294,7 @@ private:
   template<class Type>
   template<class T>
   typename TObjectContainer<Type>::template TEnableIf_IsSubclassType<T>*
-  TObjectContainer<Type>::Get() srx_noexcept
+  TObjectContainer<Type>::Get() SRX_NOEXCEPT
   {
     if (Iterator it = Find(GetRuntimeType<T>()); it != mContainer.end())
       return static_cast<T*>(it->get());
@@ -297,16 +304,16 @@ private:
 
   template<class Type>
   template<class T, class Enable>
-  srx_inline void TObjectContainer<Type>::GetAll(
-    TVector<const T*>& objects) const srx_noexcept
+  SRX_INLINE void TObjectContainer<Type>::GetAll(
+    TVector<const T*>& objects) const SRX_NOEXCEPT
   {
     return GetAll<T>(objects, GetRuntimeType<T>());
   }
 
   template<class Type>
   template<class T, class Enable>
-  srx_inline void TObjectContainer<Type>::GetAll(TVector<T*>& objects)
-    srx_noexcept
+  SRX_INLINE void TObjectContainer<Type>::GetAll(TVector<T*>& objects)
+    SRX_NOEXCEPT
   {
     return GetAll<T>(objects, GetRuntimeType<T>());
   }
@@ -315,7 +322,7 @@ private:
   template<class T>
   void TObjectContainer<Type>::GetAll(TVector<const T*>&  objects,
                                       const RuntimeClass& type) const
-    srx_noexcept
+    SRX_NOEXCEPT
   {
     static_assert(std::is_base_of<Type, T>::value,
                   "[TObjectContainer] GetAll objects of invalid runtime class");
@@ -334,7 +341,7 @@ private:
   template<class Type>
   template<class T>
   void TObjectContainer<Type>::GetAll(TVector<T*>&        objects,
-                                      const RuntimeClass& type) srx_noexcept
+                                      const RuntimeClass& type) SRX_NOEXCEPT
   {
     static_assert(std::is_base_of<Type, T>::value,
                   "[TObjectContainer] GetAll objects of invalid runtime class");
@@ -351,8 +358,8 @@ private:
   }
 
   template<class Type>
-  srx_inline typename TObjectContainer<Type>::Iterator
-  TObjectContainer<Type>::Find(const Type* object) srx_noexcept
+  SRX_INLINE typename TObjectContainer<Type>::Iterator
+  TObjectContainer<Type>::Find(const Type* object) SRX_NOEXCEPT
   {
     return std::find_if(mContainer.begin(),
                         mContainer.end(),
@@ -362,8 +369,8 @@ private:
   }
 
   template<class Type>
-  srx_inline typename TObjectContainer<Type>::ConstIterator
-  TObjectContainer<Type>::Find(const Type* object) const srx_noexcept
+  SRX_INLINE typename TObjectContainer<Type>::ConstIterator
+  TObjectContainer<Type>::Find(const Type* object) const SRX_NOEXCEPT
   {
     return std::find_if(mContainer.cbegin(),
                         mContainer.cend(),
@@ -373,8 +380,8 @@ private:
   }
 
   template<class Type>
-  srx_inline typename TObjectContainer<Type>::Iterator
-  TObjectContainer<Type>::Find(const RuntimeClass& type) srx_noexcept
+  SRX_INLINE typename TObjectContainer<Type>::Iterator
+  TObjectContainer<Type>::Find(const RuntimeClass& type) SRX_NOEXCEPT
   {
     return std::find_if(mContainer.begin(),
                         mContainer.end(),
@@ -384,8 +391,8 @@ private:
   }
 
   template<class Type>
-  srx_inline typename TObjectContainer<Type>::ConstIterator
-  TObjectContainer<Type>::Find(const RuntimeClass& type) const srx_noexcept
+  SRX_INLINE typename TObjectContainer<Type>::ConstIterator
+  TObjectContainer<Type>::Find(const RuntimeClass& type) const SRX_NOEXCEPT
   {
     return std::find_if(mContainer.cbegin(),
                         mContainer.cend(),
@@ -396,8 +403,8 @@ private:
 
   template<class Type>
   template<class T>
-  srx_inline typename TObjectContainer<Type>::Iterator
-  TObjectContainer<Type>::Find() srx_noexcept
+  SRX_INLINE typename TObjectContainer<Type>::Iterator
+  TObjectContainer<Type>::Find() SRX_NOEXCEPT
   {
     return Find(GetRuntimeType<T>());
   }

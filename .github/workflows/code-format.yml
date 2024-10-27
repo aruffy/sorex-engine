@@ -35,7 +35,9 @@ jobs:
         run: bash ./Extras/Shell/GitChangedFiles.sh ${{ github.event.pull_request.base.ref }} ${{ github.event.pull_request.head.ref }} > ./artifacts/changed-files-list.txt
 
       - name: Compare Code Formatting
-        run: bash ./Extras/Shell/ClangFormat.sh --output-file ./artifacts/lint_format.diff --files ./artifacts/changed-files-list.txt
+        run: |
+          echo $(clang-format --version)
+          bash ./Extras/Shell/ClangFormat.sh --output-file ./artifacts/lint_format.diff --files ./artifacts/changed-files-list.txt
 
       - name: Upload artifacts
         if: always()

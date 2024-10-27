@@ -72,6 +72,7 @@ ${CPPCHECK_EXE} -j${USE_THREADS}\
     --platform=unix64 \
     --std=c++20 \
     --cppcheck-build-dir=${CPPCHECK_PROJ_DIR} \
+    --project=./build/compile_commands.json \
     --enable=style,performance,portability \
     --inconclusive \
     --library=std,opengl.cfg,googletest.cfg,zlib.cfg \
@@ -80,8 +81,4 @@ ${CPPCHECK_EXE} -j${USE_THREADS}\
     --xml \
     --output-file=${OUTPUT_FILE_NAME} \
     --error-exitcode=1 \
-    -DSOREX_DEBUG_MODE=1 \
-    -DTARGET_PLATFORM_LINUX=1 \
-    -I./Engine/Include/ \
-    -I./Precompiled/ \
-    ./Engine/Source
+    -DTARGET_PLATFORM_LINUX=1

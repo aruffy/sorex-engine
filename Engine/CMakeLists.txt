@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.8.0)
 
 include(BuildTools)
 include(TargetPlatform)
+include(GenerateExportHeader)
 
 if(WIN32)
   set(ENGINE_TARGET "Sorex")
@@ -9,14 +10,35 @@ else()
   set(ENGINE_TARGET "sorex")
 endif()
 
+option(SOREX_STATIC_LIBRARY "Compile Sorex engine as static library" OFF)
 option(SRXENG_ADDRESS_SANITIZER "Enable address sanitizer for engine code" OFF)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-add_library(${ENGINE_TARGET} STATIC "")
-set_target_properties(${ENGINE_TARGET} PROPERTIES LINKER_LANGUAGE CXX)
+set(CMAKE_EXPORTS_H "${CMAKE_CURRENT_BINARY_DIR}/CMakeSorexExports.h")
 
+if(SOREX_STATIC_LIBRARY)
+  add_library(${ENGINE_TARGET} STATIC ${CMAKE_EXPORTS_H})
+  target_compile_definitions(${ENGINE_TARGET} PUBLIC SOREX_STATIC_LIB)
+else()
+  add_library(${ENGINE_TARGET} SHARED ${CMAKE_EXPORTS_H})
+  target_compile_definitions(${ENGINE_TARGET} PUBLIC SOREX_EXPORT_API)
+endif()
+
+add_library(Sorex::Sorex ALIAS ${ENGINE_TARGET})
+set_target_properties(${ENGINE_TARGET} PROPERTIES LINKER_LANGUAGE CXX)
+target_include_directories(${ENGINE_TARGET} PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
+
+generate_export_header(
+  ${ENGINE_TARGET}
+  EXPORT_MACRO_NAME
+  SRX_API
+  EXPORT_FILE_NAME
+  ${CMAKE_EXPORTS_H}
+  STATIC_DEFINE
+  SOREX_STATIC_LIB
+)
 # ##############################################################################
 # Compile Options
 # ##############################################################################
@@ -76,4 +98,4 @@ get_property(
   PROPERTY SOURCES
 )
 
-source_group(TREE "${CMAKE_CURRENT_LIST_DIR}" FILES ${src_files})
+# source_group(TREE "${CMAKE_CURRENT_LIST_DIR}" FILES ${src_files})

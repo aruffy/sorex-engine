@@ -29,7 +29,7 @@
 
 namespace Sorex
 {
-  bool RuntimeClass::IsA(const RuntimeClass& type) const srx_noexcept
+  bool RuntimeClass::IsA(const RuntimeClass& type) const SRX_NOEXCEPT
   {
     if (IsSameType(type))
       return true;
