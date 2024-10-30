@@ -27,7 +27,7 @@
 
 #include <Sorex/Status.h>
 
-namespace Sorex
+namespace Sorex::Details
 {
   const char* StatusCodeCategory::name() const noexcept
   {

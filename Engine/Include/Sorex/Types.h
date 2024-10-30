@@ -42,6 +42,7 @@
 #include <span>
 #include <memory>
 #include <variant>
+#include <optional>
 
 #define SRX_IDLE \
   do             \
@@ -136,4 +137,7 @@ namespace Sorex
 
   template<typename... Args>
   using TVariant = std::variant<Args...>;
+
+  template<typename T>
+  using TOptional = std::optional<T>;
 }
