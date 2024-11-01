@@ -100,17 +100,29 @@ public:
 
     SRX_INLINE static const T& GetErrorCategory() SRX_NOEXCEPT;
 
-    SRX_INLINE bool Success() const SRX_NOEXCEPT;
-    SRX_INLINE bool HasError() const SRX_NOEXCEPT { return !Success(); }
+    SRX_INLINE bool Ok() const SRX_NOEXCEPT;
+    SRX_INLINE bool HasError() const SRX_NOEXCEPT { return !Ok(); }
 
-    SRX_INLINE EStatusCode GetCode() const SRX_NOEXCEPT
-    {
-      return static_cast<EStatusCode>(mCode.value());
-    }
-
+    SRX_INLINE EStatusCode GetCode() const SRX_NOEXCEPT;
     SRX_INLINE String ToString() const SRX_NOEXCEPT { return mCode.message(); }
 
-    void   Reset() SRX_NOEXCEPT;
+    /**
+     * @brief Resets the status.
+     *
+     * This function clears the current error code and resets any associated
+     * message or debugging information.
+     */
+    void Reset() SRX_NOEXCEPT;
+
+    /**
+     * @brief Generates a debug message indicating the status of the operation.
+     *
+     * This function constructs a string representation of the status, including
+     * the success state, error code, and associated message. It may also
+     * include additional context information if available.
+     *
+     * @return A string containing the debug message.
+     */
     String DebugMessage() const SRX_NOEXCEPT;
 
 private:
@@ -150,10 +162,18 @@ private:
   }
 
   template<Concept::ErrorCategory T>
-  SRX_INLINE bool TStatus<T>::Success() const SRX_NOEXCEPT
+  SRX_INLINE bool TStatus<T>::Ok() const SRX_NOEXCEPT
   {
-    return static_cast<bool>(mCode);
+    return mCode.value() == int(0);
   }
+
+  template<Concept::ErrorCategory T>
+  SRX_INLINE typename TStatus<T>::EStatusCode TStatus<T>::GetCode() const
+    SRX_NOEXCEPT
+  {
+    return static_cast<EStatusCode>(mCode.value());
+  }
+
 
   template<Concept::ErrorCategory T>
   void TStatus<T>::Reset() SRX_NOEXCEPT
@@ -173,11 +193,12 @@ private:
   String TStatus<T>::DebugMessage() const SRX_NOEXCEPT
   {
     std::stringstream ss;
-    ss << (Success() ? "[OK]" : "[ERROR]") << " Status:\n";
+    ss << (Ok() ? "[OK]" : "[ERROR]") << " Status:\n";
 
     ss << "\tCode: " << '<' << std::hex << "0x" << mCode.value() << "> "
        << std::dec << '\n'
        << "\tText: " << mCode.message() << '\n';
+    ss << "\tCategory: " << GetErrorCategory().name() << "\n";
 
 #ifdef SOREX_DEBUG_LOW
     if (mMessage.has_value() && !mMessage.value().empty())

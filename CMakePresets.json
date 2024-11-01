@@ -36,6 +36,7 @@
       "binaryDir": "${sourceDir}/build/${presetName}",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
         "SOREX_BUILD_SANDBOX": "OFF",
         "SOREX_BUILD_TESTS": "ON"
       }
