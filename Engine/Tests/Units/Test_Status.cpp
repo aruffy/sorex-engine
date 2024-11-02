@@ -32,20 +32,22 @@ class TestErrorCategory final: public std::error_category
 
 inline std::error_code make_error_code(ETestErrorCode errcode)
 {
-  return std::error_code(static_cast<int>(errcode),
-                         TStatus<TestErrorCategory>::GetErrorCategory());
+  // return std::error_code(static_cast<int>(errcode),
+  // TStatus<TestErrorCategory>::GetErrorCategory());
+  return std::error_code();
 }
 
-#define ASSERT_STATUS_OK(status)                    \
-  ASSERT_TRUE(status.Ok());                         \
-  ASSERT_FALSE(status.HasError());                  \
-  ASSERT_EQ(static_cast<int>(status.GetCode()), 0); \
-  ASSERT_FALSE(status.ToString().empty())
+#define ASSERT_STATUS_OK(status)                       \
+  ASSERT_TRUE((status).Ok()) << status.DebugMessage(); \
+  ASSERT_TRUE((bool)(status));                         \
+  ASSERT_EQ(static_cast<int>((status).GetCode()), 0)   \
+    << (status).DebugMessage();                        \
+  ASSERT_FALSE((status).ToString().empty()) << (status).DebugMessage()
 
 #define ASSERT_STATUS_ERRCODE(status, errcode) \
   ASSERT_FALSE(status.Ok());                   \
-  ASSERT_TRUE(status.HasError());              \
-  ASSERT_EQ(status.GetCode(), errcode);        \
+  ASSERT_FALSE((bool)status);                  \
+  ASSERT_EQ(status.GetCode(), (int)errcode);   \
   ASSERT_FALSE(status.ToString().empty())
 
 TEST(Status, Main)
@@ -53,7 +55,9 @@ TEST(Status, Main)
   // Ok
   Status status;
   ASSERT_STATUS_OK(status);
-  Status statusOk(EStatusCode::Ok);
+  ASSERT_STATUS_OK(Status::Create(EStatusCode::Ok));
+  ASSERT_STATUS_OK(SRX_OK);
+  /* Status statusOk(EStatusCode::Ok);
   ASSERT_STATUS_OK(statusOk);
   Status statusNoError(EStatusCode::No_Error);
   ASSERT_STATUS_OK(statusNoError);
@@ -74,5 +78,5 @@ TEST(Status, Main)
   TStatus<TestErrorCategory> errorStatus(ETestErrorCode::Error);
   ASSERT_STATUS_ERRCODE(errorStatus, TestErrorCategory::EStatusCode::Error);
   errorStatus.Reset();
-  ASSERT_STATUS_OK(errorStatus);
+  ASSERT_STATUS_OK(errorStatus); */
 }

@@ -29,6 +29,7 @@
 
 #include <concepts>
 #include <system_error>
+#include <format>
 
 #include "Types.h"
 #include "Platform.h"
@@ -68,6 +69,16 @@ namespace Sorex
 
       const char* name() const noexcept override;
       std::string message(int errcode) const override;
+
+      SRX_NODISCARD static SRX_INLINE std::error_code create(
+        const EStatusCode errcode = static_cast<EStatusCode>(0)) SRX_NOEXCEPT
+      {
+        static const StatusCodeCategory errorCategory;
+        return std::error_code(static_cast<int>(errcode), errorCategory);
+      }
+
+  private:
+      StatusCodeCategory() = default;
     };
   }
 
@@ -89,22 +100,54 @@ namespace std
 
 namespace Sorex
 {
-  template<Concept::ErrorCategory T>
-  class SRX_API TStatus
+  inline std::error_code make_error_code(Sorex::EStatusCode errcode)
+  {
+    return Details::StatusCodeCategory::create(errcode);
+  }
+
+  class SRX_API Status final
   {
 public:
-    using EStatusCode = T::EStatusCode;
+    SRX_INLINE Status() SRX_NOEXCEPT;
 
-    SRX_INLINE TStatus() SRX_NOEXCEPT;
-    SRX_INLINE explicit TStatus(EStatusCode errcode) SRX_NOEXCEPT;
+    template<typename T>
+    SRX_NODISCARD static SRX_INLINE
+      std::enable_if_t<std::is_error_code_enum_v<T>, Status>
+      Create(const T errcode) SRX_NOEXCEPT
+    {
+      return Status(make_error_code(errcode));
+    }
 
-    SRX_INLINE static const T& GetErrorCategory() SRX_NOEXCEPT;
+#ifdef SOREX_DEBUG_MEDIUM
+    template<typename T>
+    SRX_NODISCARD static SRX_INLINE
+      std::enable_if_t<std::is_error_code_enum_v<T>, Status>
+      Create(const T errcode, std::string_view msg) SRX_NOEXCEPT
+    {
+      return Status(make_error_code(errcode), msg);
+    }
 
-    SRX_INLINE bool Ok() const SRX_NOEXCEPT;
-    SRX_INLINE bool HasError() const SRX_NOEXCEPT { return !Ok(); }
+    template<typename T, typename... Args>
+    SRX_NODISCARD static SRX_INLINE
+      std::enable_if_t<std::is_error_code_enum_v<T> && (sizeof...(Args)),
+                       Status>
+      Create(const T                     errcode,
+             std::format_string<Args...> fmt,
+             Args&&... args) SRX_NOEXCEPT
+    {
+      return Status(make_error_code(errcode),
+                    std::format(std::move(fmt), std::forward<Args>(args)...));
+    }
+#endif
+#ifdef SOREX_DEBUG_HIGH
+    SRX_INLINE Status SetDebugInfo(const char* filename, int line) SRX_NOEXCEPT;
+#endif
 
-    SRX_INLINE EStatusCode GetCode() const SRX_NOEXCEPT;
+    SRX_INLINE bool Ok() const SRX_NOEXCEPT { return !mCode.value(); }
+
+    SRX_INLINE int    GetCode() const SRX_NOEXCEPT { return mCode.value(); }
     SRX_INLINE String ToString() const SRX_NOEXCEPT { return mCode.message(); }
+    SRX_INLINE const std::error_category& GetCategory() SRX_NOEXCEPT;
 
     /**
      * @brief Resets the status.
@@ -125,110 +168,86 @@ public:
      */
     String DebugMessage() const SRX_NOEXCEPT;
 
+    SRX_INLINE operator bool() const SRX_NOEXCEPT { return Ok(); }
+
+private:
+    SRX_INLINE explicit Status(std::error_code&& errcode) SRX_NOEXCEPT;
+
+#ifdef SOREX_DEBUG_MEDIUM
+    SRX_INLINE Status(std::error_code&& errcode,
+                      std::string&&     msg) SRX_NOEXCEPT;
+    SRX_INLINE Status(std::error_code&& errcode,
+                      std::string_view  msg) SRX_NOEXCEPT;
+#endif
 private:
     std::error_code mCode;
 
-#ifdef SOREX_DEBUG_LOW
+#ifdef SOREX_DEBUG_MEDIUM
     TOptional<String> mMessage;
 #endif
 
-#ifdef SOREX_DEBUG_MEDIUM
+#ifdef SOREX_DEBUG_HIGH
     String mFilename;
     int    mLine = 0;
 
-    SRX_INLINE void SetDebugInfo(const char* filename, int line) SRX_NOEXCEPT;
 #endif
   };
 
-  using Status = TStatus<Details::StatusCodeCategory>;
-
   //---------------------------------------------------------------------------
 
-  template<Concept::ErrorCategory T>
-  SRX_INLINE TStatus<T>::TStatus() SRX_NOEXCEPT
-    : TStatus(static_cast<EStatusCode>(0))
+  SRX_INLINE Status::Status() SRX_NOEXCEPT
+    : Status(make_error_code(EStatusCode::Ok))
   {}
 
-  template<Concept::ErrorCategory T>
-  SRX_INLINE TStatus<T>::TStatus(EStatusCode errcode) SRX_NOEXCEPT
-    : mCode(static_cast<int>(errcode), GetErrorCategory())
+  SRX_INLINE Status::Status(std::error_code&& errcode) SRX_NOEXCEPT
+    : mCode(std::move(errcode))
   {}
 
-  template<Concept::ErrorCategory T>
-  SRX_INLINE const T& TStatus<T>::GetErrorCategory() SRX_NOEXCEPT
-  {
-    static const T errorCategory;
-    return errorCategory;
-  }
-
-  template<Concept::ErrorCategory T>
-  SRX_INLINE bool TStatus<T>::Ok() const SRX_NOEXCEPT
-  {
-    return mCode.value() == int(0);
-  }
-
-  template<Concept::ErrorCategory T>
-  SRX_INLINE typename TStatus<T>::EStatusCode TStatus<T>::GetCode() const
-    SRX_NOEXCEPT
-  {
-    return static_cast<EStatusCode>(mCode.value());
-  }
-
-
-  template<Concept::ErrorCategory T>
-  void TStatus<T>::Reset() SRX_NOEXCEPT
-  {
-    mCode.assign(0, GetErrorCategory());
-
-#ifdef SOREX_DEBUG_LOW
-    mMessage.reset();
-#endif
 #ifdef SOREX_DEBUG_MEDIUM
-    mFilename.clear();
-    mLine = 0;
+  SRX_INLINE Status::Status(std::error_code&& errcode,
+                            std::string&&     msg) SRX_NOEXCEPT
+    : mCode(std::move(errcode))
+    , mMessage(std::move(msg))
+  {}
+  SRX_INLINE Status::Status(std::error_code&& errcode,
+                            std::string_view  msg) SRX_NOEXCEPT
+    : mCode(std::move(errcode))
+    , mMessage(msg)
+  {}
 #endif
-  }
 
-  template<Concept::ErrorCategory T>
-  String TStatus<T>::DebugMessage() const SRX_NOEXCEPT
+  SRX_INLINE const std::error_category& Status::GetCategory() SRX_NOEXCEPT
   {
-    std::stringstream ss;
-    ss << (Ok() ? "[OK]" : "[ERROR]") << " Status:\n";
-
-    ss << "\tCode: " << '<' << std::hex << "0x" << mCode.value() << "> "
-       << std::dec << '\n'
-       << "\tText: " << mCode.message() << '\n';
-    ss << "\tCategory: " << GetErrorCategory().name() << "\n";
-
-#ifdef SOREX_DEBUG_LOW
-    if (mMessage.has_value() && !mMessage.value().empty())
-      ss << "\tMessage: " << mMessage.value() << "\n";
-#endif
-#ifdef SOREX_DEBUG_MEDIUM
-    if (!mFilename.empty())
-      ss << "\tContext: " << mFilename << ":" << mLine;
-#endif
-
-    return ss.str();
+    return mCode.category();
   }
 
-#ifdef SOREX_DEBUG_MEDIUM
-  template<Concept::ErrorCategory T>
-  SRX_INLINE void TStatus<T>::SetDebugInfo(const char* filename,
-                                           int         line) SRX_NOEXCEPT
+#ifdef SOREX_DEBUG_HIGH
+  SRX_INLINE Status Status::SetDebugInfo(const char* filename,
+                                         int         line) SRX_NOEXCEPT
   {
     if (filename)
     {
       mFilename.assign(filename);
       mLine = line;
     }
+
+    return *this;
   }
 #endif
 
-  inline std::error_code make_error_code(Sorex::EStatusCode errcode)
-  {
-    return std::error_code(
-      static_cast<int>(errcode),
-      Sorex::TStatus<Sorex::Details::StatusCodeCategory>::GetErrorCategory());
-  }
 }  // namespace
+
+
+#define SRX_STATUS(errcode) (Sorex::Status::Create((errcode)))
+#define SRX_OK SRX_STATUS(EStatusCode::Ok)
+
+#if defined(SOREX_DEBUG_HIGH)
+#  define SRX_STATUS_MSG(errcode, format, ...)                \
+    Sorex::Status::Create((errcode), (format), ##__VA_ARGS__) \
+      .SetDebugInfo(__FILE__, __LINE__)
+#elif defined(SOREX_DEBUG_MEDIUM)
+#  define SRX_STATUS_MSG(errcode, format, ...) \
+    Sorex::Status::Create((errcode), (format), ##__VA_ARGS__)
+#else
+#  define SRX_STATUS_MSG(errcode, format, ...) SRX_STATUS(errcode)
+#endif

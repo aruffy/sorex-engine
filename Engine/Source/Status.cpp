@@ -27,57 +27,94 @@
 
 #include <Sorex/Status.h>
 
-namespace Sorex::Details
+namespace Sorex
 {
-  const char* StatusCodeCategory::name() const noexcept
+
+  void Status::Reset() SRX_NOEXCEPT
   {
-    return "Status::Code";
+    mCode.assign(0, mCode.category());
+
+#ifdef SOREX_DEBUG_MEDIUM
+    mMessage.reset();
+#endif
+#ifdef SOREX_DEBUG_HIGH
+    mFilename.clear();
+    mLine = 0;
+#endif
   }
 
-  std::string StatusCodeCategory::message(int errcode) const
+  String Status::DebugMessage() const SRX_NOEXCEPT
   {
-    switch (static_cast<EStatusCode>(errcode))
+    std::stringstream ss;
+    ss << "{\"status\":\"" << (Ok() ? "ok" : "error") << "\""
+       << ",\"code\":" << mCode.value() << ",\"text\":\"" << mCode.message()
+       << "\",\"category\":\"" << mCode.category().name() << '"';
+
+#ifdef SOREX_DEBUG_MEDIUM
+    if (mMessage.has_value() && !mMessage.value().empty())
+      ss << ",\"message\":\"" << mMessage.value() << '"';
+#endif
+#ifdef SOREX_DEBUG_HIGH
+    if (!mFilename.empty())
+      ss << ",\"file\":\"" << mFilename << "\",\"line\":" << mLine;
+#endif
+    ss << '}';
+    return ss.str();
+  }
+
+
+  namespace Details
+  {
+    const char* StatusCodeCategory::name() const noexcept
     {
-    case EStatusCode::Ok:
-      return "Ok";
-    case EStatusCode::Invalid_Argument:
-      return "Invalid Argument";
-    case EStatusCode::Invalid_State:
-      return "Invalid State";
-    case EStatusCode::Invalid_Format:
-      return "Invalid Format";
-    case EStatusCode::Not_Available:
-      return "Not Available";
-    case EStatusCode::Not_Permitted:
-      return "Not Permitted";
-    case EStatusCode::Not_Supported:
-      return "Not Supported";
-    case EStatusCode::Not_Implemented:
-      return "Not Implemented";
-    case EStatusCode::Not_Unique:
-      return "Not Unique";
-    case EStatusCode::Not_Found:
-      return "Not Found";
-    case EStatusCode::No_Memory:
-      return "No Memory";
-    case EStatusCode::No_Space:
-      return "No Space";
-    case EStatusCode::No_Data:
-      return "No Data";
-    case EStatusCode::Access_Error:
-      return "Access Error";
-    case EStatusCode::Out_Of_Range:
-      return "Out Of Range";
-    case EStatusCode::Bad_File:
-      return "Bad File";
-    case EStatusCode::Bad_Address:
-      return "Bad Address";
-    case EStatusCode::Busy:
-      return "Busy";
-    case EStatusCode::Try_Again:
-      return "Try Again";
-    default:
-      return "Unknown error";
+      return "Status";
+    }
+
+    std::string StatusCodeCategory::message(int errcode) const
+    {
+      switch (static_cast<EStatusCode>(errcode))
+      {
+      case EStatusCode::Ok:
+        return "Ok";
+      case EStatusCode::Invalid_Argument:
+        return "Invalid Argument";
+      case EStatusCode::Invalid_State:
+        return "Invalid State";
+      case EStatusCode::Invalid_Format:
+        return "Invalid Format";
+      case EStatusCode::Not_Available:
+        return "Not Available";
+      case EStatusCode::Not_Permitted:
+        return "Not Permitted";
+      case EStatusCode::Not_Supported:
+        return "Not Supported";
+      case EStatusCode::Not_Implemented:
+        return "Not Implemented";
+      case EStatusCode::Not_Unique:
+        return "Not Unique";
+      case EStatusCode::Not_Found:
+        return "Not Found";
+      case EStatusCode::No_Memory:
+        return "No Memory";
+      case EStatusCode::No_Space:
+        return "No Space";
+      case EStatusCode::No_Data:
+        return "No Data";
+      case EStatusCode::Access_Error:
+        return "Access Error";
+      case EStatusCode::Out_Of_Range:
+        return "Out Of Range";
+      case EStatusCode::Bad_File:
+        return "Bad File";
+      case EStatusCode::Bad_Address:
+        return "Bad Address";
+      case EStatusCode::Busy:
+        return "Busy";
+      case EStatusCode::Try_Again:
+        return "Try Again";
+      default:
+        return "Unknown error";
+      }
     }
   }
 
