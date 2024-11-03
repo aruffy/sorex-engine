@@ -109,6 +109,12 @@ namespace Sorex
   {
 public:
     SRX_INLINE Status() SRX_NOEXCEPT;
+    template<typename T,
+             typename Enable =
+               SRX_TYPENAME std::enable_if_t<std::is_error_code_enum_v<T>>>
+    SRX_INLINE Status(const T errcode)
+      : Status(make_error_code(errcode))
+    {}
 
     template<typename T>
     SRX_NODISCARD static SRX_INLINE
@@ -238,7 +244,7 @@ private:
 }  // namespace
 
 
-#define SRX_STATUS(errcode) (Sorex::Status::Create((errcode)))
+#define SRX_STATUS(errcode) (Sorex::Status((errcode)))
 #define SRX_OK SRX_STATUS(EStatusCode::Ok)
 
 #if defined(SOREX_DEBUG_HIGH)
