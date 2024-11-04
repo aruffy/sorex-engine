@@ -157,7 +157,7 @@ namespace Sorex
 #define SRX_NOEXCEPT noexcept
 #define SRX_CONSTEVAL consteval
 #define SRX_NODISCARD [[nodiscard]]
-#define SRX_FALLTHROUGH [[fallthrough]];
+#define SRX_FALLTHROUGH [[fallthrough]]
 
 // Macros
 #ifdef SOREX_COMPILER_MSVC
