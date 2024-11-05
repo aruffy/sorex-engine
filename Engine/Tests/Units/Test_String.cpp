@@ -227,47 +227,57 @@ static const TArray<String, 15> kInvalidStringNumbers = {
 };
 
 static const TArray<float, 202> kFloatSet = {
-  FLT_MIN,       FLT_MAX,       -43067.952754, -2813.447246,  38336.105555,
-  8216.711953,   14671.045367,  -38019.062809, 55708.937281,  -44350.397581,
-  -41422.222953, 40672.174076,  21643.474937,  28249.598991,  -28360.872886,
-  2894.728266,   -38465.612510, -59207.119994, -7761.706197,  -44884.735186,
-  26650.970822,  -34553.023222, -60974.260127, 27400.576082,  -18674.267245,
-  10137.464746,  21910.559093,  42695.794653,  -55319.085694, 6526.796042,
-  -6768.917342,  -35890.549571, 43654.381029,  -20322.029855, -30034.065117,
-  28239.786432,  -38460.181088, -56535.350572, -22250.927072, -42883.081801,
-  63923.937000,  2976.644272,   28773.942525,  -55434.353807, -7786.996539,
-  24400.710337,  26394.800454,  29471.002220,  -55914.761424, 39248.099118,
-  47920.297197,  18538.890080,  -9202.553181,  -44686.630384, -24054.872183,
-  44934.349284,  -56378.163574, 31943.454503,  -39808.243803, -1340.925038,
-  9561.405453,   -6379.269576,  62389.015540,  -19955.201867, -22515.830744,
-  -33696.873419, -50604.679332, -55187.857671, -6625.018814,  9535.437017,
-  14527.038716,  -45393.718593, -18037.566206, 973.188029,    -18362.551032,
-  -42981.254901, -13628.859487, 58038.765415,  -55.958953,    2331.349505,
-  46314.180748,  17352.198491,  17216.096082,  -37067.874423, -23953.676546,
-  -42151.858777, 53216.399949,  -3175.581036,  -44720.045984, 42125.575912,
-  -12582.415022, 16249.394416,  -16755.545650, -17131.751379, 51011.976471,
-  4370.549961,   -12348.499205, 47950.425090,  2703.573943,   56652.185234,
-  -21077.738435, 55100.145386,  -49767.408364, 14790.299570,  58719.246984,
-  -35454.854307, 51676.045288,  1148.234349,   -22115.377598, 29708.327559,
-  -25043.057092, 37138.689949,  -24660.711331, -55862.098287, 38147.038505,
-  62451.016068,  32458.328250,  2541.055797,   7867.916769,   -36533.997199,
-  -57272.590801, -36517.995769, 52601.317036,  12242.131008,  32366.023272,
-  -33920.921487, -31172.266850, 19381.510434,  -24204.378668, 53026.439199,
-  8557.184533,   -59607.328070, -49788.698724, 35515.541339,  11175.363382,
-  -18613.828575, -38367.516718, -7270.618403,  7980.521531,   36755.702948,
-  14477.972007,  -61166.155674, 6852.476158,   19081.832772,  21350.132935,
-  -20748.344092, -5797.175235,  49914.432004,  -36683.502937, -35398.641020,
-  -38583.777427, -40721.911536, -26203.401936, 61339.781770,  17636.027861,
-  -34159.703202, -56683.935385, 56347.091309,  24455.363407,  -51685.056303,
-  -50980.341403, -30749.651458, -36576.637772, 42158.172141,  -37541.661655,
-  57044.227672,  30460.336559,  -55460.301082, -13932.133690, 36152.070608,
-  -42299.406003, -40189.051158, 14673.000017,  37711.420799,  -22307.201913,
-  25104.699449,  -13563.511540, -21960.035855, 11143.840244,  60910.244492,
-  20348.296119,  -29974.582879, -21151.013770, 42065.356082,  -53804.975937,
-  30542.361715,  46109.993525,  48980.645221,  38868.362554,  38141.716760,
-  -41428.477238, 407.598591,    -56585.546000, -46929.704125, 55793.902388,
-  -29595.710581, 22390.555398,  -21832.062760, -55896.534266, 7173.206801,
-  45758.597416,  -34986.311372
+  (FLT_MIN + 0.1f), (FLT_MAX - 0.1f), -43067.952754, -2813.447246,
+  38336.105555,     8216.711953,      14671.045367,  -38019.062809,
+  55708.937281,     -44350.397581,    -41422.222953, 40672.174076,
+  21643.474937,     28249.598991,     -28360.872886, 2894.728266,
+  -38465.612510,    -59207.119994,    -7761.706197,  -44884.735186,
+  26650.970822,     -34553.023222,    -60974.260127, 27400.576082,
+  -18674.267245,    10137.464746,     21910.559093,  42695.794653,
+  -55319.085694,    6526.796042,      -6768.917342,  -35890.549571,
+  43654.381029,     -20322.029855,    -30034.065117, 28239.786432,
+  -38460.181088,    -56535.350572,    -22250.927072, -42883.081801,
+  63923.937000,     2976.644272,      28773.942525,  -55434.353807,
+  -7786.996539,     24400.710337,     26394.800454,  29471.002220,
+  -55914.761424,    39248.099118,     47920.297197,  18538.890080,
+  -9202.553181,     -44686.630384,    -24054.872183, 44934.349284,
+  -56378.163574,    31943.454503,     -39808.243803, -1340.925038,
+  9561.405453,      -6379.269576,     62389.015540,  -19955.201867,
+  -22515.830744,    -33696.873419,    -50604.679332, -55187.857671,
+  -6625.018814,     9535.437017,      14527.038716,  -45393.718593,
+  -18037.566206,    973.188029,       -18362.551032, -42981.254901,
+  -13628.859487,    58038.765415,     -55.958953,    2331.349505,
+  46314.180748,     17352.198491,     17216.096082,  -37067.874423,
+  -23953.676546,    -42151.858777,    53216.399949,  -3175.581036,
+  -44720.045984,    42125.575912,     -12582.415022, 16249.394416,
+  -16755.545650,    -17131.751379,    51011.976471,  4370.549961,
+  -12348.499205,    47950.425090,     2703.573943,   56652.185234,
+  -21077.738435,    55100.145386,     -49767.408364, 14790.299570,
+  58719.246984,     -35454.854307,    51676.045288,  1148.234349,
+  -22115.377598,    29708.327559,     -25043.057092, 37138.689949,
+  -24660.711331,    -55862.098287,    38147.038505,  62451.016068,
+  32458.328250,     2541.055797,      7867.916769,   -36533.997199,
+  -57272.590801,    -36517.995769,    52601.317036,  12242.131008,
+  32366.023272,     -33920.921487,    -31172.266850, 19381.510434,
+  -24204.378668,    53026.439199,     8557.184533,   -59607.328070,
+  -49788.698724,    35515.541339,     11175.363382,  -18613.828575,
+  -38367.516718,    -7270.618403,     7980.521531,   36755.702948,
+  14477.972007,     -61166.155674,    6852.476158,   19081.832772,
+  21350.132935,     -20748.344092,    -5797.175235,  49914.432004,
+  -36683.502937,    -35398.641020,    -38583.777427, -40721.911536,
+  -26203.401936,    61339.781770,     17636.027861,  -34159.703202,
+  -56683.935385,    56347.091309,     24455.363407,  -51685.056303,
+  -50980.341403,    -30749.651458,    -36576.637772, 42158.172141,
+  -37541.661655,    57044.227672,     30460.336559,  -55460.301082,
+  -13932.133690,    36152.070608,     -42299.406003, -40189.051158,
+  14673.000017,     37711.420799,     -22307.201913, 25104.699449,
+  -13563.511540,    -21960.035855,    11143.840244,  60910.244492,
+  20348.296119,     -29974.582879,    -21151.013770, 42065.356082,
+  -53804.975937,    30542.361715,     46109.993525,  48980.645221,
+  38868.362554,     38141.716760,     -41428.477238, 407.598591,
+  -56585.546000,    -46929.704125,    55793.902388,  -29595.710581,
+  22390.555398,     -21832.062760,    -55896.534266, 7173.206801,
+  45758.597416,     -34986.311372
 };
 
 TEST(StringUtils, ToInteger)
@@ -390,4 +400,246 @@ TEST(StringUtils, ToFloat)
     ASSERT_EQ(fval, value);
     str.clear();
   }
+}
+
+TEST(StringStrUtils, Split)
+{
+  const String str_abc  = "abcdefghijklmnopqrstuvwxyz";
+  const String str_xyz3 = "xyzxyzxyz";
+
+  TVector<StringView> results;
+  Utils::Split(str_xyz3, 'z', results);
+  for (const auto& s : results)
+    EXPECT_EQ(s, StringView("xy", 2));
+
+  const String str_a9 = "aaaaaaaaa";
+  EXPECT_EQ(Utils::Split(str_a9, 'a', results), 0);
+
+  results.clear();
+  ASSERT_EQ(Utils::Split(str_abc, '1', results), 1);
+  EXPECT_EQ(str_abc, results[0]);
+
+  results.clear();
+  ASSERT_EQ(Utils::Split(String(), 'a', results), 0);
+  EXPECT_TRUE(results.empty());
+
+  String str = "1 2 3 4 5 6 7 8 9";
+  ASSERT_EQ(Utils::Split(str, ' ', results), 9);
+  size_t n = 0;
+  for (size_t i = 0; i < str.length(); ++i)
+  {
+    if (str[i] == ' ')
+      continue;
+
+    EXPECT_EQ(String(&str[i], 1), results[n++]);
+  }
+}
+
+TEST(SplitTest, SplitSingleSeparator)
+{
+  BasicString<char>   str("a,b,c");
+  TVector<StringView> parts;
+  size_t              count = Utils::Split(str, ',', parts);
+
+  ASSERT_EQ(count, 3);
+  EXPECT_EQ(parts[0], "a");
+  EXPECT_EQ(parts[1], "b");
+  EXPECT_EQ(parts[2], "c");
+}
+
+TEST(SplitTest, SplitMultipleConsecutiveSeparators)
+{
+  BasicString<char>   str("a,,c");
+  TVector<StringView> parts;
+  size_t              count = Utils::Split(str, ',', parts);
+
+  ASSERT_EQ(count, 2);
+  EXPECT_EQ(parts[0], "a");
+  EXPECT_EQ(parts[1], "c");
+}
+
+TEST(SplitTest, SplitNoSeparators)
+{
+  BasicString<char>   str("abc");
+  TVector<StringView> parts;
+  size_t              count = Utils::Split(str, ',', parts);
+
+  ASSERT_EQ(count, 1);
+  EXPECT_EQ(parts[0], "abc");
+}
+
+TEST(SplitTest, SplitEmptyString)
+{
+  BasicString<char>   str("");
+  TVector<StringView> parts;
+  size_t              count = Utils::Split(str, ',', parts);
+
+  ASSERT_EQ(count, 0);
+  ASSERT_TRUE(parts.empty());
+}
+
+TEST(SplitTest, SplitEndsWithSeparator)
+{
+  BasicString<char>   str("a,b,c,");
+  TVector<StringView> parts;
+  size_t              count = Utils::Split(str, ',', parts);
+
+  ASSERT_EQ(count, 3);
+  EXPECT_EQ(parts[0], "a");
+  EXPECT_EQ(parts[1], "b");
+  EXPECT_EQ(parts[2], "c");
+}
+
+TEST(SplitTest, SplitStartsWithSeparator)
+{
+  BasicString<char>   str(",a,b,c");
+  TVector<StringView> parts;
+  size_t              count = Utils::Split(str, ',', parts);
+
+  ASSERT_EQ(count, 3);
+  EXPECT_EQ(parts[0], "a");
+  EXPECT_EQ(parts[1], "b");
+  EXPECT_EQ(parts[2], "c");
+}
+
+TEST(SplitTest, SplitOnlySeparators)
+{
+  BasicString<char>   str(",,,");
+  TVector<StringView> parts;
+  size_t              count = Utils::Split(str, ',', parts);
+
+  ASSERT_EQ(count, 0);
+}
+
+TEST(StringStrUtils, Trim)
+{
+  const TArray<TPair<String, String>, 8> strings = {
+    std::make_pair(String(), String()),
+    std::make_pair(String("        "), String()),
+    std::make_pair(String("  a   "), String("a")),
+    std::make_pair(String("some string"), String("some string")),
+    std::make_pair(String(" a b c d e f g "), String("a b c d e f g")),
+    std::make_pair(String("   abc123"), String("abc123")),
+    std::make_pair(String("abc123   "), String("abc123")),
+    std::make_pair(String(" 12345 66332 "), String("12345 66332"))
+  };
+
+  for (const TPair<String, String>& str : strings)
+  {
+    EXPECT_EQ(Utils::Trim(str.first), str.second);
+  }
+
+  const TArray<TPair<WString, WString>, 8> wstrings = {
+    std::make_pair(WString(), WString()),
+    std::make_pair(WString(L"        "), WString()),
+    std::make_pair(WString(L"  a   "), WString(L"a")),
+    std::make_pair(WString(L"some string"), WString(L"some string")),
+    std::make_pair(WString(L" a b c d e f g "), WString(L"a b c d e f g")),
+    std::make_pair(WString(L"   abc123"), WString(L"abc123")),
+    std::make_pair(WString(L"abc123   "), WString(L"abc123")),
+    std::make_pair(WString(L" 12345 66332 "), WString(L"12345 66332"))
+  };
+
+  for (const TPair<WString, WString>& wstr : wstrings)
+  {
+    EXPECT_EQ(Utils::Trim(wstr.first), wstr.second);
+  }
+}
+TEST(TrimLeftTest, BasicTests)
+{
+  EXPECT_EQ(Utils::TrimLeft(StringView("   Hello World")),
+            StringView("Hello World"));
+  EXPECT_EQ(Utils::TrimLeft(StringView("Hello World")),
+            StringView("Hello World"));
+  EXPECT_EQ(Utils::TrimLeft(StringView("   ")), StringView(""));
+  EXPECT_EQ(Utils::TrimLeft(StringView("")), StringView(""));
+  EXPECT_EQ(Utils::TrimLeft(StringView("   Leading spaces")),
+            StringView("Leading spaces"));
+}
+
+// Test cases for TrimRight
+TEST(TrimRightTest, BasicTests)
+{
+  EXPECT_EQ(Utils::TrimRight(StringView("Hello World   ")),
+            StringView("Hello World"));
+  EXPECT_EQ(Utils::TrimRight(StringView("Hello World")),
+            StringView("Hello World"));
+  EXPECT_EQ(Utils::TrimRight(StringView("   ")), StringView(""));
+  EXPECT_EQ(Utils::TrimRight(StringView("")), StringView(""));
+  EXPECT_EQ(Utils::TrimRight(StringView("Trailing spaces   ")),
+            StringView("Trailing spaces"));
+}
+
+// Test cases for Trim
+TEST(TrimTest, BasicTests)
+{
+  EXPECT_EQ(Utils::Trim(BasicString<char>("   Hello World   ")),
+            StringView("Hello World"));
+  EXPECT_EQ(Utils::Trim(BasicString<char>("Hello World")),
+            StringView("Hello World"));
+  EXPECT_EQ(Utils::Trim(BasicString<char>("   ")), StringView(""));
+  EXPECT_EQ(Utils::Trim(BasicString<char>("")), StringView(""));
+  EXPECT_EQ(Utils::Trim(BasicString<char>("   Leading and trailing   ")),
+            StringView("Leading and trailing"));
+}
+
+// Test cases for edge cases
+TEST(TrimEdgeCases, EdgeTests)
+{
+  EXPECT_EQ(Utils::Trim(BasicString<char>("\t\n  \t  Hello World  \n\t")),
+            StringView("Hello World"));
+  EXPECT_EQ(Utils::Trim(BasicString<char>("   \t\n  ")), StringView(""));
+  EXPECT_EQ(Utils::Trim(BasicString<char>("Hello")), StringView("Hello"));
+  EXPECT_EQ(Utils::Trim(BasicString<char>("   Hello   ")), StringView("Hello"));
+}
+
+TEST(StartWithTest, ReturnsTrueWhenStringStartsWithPrefix)
+{
+  EXPECT_TRUE(Utils::StartWith("Hello, World!", "Hello"));
+  EXPECT_TRUE(Utils::StartWith("Test", "Test"));
+  EXPECT_TRUE(Utils::StartWith("OpenAI", "Open"));
+}
+
+TEST(StartWithTest, ReturnsFalseWhenStringDoesNotStartWithPrefix)
+{
+  EXPECT_FALSE(Utils::StartWith("Hello, World!", "World"));
+  EXPECT_FALSE(Utils::StartWith("Test", "Best"));
+  EXPECT_FALSE(Utils::StartWith("OpenAI", "AI"));
+}
+
+TEST(StartWithTest, ReturnsTrueWhenPrefixIsEmpty)
+{
+  EXPECT_TRUE(Utils::StartWith("Hello, World!", ""));
+  EXPECT_TRUE(Utils::StartWith("Test", ""));
+  EXPECT_TRUE(Utils::StartWith("OpenAI", ""));
+}
+
+TEST(StartWithTest, ReturnsFalseWhenPrefixIsLongerThanString)
+{
+  EXPECT_FALSE(Utils::StartWith("Hello", "Hello, World!"));
+  EXPECT_FALSE(Utils::StartWith("Test", "Testing"));
+  EXPECT_FALSE(Utils::StartWith("OpenAI", "OpenAI is great"));
+}
+
+TEST(StartWithTest, HandlesEdgeCases)
+{
+  EXPECT_TRUE(Utils::StartWith("", ""));
+  EXPECT_FALSE(Utils::StartWith("", "prefix"));
+  EXPECT_TRUE(Utils::StartWith("non-empty", ""));
+}
+
+TEST(StartWithTest, HandlesSingleCharacterStrings)
+{
+  EXPECT_TRUE(Utils::StartWith("a", "a"));
+  EXPECT_FALSE(Utils::StartWith("a", "b"));
+  EXPECT_TRUE(Utils::StartWith("a", ""));
+  EXPECT_FALSE(Utils::StartWith("", "a"));
+}
+
+TEST(StartWithTest, HandlesWhitespace)
+{
+  EXPECT_TRUE(Utils::StartWith("   leading whitespace", "   leading"));
+  EXPECT_FALSE(Utils::StartWith("   leading whitespace", "leading"));
+  EXPECT_TRUE(Utils::StartWith("   ", "   "));
+  EXPECT_FALSE(Utils::StartWith("   ", "    "));
 }

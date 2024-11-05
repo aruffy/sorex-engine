@@ -244,15 +244,172 @@ namespace Sorex::Utils
 
 
   template<typename T, typename = SRX_TYPENAME Details::TEnableIf_Numeric<T>>
-  SRX_INLINE String ToString(const T value) SRX_NOEXCEPT
+  SRX_API SRX_INLINE String ToString(const T value) SRX_NOEXCEPT
   {
     return std::to_string(value);
   }
 
   template<typename T, typename = SRX_TYPENAME Details::TEnableIf_Numeric<T>>
-  SRX_INLINE WString ToWString(const T value) SRX_NOEXCEPT
+  SRX_API SRX_INLINE WString ToWString(const T value) SRX_NOEXCEPT
   {
     return std::to_wstring(value);
+  }
+
+  /**
+   * @brief Splits a string into parts based on a specified separator.
+   *
+   * This function takes a string and divides it into substrings, storing the
+   * results in a vector. The substrings are determined by the occurrences of
+   * the specified separator character.
+   *
+   * @tparam Char The character type of the string.
+   * @param str The input string to be split.
+   * @param separator The character used to separate the substrings.
+   * @param parts A vector that will hold the resulting substrings
+   * @return The number of substrings added to the parts vector.
+   */
+  template<typename Char>
+  SRX_API size_t Split(const BasicString<Char>&        str,
+                       Char                            separator,
+                       TVector<BasicStringView<Char>>& parts) SRX_NOEXCEPT
+  {
+    const size_t count = parts.size();
+    size_t       begin = 0;
+    size_t       i     = 0;
+
+    const size_t len = str.length();
+    for (; i < len; ++i)
+    {
+      if (str[i] == separator)
+      {
+        if (i > begin)
+          parts.emplace_back(&str[begin], i - begin);
+
+        begin = i + 1;
+      }
+    }
+
+    if (i > begin)
+      parts.emplace_back(&str[begin], len - begin);
+
+    return parts.size() - count;
+  }
+
+  /**
+   * @brief Trims whitespace characters from the left side of the given string
+   * view.
+   *
+   * @tparam TChar The character type of the string view.
+   * @param str The string view to be trimmed.
+   * @return A new string view with leading whitespace removed.
+   */
+  template<typename TChar>
+  SRX_API BasicStringView<TChar> TrimLeft(const BasicStringView<TChar> str)
+    SRX_NOEXCEPT
+  {
+    size_t       start = 0;
+    const size_t len   = str.length();
+    while (start < len && std::isspace(str[start]))
+    {
+      ++start;
+    }
+
+    return (start < len) ? str.substr(start) : BasicStringView<TChar>();
+  }
+
+  /**
+   * @brief Trims whitespace characters from the left side of the given string
+   * view.
+   *
+   * @tparam TChar The character type of the string view.
+   * @param str The string view to be trimmed.
+   * @return A new string view with leading whitespace removed.
+   */
+  template<typename TChar>
+  SRX_API SRX_INLINE BasicStringView<TChar> TrimLeft(
+    const BasicString<TChar>& str) SRX_NOEXCEPT
+  {
+    return TrimLeft(BasicStringView<TChar>(str));
+  }
+
+  /**
+   * @brief Trims whitespace characters from the right end of the given string
+   * view.
+   *
+   * @param str The string view to be trimmed. It is a view of the original
+   * string from which whitespace characters will be removed from the right.
+   *
+   * @return A new BasicStringView containing the trimmed string. If the input
+   *         string view consists entirely of whitespace, an empty
+   * BasicStringView is returned.
+   */
+  template<typename TChar>
+  SRX_API BasicStringView<TChar> TrimRight(BasicStringView<TChar> str)
+    SRX_NOEXCEPT
+  {
+    size_t end = str.length();
+    while (end > 0 && std::isspace(str[end - 1]))
+    {
+      --end;
+    }
+
+    return end ? str.substr(0, end) : BasicStringView<TChar>();
+  }
+
+  /**
+   * @brief Trims whitespace characters from the right end of the given string
+   * view.
+   *
+   * @param str The string view to be trimmed. It is a view of the original
+   * string from which whitespace characters will be removed from the right.
+   *
+   * @return A new BasicStringView containing the trimmed string. If the input
+   *         string view consists entirely of whitespace, an empty
+   * BasicStringView is returned.
+   */
+  template<typename TChar>
+  SRX_API SRX_INLINE BasicStringView<TChar> TrimRight(
+    const BasicString<TChar>& str) SRX_NOEXCEPT
+  {
+    return TrimRight(BasicStringView<TChar>(str));
+  }
+
+  /**
+   * @brief Trims whitespace from both ends of the given string.
+   *
+   * This function removes leading and trailing whitespace characters from the
+   * input string.
+   *
+   * @tparam TChar The character type of the string.
+   * @param str The input string to be trimmed.
+   * @return A BasicStringView containing the trimmed version of the input
+   * string.
+   */
+  template<typename TChar>
+  SRX_API SRX_INLINE BasicStringView<TChar> Trim(const BasicString<TChar>& str)
+    SRX_NOEXCEPT
+  {
+    return TrimRight(TrimLeft(BasicStringView<TChar>(str)));
+  }
+
+  SRX_API SRX_INLINE bool CompareNoCase(const StringView& lhs,
+                                        const StringView& rhs) SRX_NOEXCEPT
+  {
+#ifdef _MSC_VER
+    return _stricmp(lhs.data(), rhs.data()) == 0;
+#else
+    return strcasecmp(lhs.data(), rhs.data()) == 0;
+#endif  // _MSC_VER
+  }
+
+  SRX_API SRX_INLINE bool CompareNoCase(const WStringView& lhs,
+                                        const WStringView& rhs) SRX_NOEXCEPT
+  {
+#ifdef _MSC_VER
+    return wcscmp(lhs.data(), rhs.data()) == 0;
+#else
+    return wcscasecmp(lhs.data(), rhs.data()) == 0;
+#endif
   }
 
 }  // namespace
