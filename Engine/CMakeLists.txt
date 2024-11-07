@@ -90,6 +90,20 @@ sorex_target_source(${ENGINE_TARGET} "${CMAKE_CURRENT_LIST_DIR}/Include")
 # ##############################################################################
 
 # ##############################################################################
+# Include ThirdParty Libraries
+# ##############################################################################
+set(THIRD_PARTY_LIBS_PATH "${CMAKE_CURRENT_LIST_DIR}/ThirdParty")
+set(ENGINE_THIRD_PARTY_PUBLIC_LIBS "")
+
+add_subdirectory(${THIRD_PARTY_LIBS_PATH})
+message(
+  STATUS
+    "[${ENGINE_TARGET}] third-party public libs: ${ENGINE_THIRD_PARTY_PUBLIC_LIBS}"
+)
+
+target_link_libraries(${ENGINE_TARGET} PUBLIC ${ENGINE_THIRD_PARTY_PUBLIC_LIBS})
+
+# ##############################################################################
 # Create IDE source tree
 # ##############################################################################
 get_property(
