@@ -27,8 +27,39 @@
 
 #include <Sorex/JournalManager.h>
 
+#include <spdlog/async.h>
+#include <spdlog/sinks/stdout_sinks.h>
+#include <spdlog/sinks/stdout_color_sinks.h>
+#include <spdlog/sinks/dist_sink.h>
+#include <spdlog/sinks/basic_file_sink.h>
+#include <spdlog/sinks/rotating_file_sink.h>
+
+namespace
+{
+  constexpr size_t kAsyncQueueSize = 8192U;
+}  // namespace
+
 namespace Sorex
 {
+  JournalManager::JournalManager() SRX_NOEXCEPT
+  {
+    spdlog::init_thread_pool(kAsyncQueueSize, (size_t)SOREX_LOG_THREAD_NUM);
+
+#ifdef SOREX_DEBUG_HIGH
+    spdlog::set_level(spdlog::level::trace);
+#elif defined(SOREX_DEBUG_MEDIUM)
+    spdlog::set_level(spdlog::level::debug);
+#else
+    spdlog::set_level(spdlog::level::info);
+#endif
+  }
+
+  JournalManager::~JournalManager()
+  {
+    spdlog::drop_all();
+    spdlog::shutdown();
+  }
+
   JournalManager& JournalManager::GetInstance() SRX_NOEXCEPT
   {
     static JournalManager instance;
@@ -47,4 +78,24 @@ namespace Sorex
     return kSpdLevels.size() > index ? kSpdLevels[index] : spdlog::level::trace;
   }
 
-}
+  TUniquePointer<spdlog::logger> JournalManager::CreateLogger(
+    StringView          name,
+    const LoggerParams& params) SRX_NOEXCEPT
+  {
+    TVector<spdlog::sink_ptr> sinks;
+
+    if (params.bTermLogging)
+    {
+      spdlog::sink_ptr termSink =
+        params.bTermColor
+          ? std::make_shared<spdlog::sinks::stdout_color_sink_st>()
+          : std::make_shared<spdlog::sinks::stdout_sink_st>();
+
+      termSink->set_pattern("[%T.%e] [%n %^@%l%$] %v");
+      sinks.push_back(std::move(termSink));
+    }
+
+    return nullptr;
+  }
+
+}  // namespace

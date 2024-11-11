@@ -33,8 +33,8 @@
 #include "Platform.h"
 #include "Status.h"
 
-#ifndef SRX_LOGGING_THREAD_NUM
-#  define SRX_LOGGING_THREAD_NUM (2)
+#ifndef SOREX_LOG_THREAD_NUM
+#  define SOREX_LOG_THREAD_NUM (2)
 #endif
 
 namespace Sorex
@@ -53,30 +53,120 @@ namespace Sorex
   class JournalManager final
   {
 public:
-    static constexpr size_t kMaxLoggerNumber = 4;
+    struct LoggerParams
+    {
+      ELogLevel level           = ELogLevel::Info;
+      bool      bMultithreading = false;  ///< Enable multithreading for logger
+      bool bTermLogging = true;  ///< Flush log messages to the standart output;
+      bool bTermColor   = false;  ///< Enable terminal message color
+
+      struct FileRotation
+      {
+        uint32 fileSize   = 5 * 1048576;
+        uint8  fileNumber = 3;
+      };
+
+      String filename;  ///< If not empty will write log messages to the file;
+      TOptional<FileRotation>
+        rotationParams;  ///< If specify the file rotating will be applyed;
+    };
+
+    /**
+     * @brief Callback invoked when JournalManager is about to create a new
+     * logger.
+     *
+     * @param loggerId An integer representing the new logger identifier that is
+     * going to be created.
+     * @param loggerParams A reference to LoggerParams that will hold the out
+     * parameters for the new logger.
+     *
+     * @return true to allow the creation of the new logger, false to forbid
+     * creation.
+     */
+    typedef std::function<bool(uint8, LoggerParams&)> GetLoggerParamsCallback;
+
+    /**
+     * @enum ELogger
+     * @brief Enumeration of default loggers used in the engine.
+     *
+     * This enumeration defines the different types of defaults loggers that can
+     * be registered by the engine. The availability of these loggers may
+     * depend on compile-time definitions: SRX_DEBUG_NONE prevent loggers to be
+     * registred.
+     *
+     * These loggers uses RegisterLogger function: if the
+     * GetLoggerParamsCallback return `false` the loggers will not be created;
+     *
+     */
+    enum ELogger : uint8
+    {
+      kEngineLogger = 0u,  ///< Main Engine Logger (main engine thread)
+      kTaskLogger,         ///< Async Task Logger (other engine threads)
+      kUserLogger,         ///< User Logger
+      kCustomLogger        ///< Not be registerd by default (user defined)
+    };
+
+public:
+    static constexpr uint8 kMaxLoggerNumber = 4;
+
+    ~JournalManager();
 
     JournalManager(const JournalManager&)            = delete;
     JournalManager& operator=(const JournalManager&) = delete;
 
     static JournalManager& GetInstance() SRX_NOEXCEPT;
 
-    bool SetLevel(ELogLevel level, int logger = -1) SRX_NOEXCEPT;
+    template<uint8 kLoggerId>
+    EStatusCode RegisterLogger(StringView loggerName, bool bReplace = true);
+
+    template<uint8 kLoggerId>
+    SRX_INLINE void SetLogger(TUniquePointer<spdlog::logger>&& logger)
+      SRX_NOEXCEPT;
 
 private:
-    // NOTE: array indecies
-    enum ELogger
-    {
-      Logger_Engine = 0,  ///< Main Engine Logger (main engine thread)
-      Logger_Task,        ///< Async Task Logger (other engine threads)
-      Logger_User         ///< User Logger
-    };
-
     JournalManager() SRX_NOEXCEPT;
 
     SRX_INLINE spdlog::logger* GetLogger(const int logger) const SRX_NOEXCEPT;
     static spdlog::level::level_enum ConvLogLevel(ELogLevel level) SRX_NOEXCEPT;
 
+    TUniquePointer<spdlog::logger> CreateLogger(StringView          name,
+                                                const LoggerParams& params)
+      SRX_NOEXCEPT;
+
 private:
+    GetLoggerParamsCallback                                  mGetLoggerParams;
     TArray<TUniquePointer<spdlog::logger>, kMaxLoggerNumber> mLoggers;
   };
+
+  template<uint8 kLoggerId>
+  EStatusCode JournalManager::RegisterLogger(StringView loggerName,
+                                             bool       bReplace)
+  {
+    static_assert(kLoggerId < kMaxLoggerNumber, "invalid logger index");
+
+    if (!bReplace && mLoggers[kLoggerId] != nullptr)
+      return EStatusCode::Not_Unique;
+
+    LoggerParams params;
+    if (mGetLoggerParams && mGetLoggerParams(kLoggerId, params))
+    {
+      auto logger = CreateLogger(loggerName, params);
+      if (!logger)
+        return EStatusCode::Bad_File;
+
+      mLoggers[kLoggerId] = std::move(logger);
+      return EStatusCode::Ok;
+    }
+
+    return EStatusCode::Not_Permitted;
+  }
+
+  template<uint8 kLoggerId>
+  SRX_INLINE void JournalManager::SetLogger(
+    TUniquePointer<spdlog::logger>&& logger) SRX_NOEXCEPT
+  {
+    static_assert(kLoggerId < kMaxLoggerNumber, "invalid logger index");
+    mLoggers[kLoggerId] = std::move(logger);
+  }
+
 }  // namespace
