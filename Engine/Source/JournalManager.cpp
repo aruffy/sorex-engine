@@ -27,6 +27,8 @@
 
 #include <Sorex/JournalManager.h>
 
+#include <Sorex/Assert.h>
+
 #include <spdlog/async.h>
 #include <spdlog/sinks/stdout_sinks.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
@@ -36,12 +38,46 @@
 
 namespace
 {
+  using namespace Sorex;
   constexpr size_t kAsyncQueueSize = 8192U;
+
+
+#ifdef SOREX_DEBUG_NONE
+  bool GetDefaultLoggerParams(uint8_t,
+                              JournalManager::LoggerParams&) SRX_NOEXCEPT
+  {
+    return false;
+  }
+#else
+  bool GetDefaultLoggerParams(uint8_t                       id,
+                              JournalManager::LoggerParams& params) SRX_NOEXCEPT
+  {
+#  if defined(SOREX_DEBUG_HIGH)
+    const ELogLevel logLevel = ELogLevel::Trace;
+#  elif defined(SOREX_DEBUG_MEDIUM)
+    const ELogLevel logLevel = ELogLevel::Debug;
+#  else
+    const ELogLevel logLevel = ELogLevel::Info;
+#  endif
+
+    params.level        = logLevel;
+    params.bTermLogging = true;
+    // NOTE: It doesn't make a lot of sense as the terminal sink is alway
+    // multithreading
+    params.bMultithreading = (id != JournalManager::kEngineLogger);
+    // TODO: Enable file logging to the executable dir
+    params.filename.clear();
+    params.rotationParams.reset();
+
+    return true;
+  }
+#endif
 }  // namespace
 
 namespace Sorex
 {
   JournalManager::JournalManager() SRX_NOEXCEPT
+    : mGetLoggerParams(GetDefaultLoggerParams)
   {
     spdlog::init_thread_pool(kAsyncQueueSize, (size_t)SOREX_LOG_THREAD_NUM);
 
@@ -80,22 +116,95 @@ namespace Sorex
 
   TUniquePointer<spdlog::logger> JournalManager::CreateLogger(
     StringView          name,
-    const LoggerParams& params) SRX_NOEXCEPT
+    const LoggerParams& params,
+    Status&             status) SRX_NOEXCEPT
   {
     TVector<spdlog::sink_ptr> sinks;
+    const auto                logLevel = ConvLogLevel(params.level);
+
+    if (name.empty())
+    {
+      status =
+        SRX_STATUS_MSG(EStatusCode::Invalid_Argument, "invalid logger name");
+      return nullptr;
+    }
 
     if (params.bTermLogging)
     {
-      spdlog::sink_ptr termSink =
-        params.bTermColor
-          ? std::make_shared<spdlog::sinks::stdout_color_sink_st>()
-          : std::make_shared<spdlog::sinks::stdout_sink_st>();
+      if (!mTermSink)
+      {
+#ifdef SOREX_DEBUG_MEDIUM
+        mTermSink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
+#else
+        mTermSink = std::make_shared<spdlog::sinks::stdout_sink_mt>();
+#endif
+        mTermSink->set_level(logLevel);
+        mTermSink->set_pattern("[%T.%e] [%n %^@%l%$] %v");
+      }
 
-      termSink->set_pattern("[%T.%e] [%n %^@%l%$] %v");
-      sinks.push_back(std::move(termSink));
+      sinks.push_back(mTermSink);
     }
 
-    return nullptr;
+    if (!params.filename.empty())
+    {
+      spdlog::sink_ptr fileSink;
+      if (params.rotationParams.has_value())
+      {
+        const auto& rotation = params.rotationParams.value();
+        if (params.bMultithreading)
+          fileSink = std::make_shared<spdlog::sinks::rotating_file_sink_mt>(
+            params.filename,
+            rotation.fileSize,
+            rotation.fileNumber);
+        else
+          fileSink = std::make_shared<spdlog::sinks::rotating_file_sink_st>(
+            params.filename,
+            rotation.fileSize,
+            rotation.fileNumber);
+      }
+      else  // basic file
+      {
+        if (params.bMultithreading)
+          fileSink =
+            std::make_shared<spdlog::sinks::basic_file_sink_mt>(params.filename,
+                                                                true);
+        else
+          fileSink =
+            std::make_shared<spdlog::sinks::basic_file_sink_st>(params.filename,
+                                                                true);
+      }
+
+      if (fileSink)
+      {
+        fileSink->set_level(logLevel);
+        fileSink->set_pattern("[%d/%b/%Y %T.%e] [%n @%l] %v");
+        sinks.push_back(std::move(fileSink));
+      }
+    }
+
+    if (sinks.empty())
+    {
+      status =
+        SRX_STATUS_MSG(EStatusCode::Invalid_Argument, "invalid logger params");
+      return nullptr;
+    }
+
+    auto logger =
+      MakeUnique<spdlog::logger>(name, std::begin(sinks), std::end(sinks));
+
+#ifdef SOREX_DEBUG_MEDIUM
+    auto flushLevel = spdlog::level::info;
+#else
+    auto flushLevel = spdlog::level::warn;
+#endif
+
+    logger->set_level(logLevel);
+    logger->flush_on(flushLevel);
+
+    if (!status.Ok())
+      status = SRX_OK;
+
+    return logger;
   }
 
 }  // namespace

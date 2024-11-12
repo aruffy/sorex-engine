@@ -58,7 +58,6 @@ public:
       ELogLevel level           = ELogLevel::Info;
       bool      bMultithreading = false;  ///< Enable multithreading for logger
       bool bTermLogging = true;  ///< Flush log messages to the standart output;
-      bool bTermColor   = false;  ///< Enable terminal message color
 
       struct FileRotation
       {
@@ -117,7 +116,7 @@ public:
     static JournalManager& GetInstance() SRX_NOEXCEPT;
 
     template<uint8 kLoggerId>
-    EStatusCode RegisterLogger(StringView loggerName, bool bReplace = true);
+    Status RegisterLogger(StringView loggerName, bool bReplace = true);
 
     template<uint8 kLoggerId>
     SRX_INLINE void SetLogger(TUniquePointer<spdlog::logger>&& logger)
@@ -130,35 +129,37 @@ private:
     static spdlog::level::level_enum ConvLogLevel(ELogLevel level) SRX_NOEXCEPT;
 
     TUniquePointer<spdlog::logger> CreateLogger(StringView          name,
-                                                const LoggerParams& params)
-      SRX_NOEXCEPT;
+                                                const LoggerParams& params,
+                                                Status& status) SRX_NOEXCEPT;
 
 private:
     GetLoggerParamsCallback                                  mGetLoggerParams;
     TArray<TUniquePointer<spdlog::logger>, kMaxLoggerNumber> mLoggers;
+    spdlog::sink_ptr                                         mTermSink;
   };
 
   template<uint8 kLoggerId>
-  EStatusCode JournalManager::RegisterLogger(StringView loggerName,
-                                             bool       bReplace)
+  Status JournalManager::RegisterLogger(StringView loggerName, bool bReplace)
   {
     static_assert(kLoggerId < kMaxLoggerNumber, "invalid logger index");
 
     if (!bReplace && mLoggers[kLoggerId] != nullptr)
-      return EStatusCode::Not_Unique;
+      return SRX_STATUS_MSG(EStatusCode::Not_Unique,
+                            "try to overrite logger {}",
+                            kLoggerId);
 
     LoggerParams params;
     if (mGetLoggerParams && mGetLoggerParams(kLoggerId, params))
     {
-      auto logger = CreateLogger(loggerName, params);
-      if (!logger)
-        return EStatusCode::Bad_File;
+      Status status;
+      auto   logger = CreateLogger(loggerName, params, status);
+      if (logger)
+        mLoggers[kLoggerId] = std::move(logger);
 
-      mLoggers[kLoggerId] = std::move(logger);
-      return EStatusCode::Ok;
+      return status;
     }
 
-    return EStatusCode::Not_Permitted;
+    return SRX_STATUS(EStatusCode::Not_Permitted);
   }
 
   template<uint8 kLoggerId>
