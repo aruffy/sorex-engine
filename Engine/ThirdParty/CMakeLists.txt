@@ -9,7 +9,12 @@ set(SKIP_INSTALL_ALL ON)
 # SPDLOG library
 # ##############################################################################
 set(SPDLOG_SUBDIR "spdlog")
+
 message(STATUS "[${SPDLOG_SUBDIR}] subdir build")
+if(NOT SOREX_STATIC_LIBRARY)
+  message(VERBOSE "[ThirdParty] spdlog enable fPIC compile flag")
+  set(SPDLOG_BUILD_PIC CACHE BOOL "[SPDLOG] Build position independent code" ON)
+endif()
 
 add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/${SPDLOG_SUBDIR}")
 set_target_properties(

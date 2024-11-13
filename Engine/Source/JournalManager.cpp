@@ -189,8 +189,9 @@ namespace Sorex
       return nullptr;
     }
 
-    auto logger =
-      MakeUnique<spdlog::logger>(name, std::begin(sinks), std::end(sinks));
+    auto logger = MakeUnique<spdlog::logger>(std::string(name),
+                                             std::begin(sinks),
+                                             std::end(sinks));
 
 #ifdef SOREX_DEBUG_MEDIUM
     auto flushLevel = spdlog::level::info;
