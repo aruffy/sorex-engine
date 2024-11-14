@@ -138,20 +138,15 @@ namespace Sorex
 #  pragma error "Sorex unknown compiler. Abort!"
 #endif
 
-// Function signature macros
-#ifdef SOREX_DEBUG_MEDIUM
-#  define SRX_INLINE
+#if defined(SOREX_COMPILER_MSVC) && SOREX_COMP_VER >= 1200
+#  define SRX_INLINE __forceinline
+
+#elif !defined(__ANDROID__) \
+  && (defined(SOREX_COMPILER_GNUC) || defined(SOREX_COMPILER_CLANG))
+#  define SRX_INLINE inline __attribute__((always_inline))
+
 #else
-#  if defined(SOREX_COMPILER_MSVC) && SOREX_COMP_VER >= 1200
-#    define SRX_INLINE __forceinline
-
-#  elif !defined(__ANDROID__) \
-    && (defined(SOREX_COMPILER_GNUC) || defined(SOREX_COMPILER_CLANG))
-#    define SRX_INLINE inline __attribute__((always_inline))
-
-#  else
-#    define SRX_INLINE inline
-#  endif
+#  define SRX_INLINE inline
 #endif
 
 #define SRX_NOEXCEPT noexcept

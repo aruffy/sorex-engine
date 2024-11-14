@@ -95,16 +95,22 @@ namespace Sorex::Platform
  * expression.
  */
 #ifdef SOREX_DEBUG_MEDIUM
-#  define SRX_VERIFY(expr)                                         \
-    if (SRX_UNLIKELY(!(expr)))                                     \
-      ::Sorex::Platform::OnCheckFailed(#expr, __FILE__, __LINE__); \
-    else                                                           \
+#  define SRX_VERIFY(expr)                                           \
+    if (!(expr))                                                     \
+      SRX_UNLIKELY                                                   \
+      {                                                              \
+        ::Sorex::Platform::OnCheckFailed(#expr, __FILE__, __LINE__); \
+      }                                                              \
+    else                                                             \
       ((void)0)
 
-#  define SRX_VERIFY_MSG(expr, msg)                                \
-    if (SRX_UNLIKELY(!(expr)))                                     \
-      ::Sorex::Platform::OnCheckFailed(#expr, __FILE__, __LINE__); \
-    else                                                           \
+#  define SRX_VERIFY_MSG(expr, msg)                                  \
+    if (!(expr))                                                     \
+      SRX_UNLIKELY                                                   \
+      {                                                              \
+        ::Sorex::Platform::OnCheckFailed(#expr, __FILE__, __LINE__); \
+      }                                                              \
+    else                                                             \
       ((void)0)
 #else
 #  define SRX_VERIFY(expr) ((void)(expr))
