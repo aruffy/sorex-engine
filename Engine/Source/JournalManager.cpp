@@ -102,6 +102,16 @@ namespace Sorex
     return instance;
   }
 
+  spdlog::logger* JournalManager::GetLogger(const uint8 logger) const
+    SRX_NOEXCEPT
+  {
+    // TODO: Check main thread
+    if (logger < mLoggers.size())
+      return mLoggers[logger].get();
+
+    return nullptr;
+  }
+
   spdlog::level::level_enum JournalManager::ConvLogLevel(ELogLevel level)
     SRX_NOEXCEPT
   {
@@ -139,7 +149,7 @@ namespace Sorex
         mTermSink = std::make_shared<spdlog::sinks::stdout_sink_mt>();
 #endif
         mTermSink->set_level(logLevel);
-        mTermSink->set_pattern("[%T.%e] [%n %^@%l%$] %v");
+        mTermSink->set_pattern("[%T.%e] [%^%n @%l%$] %v");
       }
 
       sinks.push_back(mTermSink);

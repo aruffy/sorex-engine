@@ -28,6 +28,7 @@
 #pragma once
 
 #include <spdlog/spdlog.h>
+#include <spdlog/fmt/fmt.h>
 
 #include "Types.h"
 #include "Platform.h"
@@ -122,10 +123,21 @@ public:
     SRX_INLINE void SetLogger(TUniquePointer<spdlog::logger>&& logger)
       SRX_NOEXCEPT;
 
+    template<
+      typename... Args,
+      typename Enable = SRX_TYPENAME std::enable_if_t<(sizeof...(Args) != 0)>>
+    void            PushRecord(uint8                       loggerId,
+                               ELogLevel                   level,
+                               fmt::format_string<Args...> format,
+                               Args&&... args);
+    SRX_INLINE void PushRecord(uint8      loggerId,
+                               ELogLevel  level,
+                               StringView message);
+
 private:
     JournalManager() SRX_NOEXCEPT;
 
-    SRX_INLINE spdlog::logger* GetLogger(const int logger) const SRX_NOEXCEPT;
+    spdlog::logger* GetLogger(const uint8 logger) const SRX_NOEXCEPT;
     static spdlog::level::level_enum ConvLogLevel(ELogLevel level) SRX_NOEXCEPT;
 
     TUniquePointer<spdlog::logger> CreateLogger(StringView          name,
@@ -170,4 +182,23 @@ private:
     mLoggers[kLoggerId] = std::move(logger);
   }
 
+  template<typename... Args, typename Enable>
+  void JournalManager::PushRecord(uint8                       loggerId,
+                                  ELogLevel                   level,
+                                  fmt::format_string<Args...> format,
+                                  Args&&... args)
+  {
+    if (auto logger = GetLogger(loggerId))
+      logger->log(ConvLogLevel(level),
+                  std::move(format),
+                  std::forward<Args>(args)...);
+  }
+
+  SRX_INLINE void JournalManager::PushRecord(uint8      loggerId,
+                                             ELogLevel  level,
+                                             StringView message)
+  {
+    if (auto logger = GetLogger(loggerId))
+      logger->log(ConvLogLevel(level), message);
+  }
 }  // namespace

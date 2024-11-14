@@ -22,6 +22,16 @@ int main(const int argc, const char* argv[])
           .Ok()))
     return 1;
 
+  JournalManager::GetInstance().PushRecord(JournalManager::kEngineLogger,
+                                           ELogLevel::Info,
+                                           "Hello, world!");
+  JournalManager::GetInstance().PushRecord(JournalManager::kEngineLogger,
+                                           ELogLevel::Warning,
+                                           "Oops code:{} text:{}",
+                                           400,
+                                           "BAD_REQUEST");
+
+
   std::cout << "[Sorex] Sandbox::Main Start." << std::endl;
   return 0;
 }

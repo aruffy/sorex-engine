@@ -29,7 +29,8 @@
 
 #include <concepts>
 #include <system_error>
-#include <format>
+
+#include <spdlog/fmt/fmt.h>
 
 #include "Types.h"
 #include "Platform.h"
@@ -138,11 +139,11 @@ public:
       std::enable_if_t<std::is_error_code_enum_v<T> && (sizeof...(Args)),
                        Status>
       Create(const T                     errcode,
-             std::format_string<Args...> fmt,
+             fmt::format_string<Args...> fmt,
              Args&&... args) SRX_NOEXCEPT
     {
       return Status(make_error_code(errcode),
-                    std::format(std::move(fmt), std::forward<Args>(args)...));
+                    fmt::format(std::move(fmt), std::forward<Args>(args)...));
     }
 #endif
 #ifdef SOREX_DEBUG_HIGH
