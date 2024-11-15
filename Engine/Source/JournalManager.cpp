@@ -111,15 +111,6 @@ namespace Sorex
     return instance;
   }
 
-  spdlog::logger* JournalManager::GetLogger(const uint8 logger) const
-    SRX_NOEXCEPT
-  {
-    if (logger < mLoggers.size())
-      return mLoggers[logger].get();
-
-    return nullptr;
-  }
-
   spdlog::level::level_enum JournalManager::ConvertLevel(ELogLevel level)
     SRX_NOEXCEPT
   {

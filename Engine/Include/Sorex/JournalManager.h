@@ -143,8 +143,7 @@ public:
 private:
     JournalManager() SRX_NOEXCEPT;
 
-    // TODO: inline (with constexpr?)
-    spdlog::logger* GetLogger(const uint8 logger) const SRX_NOEXCEPT;
+    SRX_INLINE spdlog::logger* GetLogger(const uint8 logger) const SRX_NOEXCEPT;
     static spdlog::level::level_enum ConvertLevel(ELogLevel level) SRX_NOEXCEPT;
 
     TUniquePointer<spdlog::logger> CreateLogger(StringView          name,
@@ -191,13 +190,22 @@ private:
     mLoggers[kLoggerId] = std::move(logger);
   }
 
+  SRX_INLINE spdlog::logger* JournalManager::GetLogger(
+    const uint8 loggerId) const SRX_NOEXCEPT
+  {
+    if (loggerId < kMaxLoggerNumber)
+      return mLoggers[loggerId].get();
+
+    return nullptr;
+  }
+
   template<typename... Args, typename Enable>
   void JournalManager::PushRecord(uint8                       loggerId,
                                   ELogLevel                   level,
                                   fmt::format_string<Args...> format,
                                   Args&&... args)
   {
-    if (auto logger = GetLogger(loggerId))
+    if (spdlog::logger* const logger = GetLogger(loggerId))
       logger->log(ConvertLevel(level),
                   std::move(format),
                   std::forward<Args>(args)...);
