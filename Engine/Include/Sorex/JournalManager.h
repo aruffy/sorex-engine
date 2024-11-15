@@ -145,9 +145,6 @@ private:
                                                 const LoggerParams& params,
                                                 Status& status) SRX_NOEXCEPT;
 
-    spdlog::sink_ptr GetOrCreateSink(StringView          sinkId,
-                                     const LoggerParams& params) SRX_NOEXCEPT;
-
 private:
     ELogLevel                                                mLevel;
     TArray<TUniquePointer<spdlog::logger>, kMaxLoggerNumber> mLoggers;

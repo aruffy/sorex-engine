@@ -20,7 +20,7 @@ int main(const int argc, const char* argv[])
                .Ok()); */
 
   if (!(JournalManager::GetInstance()
-          .RegisterLogger<JournalManager::kEngineLogger>("Engine", true)
+          .RegisterLogger<JournalManager::kEngineLogger>("MyEngine", true)
           .Ok()))
     return 1;
 

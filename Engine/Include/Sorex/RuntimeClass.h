@@ -178,20 +178,19 @@ private:
   }
 
   template<Concept::RuntimeClass Class>
-  SRX_API SRX_NODISCARD constexpr StringView GetTypeName() SRX_NOEXCEPT
+  SRX_API constexpr StringView GetTypeName() SRX_NOEXCEPT
   {
     return Class::GetTypeInfo().GetName();
   }
 
   template<Concept::RuntimeClass Class>
-  SRX_API SRX_NODISCARD constexpr TypeInfo GetTypeInfo() SRX_NOEXCEPT
+  SRX_API constexpr TypeInfo GetTypeInfo() SRX_NOEXCEPT
   {
     return Class::GetTypeInfo();
   }
 
   template<Concept::RuntimeClass Class>
-  SRX_API SRX_NODISCARD constexpr const RuntimeClass& GetRuntimeType()
-    SRX_NOEXCEPT
+  SRX_API constexpr const RuntimeClass& GetRuntimeType() SRX_NOEXCEPT
   {
     return Rtti::Details::GetOrCreateRuntimeType<Class>();
   }
@@ -205,7 +204,7 @@ private:
   }
 
   template<typename Derived, typename Base>
-  SRX_API SRX_NODISCARD SRX_INLINE Derived DynamicCast(Base* base) SRX_NOEXCEPT
+  SRX_API SRX_INLINE Derived DynamicCast(Base* base) SRX_NOEXCEPT
   {
     typedef std::remove_cv_t<Base>                           BaseType;
     typedef std::remove_cv_t<std::remove_pointer_t<Derived>> DerivedType;

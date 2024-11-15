@@ -8,7 +8,7 @@
 /* Permission is hereby granted, free of charge, to any person obtaining  */
 /* a copy of this software and associated documentation files (the        */
 /* "Software"), to deal in the Software without restriction, including    */
-/* without limitation the rights to use, copy, modify, merge, publish,    */
+
 /* distribute, sublicense, and/or sell copies of the Software, and to     */
 /* permit persons to whom the Software is furnished to do so, subject to  */
 /* the following conditions:                                              */
@@ -159,7 +159,7 @@ namespace Sorex
           std::make_shared<spdlog::sinks::stdout_sink_mt>();
 #endif
         termSink->set_level(logLevel);
-        termSink->set_pattern("[%T.%e] [%^%n @%l%$] %v");
+        termSink->set_pattern("[%t] [%T.%e] [%^%n @%l%$] %v");
         mSinks[kTermSinkId] = termSink;
 
         sinks.push_back(std::move(termSink));
@@ -172,38 +172,47 @@ namespace Sorex
 
     if (!params.filename.empty())
     {
-      spdlog::sink_ptr fileSink;
-      if (params.rotationParams.has_value())
+      if (auto it = mSinks.find(params.filename); it != mSinks.end())
       {
-        const auto& rotation = params.rotationParams.value();
-        if (params.bMultithreading)
-          fileSink = std::make_shared<spdlog::sinks::rotating_file_sink_mt>(
-            params.filename,
-            rotation.fileSize,
-            rotation.fileNumber);
-        else
-          fileSink = std::make_shared<spdlog::sinks::rotating_file_sink_st>(
-            params.filename,
-            rotation.fileSize,
-            rotation.fileNumber);
+        sinks.push_back(it->second);
       }
-      else  // basic file
+      else
       {
-        if (params.bMultithreading)
-          fileSink =
-            std::make_shared<spdlog::sinks::basic_file_sink_mt>(params.filename,
-                                                                true);
-        else
-          fileSink =
-            std::make_shared<spdlog::sinks::basic_file_sink_st>(params.filename,
-                                                                true);
-      }
+        spdlog::sink_ptr fileSink;
+        if (params.rotationParams.has_value())
+        {
+          const auto& rotation = params.rotationParams.value();
+          if (params.bMultithreading)
+            fileSink = std::make_shared<spdlog::sinks::rotating_file_sink_mt>(
+              params.filename,
+              rotation.fileSize,
+              rotation.fileNumber);
+          else
+            fileSink = std::make_shared<spdlog::sinks::rotating_file_sink_st>(
+              params.filename,
+              rotation.fileSize,
+              rotation.fileNumber);
+        }
+        else  // basic file
+        {
+          if (params.bMultithreading)
+            fileSink = std::make_shared<spdlog::sinks::basic_file_sink_mt>(
+              params.filename,
+              true);
+          else
+            fileSink = std::make_shared<spdlog::sinks::basic_file_sink_st>(
+              params.filename,
+              true);
+        }
 
-      if (fileSink)
-      {
-        fileSink->set_level(logLevel);
-        fileSink->set_pattern("[%d/%b/%Y %T.%e] [%n @%l] %v");
-        sinks.push_back(std::move(fileSink));
+        if (fileSink)
+        {
+          fileSink->set_level(logLevel);
+          fileSink->set_pattern("[%d/%b/%Y %T.%e] [%n @%l] %v");
+
+          mSinks[params.filename] = fileSink;
+          sinks.push_back(std::move(fileSink));
+        }
       }
     }
 
