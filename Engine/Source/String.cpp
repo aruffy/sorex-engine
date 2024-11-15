@@ -1,5 +1,4 @@
-#include <Sorex/String.h>
-
+#include <Sorex/Utils/String.h>
 
 namespace Sorex::Utils
 {
