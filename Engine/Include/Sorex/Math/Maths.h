@@ -119,7 +119,7 @@ namespace Sorex::Math
   SRX_API SRX_INLINE scalar_t Random() SRX_NOEXCEPT
   {
     const scalar_t r = rand();
-    return r / scalar_t{ RAND_MAX };
+    return r / RAND_MAX;
   }
 
   template<typename T>
@@ -179,9 +179,10 @@ namespace Sorex::Math
     std::enable_if_t<!std::numeric_limits<T>::is_integer, bool>
     IsEqual(const T left, const T right) SRX_NOEXCEPT
   {
-    const T     diff = std::fabs(left - right);
-    constexpr T kMin = std::numeric_limits<T>::min();
-    return (diff <= std::numeric_limits<T>::epsilon() * std::fabs(left + right)
-            || diff < kMin);
+    const T diff         = std::fabs(left - right);
+    const T kScaleFactor = std::fabs(left + right) * T{ 0.8 };
+    const T kEpsilon     = std::numeric_limits<T>::epsilon() * kScaleFactor;
+
+    return (diff <= kEpsilon || diff < std::numeric_limits<T>::min());
   }
 }  // namespace
