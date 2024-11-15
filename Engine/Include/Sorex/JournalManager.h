@@ -124,6 +124,11 @@ public:
     SRX_INLINE void SetLogger(TUniquePointer<spdlog::logger>&& logger)
       SRX_NOEXCEPT;
 
+    SRX_INLINE void SetCallback(GetLoggerParamsCallback&& callback) SRX_NOEXCEPT
+    {
+      mGetLoggerParams = std::move(callback);
+    }
+
     template<
       typename... Args,
       typename Enable = SRX_TYPENAME std::enable_if_t<(sizeof...(Args) != 0)>>
@@ -138,8 +143,9 @@ public:
 private:
     JournalManager() SRX_NOEXCEPT;
 
+    // TODO: inline (with constexpr?)
     spdlog::logger* GetLogger(const uint8 logger) const SRX_NOEXCEPT;
-    static spdlog::level::level_enum ConvLogLevel(ELogLevel level) SRX_NOEXCEPT;
+    static spdlog::level::level_enum ConvertLevel(ELogLevel level) SRX_NOEXCEPT;
 
     TUniquePointer<spdlog::logger> CreateLogger(StringView          name,
                                                 const LoggerParams& params,
@@ -192,7 +198,7 @@ private:
                                   Args&&... args)
   {
     if (auto logger = GetLogger(loggerId))
-      logger->log(ConvLogLevel(level),
+      logger->log(ConvertLevel(level),
                   std::move(format),
                   std::forward<Args>(args)...);
   }
@@ -202,7 +208,7 @@ private:
                                              StringView message)
   {
     if (auto logger = GetLogger(loggerId))
-      logger->log(ConvLogLevel(level), message);
+      logger->log(ConvertLevel(level), message);
   }
 }  // namespace
 

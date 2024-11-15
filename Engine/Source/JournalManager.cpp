@@ -90,7 +90,7 @@ namespace Sorex
 #endif
 
     spdlog::init_thread_pool(kAsyncQueueSize, (size_t)SOREX_LOG_THREAD_NUM);
-    spdlog::set_level(ConvLogLevel(mLevel));
+    spdlog::set_level(ConvertLevel(mLevel));
 
 #ifndef SOREX_DEBUG_NONE
     RegisterLogger<kEngineLogger>("Engine");
@@ -120,7 +120,7 @@ namespace Sorex
     return nullptr;
   }
 
-  spdlog::level::level_enum JournalManager::ConvLogLevel(ELogLevel level)
+  spdlog::level::level_enum JournalManager::ConvertLevel(ELogLevel level)
     SRX_NOEXCEPT
   {
     static constexpr TArray<spdlog::level::level_enum, 7> kSpdLevels{
@@ -138,7 +138,7 @@ namespace Sorex
     Status&             status) SRX_NOEXCEPT
   {
     TVector<spdlog::sink_ptr> sinks;
-    const auto                logLevel = ConvLogLevel(params.level);
+    const auto                logLevel = ConvertLevel(params.level);
 
     if (name.empty())
     {
