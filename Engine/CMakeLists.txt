@@ -12,6 +12,11 @@ endif()
 
 option(SOREX_STATIC_LIBRARY "Compile Sorex engine as static library" OFF)
 option(SRXENG_ADDRESS_SANITIZER "Enable address sanitizer for engine code" OFF)
+option(SRXENG_BUILD_PIC "Build position independent code (-fPIC)" OFF)
+
+if(SRXENG_BUILD_PIC)
+  set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+endif()
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -88,6 +93,20 @@ sorex_target_source(${ENGINE_TARGET} "${CMAKE_CURRENT_LIST_DIR}/Include")
 # ##############################################################################
 # Platform Code
 # ##############################################################################
+
+# ##############################################################################
+# Include ThirdParty Libraries
+# ##############################################################################
+set(THIRD_PARTY_LIBS_PATH "${CMAKE_CURRENT_LIST_DIR}/ThirdParty")
+set(ENGINE_THIRD_PARTY_PUBLIC_LIBS "")
+
+add_subdirectory(${THIRD_PARTY_LIBS_PATH})
+message(
+  STATUS
+    "[${ENGINE_TARGET}] third-party public libs: ${ENGINE_THIRD_PARTY_PUBLIC_LIBS}"
+)
+
+target_link_libraries(${ENGINE_TARGET} PUBLIC ${ENGINE_THIRD_PARTY_PUBLIC_LIBS})
 
 # ##############################################################################
 # Create IDE source tree

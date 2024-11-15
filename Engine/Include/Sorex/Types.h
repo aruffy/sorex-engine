@@ -42,6 +42,9 @@
 #include <span>
 #include <memory>
 #include <variant>
+#include <optional>
+
+#include "Platform.h"
 
 #define SRX_IDLE \
   do             \
@@ -66,6 +69,14 @@ namespace Sorex
 
   typedef std::size_t size_t;
   typedef size_t      hash_t;
+
+
+#ifdef SOREX_PLATFORM_WINDOWS
+  typedef std::size_t ssize_t;
+#else
+#  include <sys/types.h>
+  typedef ::ssize_t ssize_t;
+#endif
 
   typedef int errno_t;
 
@@ -136,4 +147,7 @@ namespace Sorex
 
   template<typename... Args>
   using TVariant = std::variant<Args...>;
+
+  template<typename T>
+  using TOptional = std::optional<T>;
 }

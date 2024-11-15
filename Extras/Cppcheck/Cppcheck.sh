@@ -4,7 +4,8 @@ PROJECT_NAME='Cppcheck'
 
 CPPCHECK_EXE=$(whereis -b cppcheck | awk '{print $2}')
 
-CPPCHECK_DIR=$(pwd)"/build/cppcheck"
+CPPCHECK_PWD="$(pwd)"
+CPPCHECK_DIR=${CPPCHECK_PWD}"/build/cppcheck"
 CPPCHECK_PROJ_DIR="${CPPCHECK_DIR}/proj"
 OUTPUT_FILE_NAME="${CPPCHECK_DIR}/cppcheck-result.xml"
 
@@ -47,6 +48,11 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
+echo "[Cppcheck] Working directory: ${CPPCHECK_DIR}"
+echo "[Cppcheck] Output filename: ${OUTPUT_FILE_NAME}"
+if [ ! -d "${CPPCHECK_DIR}" ]; then
+    mkdir -vp "${CPPCHECK_DIR}"
+fi
 
 if [ ! -d "${CPPCHECK_PROJ_DIR}" ]; then
     mkdir -vp "${CPPCHECK_PROJ_DIR}"
@@ -71,6 +77,7 @@ ${CPPCHECK_EXE} -j${USE_THREADS}\
       ${CLANG_FLAG}  \
     --platform=unix64 \
     --std=c++20 \
+    -iEngine/ThirdParty \
     --cppcheck-build-dir=${CPPCHECK_PROJ_DIR} \
     --project=./build/compile_commands.json \
     --enable=style,performance,portability \

@@ -2,5 +2,8 @@
 missingInclude
 funcArgNamesDifferent
 
+# third-party code
+*:Engine/ThirdParty/*
+
 # file specific
 useStlAlgorithm:Engine/Include/Sorex/RuntimeClass.h

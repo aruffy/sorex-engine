@@ -39,21 +39,21 @@ namespace Sorex
    */
   enum class EDebugMode
   {
-    kNone = 0,    ///< No checks are performed at all.
-    kLow  = 1,    ///< Non-performance intensive checks: assertion macros,
-                  ///< and basic logging (info, warn, error).
-    kMedium = 2,  ///< Performance-intensive checks: check/verify macros,
-                  ///< debug logging, and other checks.
-    kHigh = 3     ///< Intensive validation with no concerns for performance.
+    None = 0,    ///< No checks are performed at all.
+    Low  = 1,    ///< Non-performance intensive checks: assertion macros,
+                 ///< and basic logging (info, warn, error).
+    Medium = 2,  ///< Performance-intensive checks: check/verify macros,
+                 ///< debug logging, and other checks.
+    High = 3     ///< Intensive validation with no concerns for performance.
   };
 
   enum class ETargetPlatform
   {
-    kWin32,
-    kLinux,
-    kMacOS,
-    kAppleIOS,
-    kAndroid
+    Win32,
+    Linux,
+    MacOS,
+    AppleIOS,
+    Android
   };
 
   enum class ESorexCompiler
@@ -71,13 +71,13 @@ namespace Sorex
 #  if SOREX_DEBUG_MODE == 0
 #    define SOREX_DEBUG_NONE (1)
 #  else
-#    if SOREX_DEBUG_MODE >= 1  // ::Sorex::EDebugMode::kLow
+#    if SOREX_DEBUG_MODE >= 1  // ::Sorex::EDebugMode::Low
 #      define SOREX_DEBUG_LOW (1)
 #    endif
-#    if SOREX_DEBUG_MODE >= 2  // ::Sorex::EDebugMode::kMedium
+#    if SOREX_DEBUG_MODE >= 2  // ::Sorex::EDebugMode::Medium
 #      define SOREX_DEBUG_MEDIUM (1)
 #    endif
-#    if SOREX_DEBUG_MODE >= 3  //::Sorex::EDebugMode::kHigh
+#    if SOREX_DEBUG_MODE >= 3  //::Sorex::EDebugMode::High
 #      define SOREX_DEBUG_HIGH (1)
 #    endif
 #  endif
@@ -85,25 +85,25 @@ namespace Sorex
 
 // Finds current platform
 #if defined(__WIN32__) || defined(_WIN32) || defined(TARGET_PLATFORM_WINDOWS)
-#  define SOREX_TARGET_PLATFORM (::Sorex::ETargetPlatform::kWin32)
+#  define SOREX_TARGET_PLATFORM (::Sorex::ETargetPlatform::Win32)
 #  define SOREX_PLATFORM_WIN32 (1)
 
 #elif defined(__ANDROID__) || defined(TARGET_PLATFORM_ANDROID)
-#  define SOREX_TARGET_PLATFORM (::Sorex::ETargetPlatform::kAndroid)
+#  define SOREX_TARGET_PLATFORM (::Sorex::ETargetPlatform::Android)
 #  define SOREX_PLATFORM_ANDROID (1)
 
 #elif defined(TARGET_PLATFORM_LINUX)
-#  define SOREX_TARGET_PLATFORM (::Sorex::ETargetPlatform::kLinux)
+#  define SOREX_TARGET_PLATFORM (::Sorex::ETargetPlatform::Linux)
 #  define SOREX_PLATFORM_LINUX (1)
 
 #elif defined(__APPLE_CC__) || defined(TARGET_PLATFORM_MACOSX) \
   || defined(TARGET_PLATFORM_IOS)
 #  if __ENVIRONMENT_IPHONE_OS_VERSION_MIN_REQUIRED__ >= 60000 \
     || __IPHONE_OS_VERSION_MIN_REQUIRED >= 60000
-#    define SOREX_TARGET_PLATFORM (::Sorex::ETargetPlatform::kAppleIOS)
+#    define SOREX_TARGET_PLATFORM (::Sorex::ETargetPlatform::AppleIOS)
 #    define SOREX_PLATFORM_IOS (1)
 #  else
-#    define SOREX_TARGET_PLATFORM (::Sorex::ETargetPlatform::kMacOS)
+#    define SOREX_TARGET_PLATFORM (::Sorex::ETargetPlatform::MacOS)
 #    define SOREX_PLATFORM_MACOSX (1)
 #  endif
 
@@ -138,25 +138,21 @@ namespace Sorex
 #  pragma error "Sorex unknown compiler. Abort!"
 #endif
 
-// Function signature macros
-#ifdef SOREX_DEBUG_MEDIUM
-#  define SRX_INLINE
+#if defined(SOREX_COMPILER_MSVC) && SOREX_COMP_VER >= 1200
+#  define SRX_INLINE __forceinline
+
+#elif !defined(__ANDROID__) \
+  && (defined(SOREX_COMPILER_GNUC) || defined(SOREX_COMPILER_CLANG))
+#  define SRX_INLINE inline __attribute__((always_inline))
+
 #else
-#  if defined(SOREX_COMPILER_MSVC) && SOREX_COMP_VER >= 1200
-#    define SRX_INLINE __forceinline
-
-#  elif !defined(__ANDROID__) \
-    && (defined(SOREX_COMPILER_GNUC) || defined(SOREX_COMPILER_CLANG))
-#    define SRX_INLINE inline __attribute__((always_inline))
-
-#  else
-#    define SRX_INLINE inline
-#  endif
+#  define SRX_INLINE inline
 #endif
 
 #define SRX_NOEXCEPT noexcept
 #define SRX_CONSTEVAL consteval
 #define SRX_NODISCARD [[nodiscard]]
+#define SRX_FALLTHROUGH [[fallthrough]]
 
 // Macros
 #ifdef SOREX_COMPILER_MSVC
