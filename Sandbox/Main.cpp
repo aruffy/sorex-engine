@@ -8,6 +8,8 @@ using namespace Sorex;
 
 int main(const int argc, const char* argv[])
 {
+  Thread::SetMainThread();
+
   Status status =
     SRX_STATUS_MSG(Sorex::EStatusCode::Busy, "Status Busy {}", argc);
   std::cout << status.DebugMessage() << std::endl;
@@ -31,6 +33,14 @@ int main(const int argc, const char* argv[])
                                            400,
                                            "BAD_REQUEST");
 
+  SRX_INFO("Hello, from main thread (MACRO)");
+
+  Sorex::Thread thr;
+  thr.Execute([]() {
+    std::stringstream ss;
+    ss << std::this_thread::get_id();
+    SRX_DEBUG("Debug message from a thread {} num {}", ss.str(), 124);
+  });
 
   std::cout << "[Sorex] Sandbox::Main Start." << std::endl;
   return 0;

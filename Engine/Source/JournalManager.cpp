@@ -40,6 +40,7 @@ namespace
 {
   using namespace Sorex;
   constexpr size_t kAsyncQueueSize = 8192U;
+  const String     kTermSinkId     = "Sorex:TerminalSinkId";
 
 
 #ifdef SOREX_DEBUG_NONE
@@ -77,16 +78,24 @@ namespace
 namespace Sorex
 {
   JournalManager::JournalManager() SRX_NOEXCEPT
-    : mGetLoggerParams(GetDefaultLoggerParams)
+    : mLevel(ELogLevel::Info)
+    , mGetLoggerParams(GetDefaultLoggerParams)
   {
-    spdlog::init_thread_pool(kAsyncQueueSize, (size_t)SOREX_LOG_THREAD_NUM);
-
 #ifdef SOREX_DEBUG_HIGH
-    spdlog::set_level(spdlog::level::trace);
+    mLevel = ELogLevel::Trace;
 #elif defined(SOREX_DEBUG_MEDIUM)
-    spdlog::set_level(spdlog::level::debug);
+    mLevel = ELogLevel::Debug;
 #else
-    spdlog::set_level(spdlog::level::info);
+    mLevel = ELogLevel::Info;
+#endif
+
+    spdlog::init_thread_pool(kAsyncQueueSize, (size_t)SOREX_LOG_THREAD_NUM);
+    spdlog::set_level(ConvLogLevel(mLevel));
+
+#ifndef SOREX_DEBUG_NONE
+    RegisterLogger<kEngineLogger>("Engine");
+    RegisterLogger<kTaskLogger>("Engine:Thread");
+    RegisterLogger<kUserLogger>("Application");
 #endif
   }
 
@@ -105,7 +114,6 @@ namespace Sorex
   spdlog::logger* JournalManager::GetLogger(const uint8 logger) const
     SRX_NOEXCEPT
   {
-    // TODO: Check main thread
     if (logger < mLoggers.size())
       return mLoggers[logger].get();
 
@@ -141,18 +149,25 @@ namespace Sorex
 
     if (params.bTermLogging)
     {
-      if (!mTermSink)
+      if (auto it = mSinks.find(kTermSinkId); it == mSinks.end())
       {
 #ifdef SOREX_DEBUG_MEDIUM
-        mTermSink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
+        spdlog::sink_ptr termSink =
+          std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
 #else
-        mTermSink = std::make_shared<spdlog::sinks::stdout_sink_mt>();
+        spdlog::sink_ptr termSink =
+          std::make_shared<spdlog::sinks::stdout_sink_mt>();
 #endif
-        mTermSink->set_level(logLevel);
-        mTermSink->set_pattern("[%T.%e] [%^%n @%l%$] %v");
-      }
+        termSink->set_level(logLevel);
+        termSink->set_pattern("[%T.%e] [%^%n @%l%$] %v");
+        mSinks[kTermSinkId] = termSink;
 
-      sinks.push_back(mTermSink);
+        sinks.push_back(std::move(termSink));
+      }
+      else
+      {
+        sinks.push_back(it->second);
+      }
     }
 
     if (!params.filename.empty())

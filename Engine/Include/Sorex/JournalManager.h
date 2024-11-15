@@ -33,6 +33,7 @@
 #include "Types.h"
 #include "Platform.h"
 #include "Status.h"
+#include "Thread/Thread.h"
 
 #ifndef SOREX_LOG_THREAD_NUM
 #  define SOREX_LOG_THREAD_NUM (2)
@@ -144,10 +145,15 @@ private:
                                                 const LoggerParams& params,
                                                 Status& status) SRX_NOEXCEPT;
 
+    spdlog::sink_ptr GetOrCreateSink(StringView          sinkId,
+                                     const LoggerParams& params) SRX_NOEXCEPT;
+
 private:
-    GetLoggerParamsCallback                                  mGetLoggerParams;
+    ELogLevel                                                mLevel;
     TArray<TUniquePointer<spdlog::logger>, kMaxLoggerNumber> mLoggers;
-    spdlog::sink_ptr                                         mTermSink;
+    THashMap<String, spdlog::sink_ptr>                       mSinks;
+
+    GetLoggerParamsCallback mGetLoggerParams;
   };
 
   template<uint8 kLoggerId>
@@ -202,3 +208,65 @@ private:
       logger->log(ConvLogLevel(level), message);
   }
 }  // namespace
+
+#define SOREX_JOURNAL_RECORD(loggerId, level, format, ...)  \
+  Sorex::JournalManager::GetInstance().PushRecord(loggerId, \
+                                                  level,    \
+                                                  format,   \
+                                                  ##__VA_ARGS__)
+
+#define SRX_USER_LOG(level, format, ...)                   \
+  SOREX_JOURNAL_RECORD(Sorex::JournalManager::kUserLogger, \
+                       level,                              \
+                       format,                             \
+                       ##__VA_ARGS__)
+
+#define LOG_ERROR(format, ...) \
+  SRX_USER_LOG(Sorex::ELogLevel::Error, format, ##__VA_ARGS__)
+#define LOG_WARN(format, ...) \
+  SRX_USER_LOG(Sorex::ELogLevel::Warning, format, ##__VA_ARGS__)
+#define LOG_INFO(format, ...) \
+  SRX_USER_LOG(Sorex::ELogLevel::Info, format, ##__VA_ARGS__)
+#define LOG_DEBUG(format, ...) \
+  SRX_USER_LOG(Sorex::ELogLevel::Debug, format, ##__VA_ARGS__)
+#define LOG_TRACE(format, ...) \
+  SRX_USER_LOG(Sorex::ELogLevel::Trace, format, ##__VA_ARGS__)
+
+#define SRX_ENGINE_LOG(level, format, ...)                       \
+  SOREX_JOURNAL_RECORD((Sorex::Thread::IsMainThread()            \
+                          ? Sorex::JournalManager::kEngineLogger \
+                          : Sorex::JournalManager::kTaskLogger), \
+                       level,                                    \
+                       format,                                   \
+                       ##__VA_ARGS__)
+
+#ifndef SOREX_DEBUG_NONE
+#  define SRX_ERROR(format, ...) \
+    SRX_ENGINE_LOG(Sorex::ELogLevel::Error, format, ##__VA_ARGS__)
+#  define SRX_WARN(format, ...) \
+    SRX_ENGINE_LOG(Sorex::ELogLevel::Warning, format, ##__VA_ARGS__)
+#  define SRX_INFO(format, ...) \
+    SRX_ENGINE_LOG(Sorex::ELogLevel::Info, format, ##__VA_ARGS__)
+
+#  ifdef SOREX_DEBUG_MEDIUM
+#    define SRX_DEBUG(format, ...) \
+      SRX_ENGINE_LOG(Sorex::ELogLevel::Debug, format, ##__VA_ARGS__)
+#  else
+#    define SRX_DEBUG(format, ...) SRX_IDLE
+#  endif
+
+#  ifdef SOREX_DEBUG_HIGH
+#    define SRX_TRACE(format, ...) \
+      SRX_ENGINE_LOG(Sorex::ELogLevel::Trace, format, ##__VA_ARGS__)
+#  else  // RUFFY_ENGINE_DEBUG
+#    define SRX_TRACE(format, ...) SRX_IDLE
+#  endif
+
+#else  // SOREX_DEBUG_NONE
+
+#  define SRX_ERROR(format, ...) SRX_IDLE
+#  define SRX_WARN(format, ...) SRX_IDLE
+#  define SRX_INFO(format, ...) SRX_IDLE
+#  define SRX_DEBUG(format, ...) SRX_IDLE
+#  define SRX_TRACE(format, ...) SRX_IDLE
+#endif
