@@ -183,8 +183,8 @@ private:
 #ifdef SOREX_DEBUG_MEDIUM
     SRX_INLINE Status(std::error_code&& errcode,
                       std::string&&     msg) SRX_NOEXCEPT;
-    SRX_INLINE Status(std::error_code&& errcode,
-                      std::string_view  msg) SRX_NOEXCEPT;
+    SRX_INLINE Status(std::error_code&&       errcode,
+                      const std::string_view& msg) SRX_NOEXCEPT;
 #endif
 private:
     std::error_code mCode;
@@ -216,8 +216,8 @@ private:
     : mCode(std::move(errcode))
     , mMessage(std::move(msg))
   {}
-  SRX_INLINE Status::Status(std::error_code&& errcode,
-                            std::string_view  msg) SRX_NOEXCEPT
+  SRX_INLINE Status::Status(std::error_code&&       errcode,
+                            const std::string_view& msg) SRX_NOEXCEPT
     : mCode(std::move(errcode))
     , mMessage(msg)
   {}
