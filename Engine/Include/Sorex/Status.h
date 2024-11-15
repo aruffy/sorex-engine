@@ -113,7 +113,7 @@ public:
     template<typename T,
              typename Enable =
                SRX_TYPENAME std::enable_if_t<std::is_error_code_enum_v<T>>>
-    SRX_INLINE Status(const T errcode)
+    explicit SRX_INLINE Status(const T errcode)
       : Status(make_error_code(errcode))
     {}
 

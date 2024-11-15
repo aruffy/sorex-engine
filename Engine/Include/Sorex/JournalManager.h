@@ -135,10 +135,10 @@ public:
     void            PushRecord(uint8                       loggerId,
                                ELogLevel                   level,
                                fmt::format_string<Args...> format,
-                               Args&&... args);
+                               Args&&... args) const;
     SRX_INLINE void PushRecord(uint8      loggerId,
                                ELogLevel  level,
-                               StringView message);
+                               StringView message) const;
 
 private:
     JournalManager() SRX_NOEXCEPT;
@@ -203,7 +203,7 @@ private:
   void JournalManager::PushRecord(uint8                       loggerId,
                                   ELogLevel                   level,
                                   fmt::format_string<Args...> format,
-                                  Args&&... args)
+                                  Args&&... args) const
   {
     if (spdlog::logger* const logger = GetLogger(loggerId))
       logger->log(ConvertLevel(level),
@@ -213,7 +213,7 @@ private:
 
   SRX_INLINE void JournalManager::PushRecord(uint8      loggerId,
                                              ELogLevel  level,
-                                             StringView message)
+                                             StringView message) const
   {
     if (auto logger = GetLogger(loggerId))
       logger->log(ConvertLevel(level), message);
