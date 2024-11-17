@@ -67,7 +67,9 @@ public:
       , y(0)
     {}
 
-    SRX_INLINE TIntegerPoint(const T aX, const T aY) SRX_NOEXCEPT
+    template<typename U>
+      requires Concept::SafeIntegralConversion<U, T>
+    SRX_INLINE TIntegerPoint(const U aX, const U aY) SRX_NOEXCEPT
       : x(aX)
       , y(aY)
     {}
@@ -94,7 +96,7 @@ public:
     }
 
     template<typename U>
-      requires Concept::SafeIntegralConversion<U, T>
+      requires std::is_signed_v<T> and Concept::SafeIntegralConversion<U, T>
     SRX_INLINE scalar_t
     Distance(const TIntegerPoint<U>& other) const SRX_NOEXCEPT
     {
@@ -104,14 +106,15 @@ public:
     }
 
     template<typename U>
-      requires Concept::SafeIntegralConversion<U, T>
-    SRX_INLINE static scalar_t Distance(const TIntegerPoint&    a,
-                                        const TIntegerPoint<U>& b) SRX_NOEXCEPT
+      requires std::is_unsigned_v<T> and Concept::SafeIntegralConversion<U, T>
+    SRX_INLINE scalar_t
+    Distance(const TIntegerPoint<U>& other) const SRX_NOEXCEPT
     {
-      const scalar_t dx = static_cast<T>(b.x) - a.x;
-      const scalar_t dy = static_cast<T>(b.y) - a.y;
+      const scalar_t dx = static_cast<scalar_t>(other.x) - x;
+      const scalar_t dy = static_cast<scalar_t>(other.y) - y;
       return std::sqrt(dx * dx + dy * dy);
     }
+
 
     void Swap(TIntegerPoint& other) SRX_NOEXCEPT
     {
@@ -137,9 +140,10 @@ public:
       b.y = t;
     }
 
-    SRX_INLINE SRX_TYPENAME std::enable_if_t<std::is_signed_v<T>, TIntegerPoint>
-                            operator-() const SRX_NOEXCEPT
+    SRX_INLINE SRX_TYPENAME TIntegerPoint operator-() const SRX_NOEXCEPT
     {
+      static_assert(std::is_signed_v<T>,
+                    "invalid operator for unsigned integer");
       return { -x, -y };
     }
 
@@ -232,7 +236,7 @@ public:
                                         const TIntegerPoint<T>& rhs)
     SRX_NOEXCEPT
   {
-    return TIntegerPoint(lhs.x - rhs.x, lhs.y - rhs.y);
+    return TIntegerPoint<T>(lhs.x - rhs.x, lhs.y - rhs.y);
   }
 
   template<typename T>
