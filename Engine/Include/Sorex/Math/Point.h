@@ -297,13 +297,13 @@ public:
     {
       if constexpr (std::is_same_v<T, float>)
       {
-        point.x = Int{ truncf(x) };
-        point.y = Int{ truncf(y) };
+        point.x = static_cast<Int>(truncf(x));
+        point.y = static_cast<Int>(truncf(y));
       }
       else
       {
-        point.x = Int{ trunc(x) };
-        point.y = Int{ trunc(y) };
+        point.x = static_cast<Int>(trunc(x));
+        point.y = static_cast<Int>(trunc(y));
       }
     }
 
@@ -327,13 +327,13 @@ public:
     {
       if constexpr (std::is_same_v<T, float>)
       {
-        point.x = Int{ roundf(x) };
-        point.y = Int{ roundf(y) };
+        point.x = static_cast<Int>(roundf(x));
+        point.y = static_cast<Int>(roundf(y));
       }
       else
       {
-        point.x = Int{ round(x) };
-        point.y = Int{ round(y) };
+        point.x = static_cast<Int>(round(x));
+        point.y = static_cast<Int>(round(y));
       }
     }
 
@@ -357,13 +357,13 @@ public:
     {
       if constexpr (std::is_same_v<T, float>)
       {
-        point.x = Int{ floorf(x) };
-        point.y = Int{ floorf(y) };
+        point.x = static_cast<Int>(floorf(x));
+        point.y = static_cast<Int>(floorf(y));
       }
       else
       {
-        point.x = Int{ floor(x) };
-        point.y = Int{ floor(y) };
+        point.x = static_cast<Int>(floor(x));
+        point.y = static_cast<Int>(floor(y));
       }
     }
 
@@ -387,13 +387,13 @@ public:
     {
       if constexpr (std::is_same_v<T, float>)
       {
-        point.x = Int{ ceilf(x) };
-        point.y = Int{ ceilf(y) };
+        point.x = static_cast<Int>(ceilf(x));
+        point.y = static_cast<Int>(ceilf(y));
       }
       else
       {
-        point.x = Int{ ceil(x) };
-        point.y = Int{ ceil(y) };
+        point.x = static_cast<Int>(ceil(x));
+        point.y = static_cast<Int>(ceil(y));
       }
     }
 
@@ -467,7 +467,7 @@ public:
 
     template<typename U>
       requires std::is_same_v<U, T> or std::is_integral_v<U>
-    SRX_INLINE TFloatingPoint& operator*=(const T factor) SRX_NOEXCEPT
+    SRX_INLINE TFloatingPoint& operator*=(const U factor) SRX_NOEXCEPT
     {
       x *= factor;
       y *= factor;
