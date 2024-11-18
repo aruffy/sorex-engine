@@ -29,6 +29,7 @@
 
 #include <Sorex/Types.h>
 #include <Sorex/Platform.h>
+#include <Sorex/Math/Maths.h>
 
 namespace Sorex::Concept
 {
@@ -114,7 +115,6 @@ public:
       const scalar_t dy = static_cast<scalar_t>(other.y) - y;
       return std::sqrt(dx * dx + dy * dy);
     }
-
 
     void Swap(TIntegerPoint& other) SRX_NOEXCEPT
     {
@@ -245,4 +245,269 @@ public:
   {
     return TIntegerPoint<T>(point.x * factor, point.y * factor);
   }
+
+  // Floating Point
+  template<typename T>
+  struct SRX_API TFloatingPoint
+  {
+private:
+    using ValueType = T;
+    static_assert(std::is_floating_point_v<T>,
+                  "[TFloatingPoint] Value type must be an floating point");
+
+public:
+    union
+    {
+      struct
+      {
+        T x, y;
+      };
+
+      T data[2] = { 0, 0 };
+    };
+
+    SRX_INLINE TFloatingPoint() SRX_NOEXCEPT
+      : x(T{ 0 })
+      , y(T{ 0 })
+    {}
+
+    SRX_INLINE TFloatingPoint(T aX, T aY) SRX_NOEXCEPT
+      : x(aX)
+      , y(aY)
+    {}
+
+    SRX_INLINE T Distance(const TFloatingPoint& other) const SRX_NOEXCEPT
+    {
+      const T dx = other.x - x;
+      const T dy = other.y - y;
+      return std::sqrt(dx * dx + dy * dy);
+    }
+
+    SRX_INLINE bool IsEqual(const TFloatingPoint& other) const SRX_NOEXCEPT
+    {
+      return (Math::IsEqual(x, other.x) && Math::IsEqual(y, other.y));
+    }
+
+    template<std::integral Int>
+      requires std::is_signed_v<Int>
+    void Trunc(TIntegerPoint<Int>& point) const SRX_NOEXCEPT
+    {
+      if constexpr (std::is_same_v<T, float>)
+      {
+        point.x = Int{ truncf(x) };
+        point.y = Int{ truncf(y) };
+      }
+      else
+      {
+        point.x = Int{ trunc(x) };
+        point.y = Int{ trunc(y) };
+      }
+    }
+
+    void Trunc() SRX_NOEXCEPT
+    {
+      if constexpr (std::is_same_v<T, float>)
+      {
+        x = truncf(x);
+        y = truncf(y);
+      }
+      else
+      {
+        x = trunc(x);
+        y = trunc(y);
+      }
+    }
+
+    template<std::integral Int>
+      requires std::is_signed_v<Int>
+    SRX_INLINE void Round(TIntegerPoint<Int>& point) const SRX_NOEXCEPT
+    {
+      if constexpr (std::is_same_v<T, float>)
+      {
+        point.x = Int{ roundf(x) };
+        point.y = Int{ roundf(y) };
+      }
+      else
+      {
+        point.x = Int{ round(x) };
+        point.y = Int{ round(y) };
+      }
+    }
+
+    SRX_INLINE void Round() SRX_NOEXCEPT
+    {
+      if constexpr (std::is_same_v<T, float>)
+      {
+        x = roundf(x);
+        y = roundf(y);
+      }
+      else
+      {
+        x = round(x);
+        y = round(y);
+      }
+    }
+
+    template<std::integral Int>
+      requires std::is_signed_v<Int>
+    SRX_INLINE void Floor(TIntegerPoint<Int>& point) const SRX_NOEXCEPT
+    {
+      if constexpr (std::is_same_v<T, float>)
+      {
+        point.x = Int{ floorf(x) };
+        point.y = Int{ floorf(y) };
+      }
+      else
+      {
+        point.x = Int{ floor(x) };
+        point.y = Int{ floor(y) };
+      }
+    }
+
+    SRX_INLINE void Floor() SRX_NOEXCEPT
+    {
+      if constexpr (std::is_same_v<T, float>)
+      {
+        x = floorf(x);
+        y = floorf(y);
+      }
+      else
+      {
+        x = floor(x);
+        y = floor(y);
+      }
+    }
+
+    template<std::integral Int>
+      requires std::is_signed_v<Int>
+    SRX_INLINE void Ceil(TIntegerPoint<Int>& point) const SRX_NOEXCEPT
+    {
+      if constexpr (std::is_same_v<T, float>)
+      {
+        point.x = Int{ ceilf(x) };
+        point.y = Int{ ceilf(y) };
+      }
+      else
+      {
+        point.x = Int{ ceil(x) };
+        point.y = Int{ ceil(y) };
+      }
+    }
+
+    SRX_INLINE void Ceil() SRX_NOEXCEPT
+    {
+      if constexpr (std::is_same_v<T, float>)
+      {
+        x = ceilf(x);
+        y = ceilf(y);
+      }
+      else
+      {
+        x = ceil(x);
+        y = ceil(y);
+      }
+    }
+
+    void Swap(TFloatingPoint& other) SRX_NOEXCEPT
+    {
+      ValueType t;
+      t       = other.x;
+      other.x = x;
+      x       = t;
+
+      t       = other.y;
+      other.y = y;
+      y       = t;
+    }
+
+    static void Swap(TFloatingPoint& a, TFloatingPoint& b) SRX_NOEXCEPT
+    {
+      ValueType t;
+      t   = a.x;
+      a.x = b.x;
+      b.x = t;
+
+      t   = a.y;
+      a.y = b.y;
+      b.y = t;
+    }
+
+    SRX_INLINE TFloatingPoint operator-() const SRX_NOEXCEPT
+    {
+      return TFloatingPoint(-x, -y);
+    }
+
+    SRX_INLINE TFloatingPoint& operator+=(const TFloatingPoint& other)
+      SRX_NOEXCEPT
+    {
+      x += other.x;
+      y += other.y;
+      return *this;
+    }
+
+    SRX_INLINE TFloatingPoint& operator-=(const TFloatingPoint& other)
+      SRX_NOEXCEPT
+    {
+      x -= other.x;
+      y -= other.y;
+      return *this;
+    }
+
+    SRX_INLINE bool operator==(const TFloatingPoint& other) const SRX_NOEXCEPT
+    {
+      return (x == other.x && y == other.y);
+    }
+    SRX_INLINE bool operator!=(const TFloatingPoint& other) const SRX_NOEXCEPT
+    {
+      return (x != other.x || y != other.y);
+    }
+
+    template<typename U>
+      requires std::is_same_v<U, T> or std::is_integral_v<U>
+    SRX_INLINE TFloatingPoint& operator*=(const T factor) SRX_NOEXCEPT
+    {
+      x *= factor;
+      y *= factor;
+      return *this;
+    }
+
+    template<typename U>
+      requires std::is_same_v<U, T> or std::is_integral_v<U>
+    TFloatingPoint& operator/=(const U divisor)
+    {
+      x /= divisor;
+      y /= divisor;
+      return *this;
+    }
+  };
+
+  template<typename T>
+  SRX_INLINE TFloatingPoint<T> operator+(const TFloatingPoint<T>& lhs,
+                                         const TFloatingPoint<T>& rhs)
+    SRX_NOEXCEPT
+  {
+    return TFloatingPoint<T>(lhs.x + rhs.x, lhs.y + rhs.y);
+  }
+
+  template<typename T>
+  SRX_INLINE TFloatingPoint<T> operator-(const TFloatingPoint<T>& lhs,
+                                         const TFloatingPoint<T>& rhs)
+    SRX_NOEXCEPT
+  {
+    return TFloatingPoint(lhs.x - rhs.x, lhs.y - rhs.y);
+  }
+
+  template<typename T, typename U>
+    requires std::is_same_v<U, T> or std::is_integral_v<U>
+  SRX_INLINE TFloatingPoint<T> operator*(const TFloatingPoint<T>& point,
+                                         const U factor) SRX_NOEXCEPT
+  {
+    return TFloatingPoint<T>(point.x * factor, point.y * factor);
+  }
+}  // namespace
+
+namespace Sorex
+{
+  using PointInt = Math::TIntegerPoint<int32>;
+  using Point    = Math::TFloatingPoint<scalar_t>;
 }
