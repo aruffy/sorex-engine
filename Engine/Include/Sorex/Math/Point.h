@@ -33,12 +33,15 @@
 
 namespace Sorex::Concept
 {
+  template<typename T, typename U>
+  concept TSameSignIntegral =
+    std::is_integral_v<T> && std::is_integral_v<U>
+    && ((std::is_signed_v<T> && std::is_signed_v<U>)
+        || (std::is_unsigned_v<T> && std::is_unsigned_v<U>));
+
   template<typename From, typename To>
   concept SafeIntegralConversion =
-    std::is_integral_v<From> && std::is_integral_v<To>
-    && ((std::is_signed_v<From> && std::is_signed_v<To>)
-        || (std::is_unsigned_v<From> && std::is_unsigned_v<To>))
-    && (sizeof(From) <= sizeof(To))
+    TSameSignIntegral<From, To> && (sizeof(From) <= sizeof(To))
     && (std::numeric_limits<From>::max() <= std::numeric_limits<To>::max());
 }
 
