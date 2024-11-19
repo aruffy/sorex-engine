@@ -31,6 +31,15 @@
 
 #include "Point.h"
 
+namespace Sorex::Concept
+{
+  template<typename I, typename F>
+  concept SafeConvIntToFlotingPoint =
+    std::is_integral_v<I> and std::is_floating_point_v<F>
+    and (std::numeric_limits<I>::max() <= std::numeric_limits<F>::max())
+    and (std::numeric_limits<I>::min() >= std::numeric_limits<F>::min());
+}
+
 namespace Sorex::Math
 {
   template<typename T>
@@ -241,4 +250,277 @@ public:
       return !(*this == other);
     }
   };
+
+  template<typename T>
+  struct TFloatingSize
+  {
+private:
+    static_assert(std::is_floating_point_v<T>,
+                  "[TFloatingSize] Invalid value type");
+
+    static constexpr T _kZero = T{ 0.f };
+
+public:
+    using ValueType = T;
+
+    T width  = _kZero;
+    T height = _kZero;
+
+    TFloatingSize() = default;
+    SRX_INLINE TFloatingSize(const T w, const T h) SRX_NOEXCEPT
+      : width(w)
+      , height(h)
+    {}
+
+    template<typename U>
+      requires Concept::SafeConvIntToFlotingPoint<U, T>
+    SRX_INLINE TFloatingSize(const TIntegerSize<U>& size)
+      SRX_NOEXCEPT  // cppcheck-suppress noExplicitConstructor
+      : width(static_cast<T>(size.width))
+      , height(static_cast<T>(size.height))
+    {}
+
+    SRX_INLINE bool IsValid() const SRX_NOEXCEPT
+    {
+      return (width > _kZero && height > _kZero);
+    }
+
+    /**
+     * @brief Set width of size. Ensures that width value will not be less zero;
+     */
+    SRX_INLINE void SetWidth(const T value) SRX_NOEXCEPT
+    {
+      width = std::max<T>(value, _kZero);
+    }
+
+    /**
+     * @brief Set height of size. Ensures that height value will not be less
+     * zero;
+     */
+    SRX_INLINE void SetHeight(const T value) SRX_NOEXCEPT
+    {
+      height = std::max<T>(value, _kZero);
+    }
+
+    /**
+     * @brief Set values of size. Ensures that values will not be less zero;
+     */
+    SRX_INLINE void Set(const T w, const T h) SRX_NOEXCEPT
+    {
+      SetWidth(w);
+      SetHeight(h);
+    }
+
+    /**
+     * @brief Added values to width and height. Ensures that size values will
+     * not be less zero;
+     */
+    SRX_INLINE void Add(const T w, const T h) SRX_NOEXCEPT
+    {
+      width  = std::max(width + w, _kZero);
+      height = std::max(height + h, _kZero);
+    }
+
+    /**
+     * @brief Added values to width and height. Ensures that size values will
+     * not be less zero;
+     */
+    SRX_INLINE void Add(const TFloatingSize& other) SRX_NOEXCEPT
+    {
+      Add(other.width, other.height);
+    }
+
+    /**
+     * @brief Subtract values from size.
+     *
+     * Ensures that size values will not be less zero;
+     * If integer type is unsigned ensure that value will be zero in case when
+     * args are more that values of size;
+     *
+     */
+    SRX_INLINE void Subtract(const T w, const T h) SRX_NOEXCEPT
+    {
+      width  = std::max(width - w, _kZero);
+      height = std::max(height - h, _kZero);
+    }
+
+    template<std::integral Int>
+      requires std::is_signed_v<Int>
+    void Trunc(TIntegerSize<Int>& size) const SRX_NOEXCEPT
+    {
+      if constexpr (std::is_same_v<T, float>)
+      {
+        size.width  = static_cast<Int>(truncf(width));
+        size.height = static_cast<Int>(truncf(height));
+      }
+      else
+      {
+        size.width  = static_cast<Int>(trunc(width));
+        size.height = static_cast<Int>(trunc(height));
+      }
+    }
+
+    SRX_INLINE void Trunc() SRX_NOEXCEPT
+    {
+      if constexpr (std::is_same_v<T, float>)
+      {
+        width  = truncf(width);
+        height = truncf(height);
+      }
+      else
+      {
+        width  = trunc(width);
+        height = trunc(height);
+      }
+    }
+
+    template<std::integral Int>
+      requires std::is_signed_v<Int>
+    void Round(TIntegerSize<Int>& size) const SRX_NOEXCEPT
+    {
+      if constexpr (std::is_same_v<T, float>)
+      {
+        size.width  = static_cast<Int>(roundf(width));
+        size.height = static_cast<Int>(roundf(height));
+      }
+      else
+      {
+        size.width  = static_cast<Int>(round(width));
+        size.height = static_cast<Int>(round(height));
+      }
+    }
+
+    SRX_INLINE void Round() SRX_NOEXCEPT
+    {
+      if constexpr (std::is_same_v<T, float>)
+      {
+        width  = roundf(width);
+        height = roundf(height);
+      }
+      else
+      {
+        width  = round(width);
+        height = round(height);
+      }
+    }
+
+    template<std::integral Int>
+      requires std::is_signed_v<Int>
+    void Floor(TIntegerSize<Int>& size) const SRX_NOEXCEPT
+    {
+      if constexpr (std::is_same_v<T, float>)
+      {
+        size.width  = static_cast<Int>(floorf(width));
+        size.height = static_cast<Int>(floorf(height));
+      }
+      else
+      {
+        size.width  = static_cast<Int>(floor(width));
+        size.height = static_cast<Int>(floor(height));
+      }
+    }
+
+    SRX_INLINE void Floor() SRX_NOEXCEPT
+    {
+      if constexpr (std::is_same_v<T, float>)
+      {
+        width  = floorf(width);
+        height = floorf(height);
+      }
+      else
+      {
+        width  = floor(width);
+        height = floor(height);
+      }
+    }
+
+    template<std::integral Int>
+      requires std::is_signed_v<Int>
+    void Ceil(TIntegerSize<int32>& size) const SRX_NOEXCEPT
+    {
+      if constexpr (std::is_same_v<T, float>)
+      {
+        size.width  = static_cast<Int>(ceilf(width));
+        size.height = static_cast<Int>(ceilf(height));
+      }
+      else
+      {
+        size.width  = static_cast<Int>(ceil(width));
+        size.height = static_cast<Int>(ceil(height));
+      }
+    }
+
+    SRX_INLINE void Ceil() SRX_NOEXCEPT
+    {
+      if constexpr (std::is_same_v<T, float>)
+      {
+        width  = ceilf(width);
+        height = ceilf(height);
+      }
+      else
+      {
+        width  = ceil(width);
+        height = ceil(height);
+      }
+    }
+
+    SRX_INLINE bool IsEqual(const TFloatingSize& other) const SRX_NOEXCEPT
+    {
+      return (Math::IsEqual(width, other.width)
+              && Math::IsEqual(height, other.height));
+    }
+
+    SRX_INLINE void Swap(TFloatingSize& other) SRX_NOEXCEPT
+    {
+      ValueType t;
+      t           = other.width;
+      other.width = width;
+      width       = t;
+
+      t            = other.height;
+      other.height = height;
+      height       = t;
+    }
+
+    static void Swap(TFloatingSize& a, TFloatingSize& b) SRX_NOEXCEPT
+    {
+      ValueType t;
+      t       = a.width;
+      a.width = b.width;
+      b.width = t;
+
+      t        = a.height;
+      a.height = b.height;
+      b.height = t;
+    }
+
+    /**
+     * @brief Subtract values from size.
+     *
+     * Ensures that size values will not be less zero;
+     * If integer type is unsigned ensure that value will be zero in case when
+     * args are more that values of size;
+     *
+     */
+    SRX_INLINE void Subtract(const TFloatingSize& other) SRX_NOEXCEPT
+    {
+      Subtract(other.width, other.height);
+    }
+
+    SRX_INLINE bool operator==(const TFloatingSize& other) const SRX_NOEXCEPT
+    {
+      return (width == other.width && height == other.height);
+    }
+
+    SRX_INLINE bool operator!=(const TFloatingSize& other) const SRX_NOEXCEPT
+    {
+      return !(*this == other);
+    }
+  };
 }  // namespace
+
+namespace Sorex
+{
+  using Size    = Math::TFloatingSize<scalar_t>;
+  using SizeInt = Math::TIntegerSize<int32>;
+}
