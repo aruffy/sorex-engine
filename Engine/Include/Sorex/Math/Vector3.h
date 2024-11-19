@@ -28,7 +28,6 @@
 #pragma once
 
 #include "Vector2.h"
-#include <sys/wait.h>
 
 #if defined(SOREX_COMPILER_MSVC)
 #  pragma warning( \
@@ -133,13 +132,6 @@ namespace Sorex::Math
     TVector3& operator*=(value_type factor) SRX_NOEXCEPT;
     TVector3& operator/=(value_type divisor) SRX_NOEXCEPT;
   };
-
-  template<typename T>
-  SRX_INLINE TVector3<T>::TVector3() SRX_NOEXCEPT
-    : x(0.f)
-    , y(0.f)
-    , z(0.f)
-  {}
 
   template<typename T>
   SRX_INLINE TVector3<T>::TVector3(const T ax,
