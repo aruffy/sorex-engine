@@ -514,3 +514,5 @@ namespace Sorex
   using Point    = Math::TFloatingPoint<scalar_t>;
   using PointInt = Math::TIntegerPoint<int32>;
 }
+
+using SxPoint = Sorex::Point;

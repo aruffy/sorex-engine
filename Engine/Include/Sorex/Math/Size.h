@@ -524,3 +524,5 @@ namespace Sorex
   using Size    = Math::TFloatingSize<scalar_t>;
   using SizeInt = Math::TIntegerSize<int32>;
 }
+
+using SxSize = Sorex::Size;

@@ -263,3 +263,5 @@ namespace Sorex
   typedef Math::TFloatingRectangle<Sorex::scalar_t> Rectangle;
   typedef Rectangle                                 Rect;
 }
+
+using SxRect = Sorex::Rect;
