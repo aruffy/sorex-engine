@@ -476,7 +476,7 @@ private:
   }
 
   template<typename T>
-  SRX_INLINE typename T TMatrix3x3<T>::Determinant() const SRX_NOEXCEPT
+  SRX_INLINE T TMatrix3x3<T>::Determinant() const SRX_NOEXCEPT
   {
     return _00 * (_11 * _22 - _12 * _21) - _10 * (_01 * _22 - _02 * _21)
            + _20 * (_01 * _12 - _11 * _02);

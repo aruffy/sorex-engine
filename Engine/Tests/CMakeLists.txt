@@ -96,11 +96,22 @@ target_include_directories(
   ${ENGINE_UNITTEST_TARGET} PRIVATE ${GTEST_INCLUDE_DIR}
 )
 
+# ##############################################################################
+# GLM library
+# ##############################################################################
+set(GLM_SUBDIR "${SOREX_ENGINE_DIR}/ThirdParty/glm")
+message(STATUS "[${ENGINE_UNITTEST_TARGET}] glm library: ${GLM_SUBDIR}")
+add_subdirectory("${GLM_SUBDIR}" "${CMAKE_CURRENT_BINARY_DIR}/glm")
+target_include_directories(
+  ${ENGINE_UNITTEST_TARGET} PRIVATE "${GLM_SUBDIR}/glm"
+)
+# ##############################################################################
+
 message(
   STATUS "[${ENGINE_UNITTEST_TARGET}] Link engine library ${ENGINE_TARGET}"
 )
 target_link_libraries(
-  ${ENGINE_UNITTEST_TARGET} PRIVATE Sorex::Sorex ${GTEST_LIBRARIES}
+  ${ENGINE_UNITTEST_TARGET} PRIVATE Sorex::Sorex glm::glm ${GTEST_LIBRARIES}
 )
 
 set(ENGINE_UNITTEST_NAME "CTest_${ENGINE_UNITTEST_TARGET}")
