@@ -274,8 +274,8 @@ public:
 
     template<typename U>
       requires Concept::SafeConvIntToFlotingPoint<U, T>
-    SRX_INLINE TFloatingSize(const TIntegerSize<U>& size)
-      SRX_NOEXCEPT  // cppcheck-suppress noExplicitConstructor
+    // cppcheck-suppress noExplicitConstructor
+    SRX_INLINE TFloatingSize(const TIntegerSize<U>& size) SRX_NOEXCEPT
       : width(static_cast<T>(size.width))
       , height(static_cast<T>(size.height))
     {}
