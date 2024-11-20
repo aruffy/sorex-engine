@@ -54,6 +54,8 @@ namespace Sorex
     int16 minute    = 0;
     int16 second    = 0;
     int16 millisec  = 0;
+
+    // TODO: Add operator ostream <<
   };
 }
 

@@ -159,8 +159,8 @@ public:
     static StandartTimeSystem _timeSystem;
     return _timeSystem;
   }
-
 }
+
 namespace Sorex
 {
   bool operator==(const SystemTime& lhs, const SystemTime& rhs) SRX_NOEXCEPT
@@ -194,32 +194,32 @@ namespace Sorex
     return lhs.millisec < rhs.millisec;
   }
 
-  bool GetSystemTime(SystemTime& time) SRX_NOEXCEPT
+  bool Time::GetSystemTime(SystemTime& time) SRX_NOEXCEPT
   {
     return GetTimeSystem().GetSystemTime(time);
   }
 
-  bool GetLocalTime(SystemTime& time) SRX_NOEXCEPT
+  bool Time::GetLocalTime(SystemTime& time) SRX_NOEXCEPT
   {
     return GetTimeSystem().GetLocalTime(time);
   }
 
-  uint64 GetMonotonicCounter() SRX_NOEXCEPT
+  uint64 Time::GetMonotonicCounter() SRX_NOEXCEPT
   {
     return GetTimeSystem().GetMonotonicCounter();
   }
 
-  uint64 GetUnixTime() SRX_NOEXCEPT
+  uint32 Time::GetUnixTime() SRX_NOEXCEPT
   {
     return GetTimeSystem().GetUnixTime();
   }
 
-  uint64 GetSteadyCounter() SRX_NOEXCEPT
+  uint64 Time::GetSteadyCounter() SRX_NOEXCEPT
   {
     return GetTimeSystem().GetSteadyCounter();
   }
 
-  uint64 GetSteadyCounterFrequency() SRX_NOEXCEPT
+  uint64 Time::GetSteadyCounterFrequency() SRX_NOEXCEPT
   {
     return GetTimeSystem().GetSteadyCounterFrequency();
   }
