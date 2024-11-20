@@ -1,8 +1,8 @@
 #pragma once
 
-#include "Types.h"
-#include "Status.h"
-#include "Assert.h"
+#include <Sorex/Types.h>
+#include <Sorex/Status.h>
+#include <Sorex/Assert.h>
 
 namespace Sorex::Utils
 {

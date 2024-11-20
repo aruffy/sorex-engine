@@ -25,18 +25,63 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#include <Sorex/Utils/String.h>
+#include <Sorex/Color.h>
 
-namespace Sorex::Utils
+using namespace Sorex;
+
+namespace
 {
-  SRX_API bool StartWith(StringView str, StringView prefix) SRX_NOEXCEPT
+  constexpr int kByteMaxValue = std::numeric_limits<uint8>::max();
+
+  SRX_INLINE uint8 IntToByte(const int value) SRX_NOEXCEPT
   {
-    if (prefix.size() > str.size())
-      return false;
-
-    if (prefix.empty())
-      return true;
-
-    return (str.rfind(prefix, 0) == 0);
+    return static_cast<uint8>(Math::Clamp<int>(value, 0, kByteMaxValue));
   }
-}  // namespace
+
+  SRX_INLINE uint8 FloatToByte(const scalar_t value) SRX_NOEXCEPT
+  {
+    return IntToByte(static_cast<int>(value * kByteMaxValue));
+  }
+}
+
+namespace Sorex
+{
+  const Color Color::Black(0u, 0u, 0u);
+  const Color Color::White(255u, 255u, 255u);
+  const Color Color::Gray(128u, 128u, 128u);
+  const Color Color::Red(255u, 0u, 0u);
+  const Color Color::Green(0u, 255u, 0u);
+  const Color Color::Blue(0u, 0u, 255u);
+  const Color Color::Yellow(255u, 255u, 0u);
+  const Color Color::Cyan(0u, 255u, 255u);
+  const Color Color::Purple(255u, 0u, 255u);
+
+  Color::Color(const Color& base, int alpha) SRX_NOEXCEPT
+    : r(base.r)
+    , g(base.g)
+    , b(base.b)
+    , a(IntToByte(alpha))
+  {}
+
+  Color::Color(const int red, const int green, const int blue, const int alpha)
+    SRX_NOEXCEPT
+    : r(IntToByte(red))
+    , g(IntToByte(green))
+    , b(IntToByte(blue))
+    , a(IntToByte(alpha))
+  {}
+
+  Color::Color(const Vector3& vec3, const scalar_t alpha) SRX_NOEXCEPT
+    : r(FloatToByte(vec3.x))
+    , g(FloatToByte(vec3.y))
+    , b(FloatToByte(vec3.z))
+    , a(FloatToByte(alpha))
+  {}
+
+  Color::Color(const Vector4& vec4) SRX_NOEXCEPT
+    : r(FloatToByte(vec4.x))
+    , g(FloatToByte(vec4.y))
+    , b(FloatToByte(vec4.z))
+    , a(FloatToByte(vec4.w))
+  {}
+}

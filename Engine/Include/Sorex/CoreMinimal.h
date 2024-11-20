@@ -30,3 +30,18 @@
 #include <Sorex/Types.h>
 #include <Sorex/Platform.h>
 #include <Sorex/Assert.h>
+
+#include <Sorex/Status.h>
+#include <Sorex/JournalManager.h>
+
+#include <Sorex/RuntimeClass.h>
+
+#include <Sorex/Math/Maths.h>
+#include <Sorex/Math/Point.h>
+#include <Sorex/Math/Vector2.h>
+#include <Sorex/Math/Vector3.h>
+#include <Sorex/Math/Vector4.h>
+#include <Sorex/Math/Rectangle.h>
+
+#include <Sorex/Color.h>
+#include <Sorex/Bitmask.h>

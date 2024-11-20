@@ -26,7 +26,7 @@ namespace Sorex::Details
    * @tparam Type The enum class type for which to enable bitmask support.
    */
   template<typename Type>
-  SRX_INLINE constexpr bool enum_as_bitmask_v = TEnumAsBitmask<Type>::value;
+  constexpr bool enum_as_bitmask_v = TEnumAsBitmask<Type>::value;
 }  // namespace
 
 /**

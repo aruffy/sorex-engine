@@ -1,6 +1,8 @@
-cmake_minimum_required(VERSION 3.8.0)
+cmake_minimum_required(VERSION 3.12.0)
 
 set(THIRD_PARTY_FOLDER "ThirdParty")
+
+cmake_policy(SET CMP0077 NEW)
 
 # Skip libraries installation
 set(SKIP_INSTALL_ALL ON)
@@ -26,8 +28,24 @@ get_target_property(
   SPDLOG_LIBRARY_INCLUDE_DIRS spdlog::spdlog INCLUDE_DIRECTORIES
 )
 
-# target_include_directories(${ENGINE_TARGET} PUBLIC
-# ${SPDLOG_LIBRARY_INCLUDE_DIRS})
+# ##############################################################################
+# GLM library
+# ##############################################################################
+# set(GLM_SUBDIR "glm") message(CHECK_START "[${GLM_SUBDIR}] subdir build")
+#
+# set(GLM_ENABLE_CXX_20 CACHE BOOL "[${GLM_SUBDIR}] Enable C++ 20" ON)
+#
+# add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/${GLM_SUBDIR}")
+# set_target_properties( glm PROPERTIES FOLDER
+# "${THIRD_PARTY_FOLDER}/${GLM_SUBDIR}" )
+#
+# set(GLM_INCLUDE_DIR "${CMAKE_CURRENT_LIST_DIR}/${GLM_SUBDIR}/glm")
+#
+# list(APPEND THIRD_PARTY_LIBRARIES glm::glm) list(APPEND
+# THIRD_PARTY_INCLUDE_DIRECTORIES "${GLM_INCLUDE_DIR}")
+#
+# message(CHECK_PASS "done")
+
 # ##############################################################################
 
 set(ENGINE_THIRD_PARTY_INCLUDE_DIRECTORIES

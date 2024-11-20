@@ -70,6 +70,7 @@ namespace Sorex
   typedef std::size_t size_t;
   typedef size_t      hash_t;
 
+  typedef float scalar_t;
 
 #ifdef SOREX_PLATFORM_WINDOWS
   typedef std::size_t ssize_t;
