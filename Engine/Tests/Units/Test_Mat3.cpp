@@ -28,10 +28,14 @@ namespace
   };
 }
 
-#define EXPECT_EQ_VEC3(v1, v2)                                             \
-  EXPECT_EQ((v1), (v2)) << "Vec3: '" << v1.x << '/' << v1.y << '/' << v1.z \
-                        << "' ins't equal '" << v2.x << '/' << v2.y << '/' \
-                        << v2.z << '\'';
+#define EXPECT_EQ_VEC3(v1, v2)                                                \
+  EXPECT_DOUBLE_EQ((v1).x, (v2).x);                                           \
+  EXPECT_DOUBLE_EQ((v1).y, (v2).y);                                           \
+  EXPECT_DOUBLE_EQ((v1).z, (v2).z);                                           \
+  EXPECT_EQ((v1), (v2));                                                      \
+  EXPECT_TRUE(Vec3::IsEqual((v1), (v2)))                                      \
+    << "Vec3: {" << v1.x << ", " << v1.y << ", " << v1.z << "} ins't equal {" \
+    << v2.x << ", " << v2.y << ", " << v2.z << '}'
 
 #define EXPECT_EQ_MAT4(mat3, mat4)           \
   EXPECT_EQ_VEC3(mat3[0], GetVec3(mat4, 0)); \
