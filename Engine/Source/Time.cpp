@@ -26,8 +26,10 @@
 /**************************************************************************/
 
 #include <Sorex/Time.h>
+#include <Sorex/Math/Maths.h>
 
 #include <chrono>
+#include <iomanip>
 
 namespace
 {
@@ -153,7 +155,6 @@ public:
     return static_cast<uint64>(std::chrono::steady_clock::period::den);
   }
 
-  // TODO: Add Platform Time Systems
   SRX_INLINE ITimeSystem& GetTimeSystem() SRX_NOEXCEPT
   {
     static StandartTimeSystem _timeSystem;
@@ -222,5 +223,25 @@ namespace Sorex
   uint64 Time::GetSteadyCounterFrequency() SRX_NOEXCEPT
   {
     return GetTimeSystem().GetSteadyCounterFrequency();
+  }
+
+  std::ostream& operator<<(std::ostream&     ostrm,
+                           const SystemTime& stm) SRX_NOEXCEPT
+  {
+    std::tm tm;
+    tm.tm_year  = Math::Clamp<int>(stm.year, 1900, 30827) - 1900;
+    tm.tm_mon   = stm.month - 1;
+    tm.tm_mday  = stm.day;
+    tm.tm_wday  = stm.dayOfWeek;
+    tm.tm_hour  = stm.hour;
+    tm.tm_min   = stm.minute;
+    tm.tm_sec   = stm.second;
+    tm.tm_isdst = 0;  // Not daylight saving
+
+    const std::time_t t     = std::mktime(&tm);
+    const std::tm*    local = std::localtime(&t);
+
+    ostrm << std::put_time(local, "%b %d %Y %T");
+    return ostrm;
   }
 }

@@ -34,33 +34,38 @@ namespace Sorex
 {
   struct SystemTime
   {
+    SRX_INLINE int16 convTmSec(const int sec) SRX_NOEXCEPT
+    {
+      constexpr float factor = 0.984f;  // 59 / 60
+      return static_cast<int16>(roundf(factor * sec));
+    }
+
+public:
     SystemTime() = default;
     explicit SystemTime(const std::tm& time) SRX_NOEXCEPT
-      : year(time.tm_year)
-      , month(time.tm_mon)
+      : year(time.tm_year + 1900)
+      , month(time.tm_mon + 1)
       , day(time.tm_mday)
       , dayOfWeek(time.tm_wday)
       , hour(time.tm_hour)
       , minute(time.tm_min)
-      , second(time.tm_sec)
+      , second(convTmSec(time.tm_sec))
       , millisec(0)
     {}
 
-    int16 year      = 0;
-    int16 month     = 0;
-    int16 day       = 0;
-    int16 dayOfWeek = 0;
-    int16 hour      = 0;
-    int16 minute    = 0;
-    int16 second    = 0;
-    int16 millisec  = 0;
-
-    // TODO: Add operator ostream <<
+    int16 year      = 0;  // [1900 - 30827]
+    int8  month     = 0;  // [1 - 12] // Jan - 1
+    int8  day       = 0;  // [1 - 31]
+    int8  dayOfWeek = 0;  // [0 - 6] // Sunday - 0
+    int8  hour      = 0;  // [0 - 23]
+    int16 minute    = 0;  // [0 - 59]
+    int16 second    = 0;  // [0 - 59]
+    int16 millisec  = 0;  // [0 - 999]
   };
-}
 
-namespace Sorex
-{
+  std::ostream& operator<<(std::ostream&     ostrm,
+                           const SystemTime& stm) SRX_NOEXCEPT;
+
   class Time final
   {
 public:
@@ -69,7 +74,7 @@ public:
      * Universal Time (UTC) format.
      *
      * @param time - out parameter of system time (UTC).
-     * @return Error::None if get time successfully, else code error.
+     * @return `true` if get time successfully, else `false`.
      */
     static bool GetSystemTime(SystemTime& time) SRX_NOEXCEPT;
 
@@ -77,7 +82,7 @@ public:
      * @brief Retrieves the current local date and time.
      *
      * @param time - out parameter of local time.
-     * @return Error::None if get time successfully, else code error.
+     * @return `true` if get time successfully, else `false`.
      */
     static bool GetLocalTime(SystemTime& time) SRX_NOEXCEPT;
 
@@ -130,4 +135,4 @@ public:
   {
     return !(lhs > rhs);
   }
-}
+}  // namespace

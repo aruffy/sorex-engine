@@ -4,6 +4,8 @@
 #include <Sorex/Status.h>
 #include <Sorex/JournalManager.h>
 
+#include <Sorex/Time.h>
+
 using namespace Sorex;
 
 int main(const int argc, const char* argv[])
@@ -34,6 +36,10 @@ int main(const int argc, const char* argv[])
                                            "BAD_REQUEST");
 
   SRX_INFO("Hello, from main thread (MACRO)");
+
+  SystemTime stm;
+  Time::GetLocalTime(stm);
+  std::cout << "Time: " << stm << std::endl;
 
   Sorex::Thread thr;
   thr.Execute([]() {
