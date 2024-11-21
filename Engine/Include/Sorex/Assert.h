@@ -29,6 +29,16 @@
 
 #include "Platform.h"
 
+#ifdef SOREX_DEBUG_MEDIUM
+#  ifdef SOREX_COMPILER_MSVC
+#    define SOREX_DEBUG_BREAK() __debugbreak()
+#  else
+#    define SOREX_DEBUG_BREAK() __builtin_trap()
+#  endif
+#else  // SOREX_DEBUG_MEDIUM
+#  define SOREX_DEBUG_BREAK() SRX_IDLE
+#endif
+
 namespace Sorex::Platform
 {
   /**
@@ -100,6 +110,7 @@ namespace Sorex::Platform
       SRX_UNLIKELY                                                   \
       {                                                              \
         ::Sorex::Platform::OnCheckFailed(#expr, __FILE__, __LINE__); \
+        SOREX_DEBUG_BREAK();                                         \
       }                                                              \
     else                                                             \
       ((void)0)
@@ -109,6 +120,7 @@ namespace Sorex::Platform
       SRX_UNLIKELY                                                   \
       {                                                              \
         ::Sorex::Platform::OnCheckFailed(#expr, __FILE__, __LINE__); \
+        SOREX_DEBUG_BREAK();                                         \
       }                                                              \
     else                                                             \
       ((void)0)

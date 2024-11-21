@@ -46,11 +46,6 @@
 
 #include "Platform.h"
 
-#define SRX_IDLE \
-  do             \
-  {              \
-  } while (0)
-
 namespace Sorex
 {
   typedef std::int8_t  int8;
@@ -75,7 +70,6 @@ namespace Sorex
 #ifdef SOREX_PLATFORM_WINDOWS
   typedef std::size_t ssize_t;
 #else
-#  include <sys/types.h>
   typedef ::ssize_t ssize_t;
 #endif
 

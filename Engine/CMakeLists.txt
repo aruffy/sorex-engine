@@ -93,6 +93,7 @@ sorex_target_source(${ENGINE_TARGET} "${CMAKE_CURRENT_LIST_DIR}/Include")
 # ##############################################################################
 # Platform Code
 # ##############################################################################
+add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/Platform")
 
 # ##############################################################################
 # Include ThirdParty Libraries
