@@ -33,7 +33,7 @@
 #include "Types.h"
 #include "Platform.h"
 #include "Status.h"
-#include "Thread/Thread.h"
+#include "Thread.h"
 
 #ifndef SOREX_LOG_THREAD_NUM
 #  define SOREX_LOG_THREAD_NUM (2)

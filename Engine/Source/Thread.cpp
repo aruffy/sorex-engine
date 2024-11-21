@@ -25,7 +25,7 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#include <Sorex/Thread/Thread.h>
+#include <Sorex/Thread.h>
 
 namespace Sorex
 {
