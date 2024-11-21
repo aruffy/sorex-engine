@@ -147,8 +147,9 @@ namespace Sorex::Platform
 #  define SRX_CHECK(expr) SRX_VERIFY(expr)
 #  define SRX_CHECK_MSG(expr, msg) SRX_VERIFY_MSG(expr, msg)
 
-#  define SRX_NOENTRY(msg) \
-    ((void)(::Sorex::Platform::Linux::OnCheckFailed(msg, __FILE__, __LINE__)))
+#  define SRX_NOENTRY(msg)                                               \
+    ((void)(::Sorex::Platform::OnCheckFailed(msg, __FILE__, __LINE__))); \
+    SOREX_DEBUG_BREAK()
 
 #else
 #  define SRX_CHECK(expr)
