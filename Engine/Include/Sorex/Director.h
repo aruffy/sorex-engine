@@ -61,14 +61,13 @@ public:
     // Components
     template<typename T, typename... Args>
       requires std::is_base_of_v<Component, T>
-    SRX_INLINE T*         AddComponent(Args&&... args) SRX_NOEXCEPT;
-    SRX_INLINE Component* AddComponent(TUniquePointer<Component>&& component)
-      SRX_NOEXCEPT;
+    SRX_INLINE T* AddComponent(Args&&... args) SRX_NOEXCEPT;
+    Component* AddComponent(TUniquePointer<Component>&& component) SRX_NOEXCEPT;
 
     template<typename T>
       requires std::is_base_of_v<Component, T>
     SRX_INLINE void RemoveComponent() SRX_NOEXCEPT;
-    SRX_INLINE void RemoveComponent(const Component* component) SRX_NOEXCEPT;
+    bool            RemoveComponent(const Component* component) SRX_NOEXCEPT;
 
     template<typename T>
       requires std::is_base_of_v<Component, T>
