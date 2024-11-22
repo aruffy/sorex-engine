@@ -46,22 +46,21 @@ namespace Sorex
   String Status::DebugMessage() const SRX_NOEXCEPT
   {
     std::stringstream ss;
-    ss << "{\"status\":\"" << (Ok() ? "ok" : "error") << "\""
-       << ",\"code\":" << mCode.value() << ",\"text\":\"" << mCode.message()
-       << "\",\"category\":\"" << mCode.category().name() << '"';
+    ss << "{\"Status\":\"" << (Ok() ? "Ok" : "Error") << "\""
+       << ",\"Code\":" << mCode.value() << ",\"Text\":\"" << mCode.message()
+       << "\",\"Category\":\"" << mCode.category().name() << '"';
 
 #ifdef SOREX_DEBUG_MEDIUM
     if (mMessage.has_value() && !mMessage.value().empty())
-      ss << ",\"message\":\"" << mMessage.value() << '"';
+      ss << ",\"Message\":\"" << mMessage.value() << '"';
 #endif
 #ifdef SOREX_DEBUG_HIGH
     if (!mFilename.empty())
-      ss << ",\"file\":\"" << mFilename << "\",\"line\":" << mLine;
+      ss << ",\"File\":\"" << mFilename << "\",\"Line\":" << mLine;
 #endif
     ss << '}';
     return ss.str();
   }
-
 
   namespace Details
   {

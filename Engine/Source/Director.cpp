@@ -32,16 +32,6 @@ namespace Sorex
   Status Director::Initialize()
   {
     Status status;
-
-    // Graphics::RenderDevice* renderDevice =
-    // GetComponent<Graphics::RenderDevice>();
-    /*   if (renderDevice == nullptr)
-      {
-        RFY_MAKE_ERR(error,
-                     Error::Invalid_State,
-                     "[Application] Render device not found");
-        return false;
-      } */
     for (auto& cmp : mComponents)
     {
       if (cmp == nullptr)

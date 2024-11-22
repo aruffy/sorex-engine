@@ -154,9 +154,14 @@ public:
 
     SRX_INLINE bool Ok() const SRX_NOEXCEPT { return !mCode.value(); }
 
-    SRX_INLINE int    GetCode() const SRX_NOEXCEPT { return mCode.value(); }
-    SRX_INLINE String ToString() const SRX_NOEXCEPT { return mCode.message(); }
+    SRX_INLINE int   GetCode() const SRX_NOEXCEPT { return mCode.value(); }
     SRX_INLINE const std::error_category& GetCategory() SRX_NOEXCEPT;
+
+#ifndef SOREX_DEBUG_MEDIUM
+    SRX_INLINE String ToString() const SRX_NOEXCEPT { return mCode.message(); }
+#else
+    SRX_INLINE String ToString() const SRX_NOEXCEPT { return DebugMessage(); }
+#endif
 
     /**
      * @brief Resets the status.
@@ -165,6 +170,11 @@ public:
      * message or debugging information.
      */
     void Reset() SRX_NOEXCEPT;
+
+    SRX_INLINE operator bool() const SRX_NOEXCEPT { return Ok(); }
+
+private:
+    SRX_INLINE explicit Status(std::error_code&& errcode) SRX_NOEXCEPT;
 
     /**
      * @brief Generates a debug message indicating the status of the operation.
@@ -176,11 +186,6 @@ public:
      * @return A string containing the debug message.
      */
     String DebugMessage() const SRX_NOEXCEPT;
-
-    SRX_INLINE operator bool() const SRX_NOEXCEPT { return Ok(); }
-
-private:
-    SRX_INLINE explicit Status(std::error_code&& errcode) SRX_NOEXCEPT;
 
 #ifdef SOREX_DEBUG_MEDIUM
     SRX_INLINE Status(std::error_code&& errcode,
@@ -198,7 +203,6 @@ private:
 #ifdef SOREX_DEBUG_HIGH
     String mFilename;
     int    mLine = 0;
-
 #endif
   };
 
