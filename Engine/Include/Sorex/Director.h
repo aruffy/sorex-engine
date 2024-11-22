@@ -56,9 +56,55 @@ public:
       Director* mDirector = nullptr;
     };
 
+    class IListener
+    {
+  public:
+      virtual ~IListener() {}
+
+      /**
+       * @brief Will be invoked before start new frame.
+       *
+       * @param deltaTime - the time difference between the previous frame
+       */
+      virtual void OnBeginFrame(const float deltaTime) {}
+
+      /**
+       * @brief Will be invoked after work to process frame is completed.
+       *
+       * @param frameTime - elipsis time from the begin frame to finis frame
+       */
+      virtual void OnFinishFrame(const float frameTime) {}
+
+      /**
+       * @brief Will be invoked before the scene update. There must not be
+       * any rendering.
+       *
+       * @param deltaTime - time elapsed since the previous frame
+       */
+      virtual void OnUpdate(float deltaTime) {}
+
+      /**
+       * @brief Will be invoked when frame is being rendered.
+       *
+       * @param stage - stage of rendering.
+       */
+      virtual void OnRenderScene() {}
+
+      /**
+       * @brief Will be invoked after the main loop exited.
+       *
+       */
+      virtual void OnExit() {}
+    };
+
 public:
     virtual Status Initialize();
     virtual void   Shutdown();
+
+    /**
+     * @brief Start main engine loop.
+     */
+    virtual void Run() {}
 
     // Components
     template<typename T, typename... Args>
@@ -77,6 +123,32 @@ public:
     template<typename T>
       requires std::is_base_of_v<Component, T>
     SRX_INLINE T* GetComponent() SRX_NOEXCEPT;
+
+    // Listeners
+    SRX_INLINE bool AddListener(IListener* listener) SRX_NOEXCEPT
+    {
+      // return mListeners.Add(listener);
+      return false;
+    }
+
+    /**
+     * @brief Remove the listener from rendering loop.
+     *
+     * @param listener - removed observer
+     */
+    SRX_INLINE void RemoveListener(IListener* listener) SRX_NOEXCEPT
+    {
+      // _listeners.Remove(listener);
+    }
+
+    // FIXME: Add Impl
+    virtual void Exit() {}
+    virtual bool IsExitRequested() { return false; }
+    // virtual int32 GetFrameRate() const          = 0;
+    // virtual void  SetFrameRate(int32 frameRate) = 0;
+
+protected:
+    // TListenerContainer<Listener> _listeners;
 
 private:
     TObjectContainer<Component> mComponents;

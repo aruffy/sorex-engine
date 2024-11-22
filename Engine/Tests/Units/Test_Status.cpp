@@ -36,17 +36,16 @@ inline std::error_code make_error_code(ETestErrorCode errcode)
   return std::error_code(static_cast<int>(errcode), errorCategory);
 }
 
-#define ASSERT_STATUS_OK(status)                       \
-  ASSERT_TRUE((status).Ok()) << status.DebugMessage(); \
-  ASSERT_TRUE((bool)(status));                         \
-  ASSERT_EQ(static_cast<int>((status).GetCode()), 0)   \
-    << (status).DebugMessage();                        \
-  ASSERT_FALSE((status).ToString().empty()) << (status).DebugMessage()
+#define ASSERT_STATUS_OK(status)                                             \
+  ASSERT_TRUE((status).Ok()) << status.ToString();                           \
+  ASSERT_TRUE((bool)(status));                                               \
+  ASSERT_EQ(static_cast<int>((status).GetCode()), 0) << (status).ToString(); \
+  ASSERT_FALSE((status).ToString().empty()) << (status).ToString()
 
-#define ASSERT_STATUS_ERRCODE(status, errcode)            \
-  ASSERT_FALSE((status).Ok()) << (status).DebugMessage(); \
-  ASSERT_FALSE((bool)(status));                           \
-  ASSERT_EQ((status).GetCode(), (int)(errcode));          \
+#define ASSERT_STATUS_ERRCODE(status, errcode)        \
+  ASSERT_FALSE((status).Ok()) << (status).ToString(); \
+  ASSERT_FALSE((bool)(status));                       \
+  ASSERT_EQ((status).GetCode(), (int)(errcode));      \
   ASSERT_FALSE((status).ToString().empty())
 
 TEST(Status, Main)
