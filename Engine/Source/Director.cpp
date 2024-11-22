@@ -29,6 +29,54 @@
 
 namespace Sorex
 {
+  Status Director::Initialize()
+  {
+    Status status;
+
+    // Graphics::RenderDevice* renderDevice =
+    // GetComponent<Graphics::RenderDevice>();
+    /*   if (renderDevice == nullptr)
+      {
+        RFY_MAKE_ERR(error,
+                     Error::Invalid_State,
+                     "[Application] Render device not found");
+        return false;
+      } */
+    for (auto& cmp : mComponents)
+    {
+      if (cmp == nullptr)
+        continue;
+
+      if (status = cmp->Initialize(); !status.Ok())
+      {
+        SRX_ERROR("[Director] Component '{}' initialization failed: {}",
+                  cmp->GetRuntimeClass().GetName(),
+                  status.ToString());
+
+        return status;
+      }
+    }
+
+    return status;
+  }
+
+  void Director::Shutdown()
+  {
+    for (auto& cmp : mComponents)
+    {
+      if (cmp)
+        cmp->Shutdown();
+    }
+
+    mComponents.Clear();
+  }
+
+  void Director::Component::Attach(Director& director)
+  {
+    SRX_CHECK(!IsAttached());
+    mDirector = &director;
+  }
+
   Director::Component* Director::AddComponent(
     TUniquePointer<Component>&& component) SRX_NOEXCEPT
   {

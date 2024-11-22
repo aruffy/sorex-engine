@@ -42,11 +42,10 @@ public:
   public:
       virtual ~Component() = default;
 
-      virtual void Attach(Director& director) { mDirector = &director; }
-      virtual void Detach() { mDirector = nullptr; }
+      virtual void Attach(Director& director);
 
-      virtual Status Initialize() = 0;
-      virtual void   Shutdown()   = 0;
+      virtual Status Initialize() { return SRX_OK; }
+      virtual void   Shutdown() {};
 
       virtual void Update(const float deltaTime) {}
 
@@ -58,8 +57,8 @@ public:
     };
 
 public:
-    virtual Status Initialize() { return SRX_OK; }
-    virtual void   Shutdown() {}
+    virtual Status Initialize();
+    virtual void   Shutdown();
 
     // Components
     template<typename T, typename... Args>
@@ -101,7 +100,7 @@ private:
   SRX_INLINE void Director::RemoveComponent() SRX_NOEXCEPT
   {
     if (auto cmp = mComponents.Release<T>())
-      cmp->Detach();
+      cmp->Shutdown();
   }
 
   template<typename T>

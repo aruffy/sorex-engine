@@ -131,6 +131,7 @@ private:
       if (status = Initialize(*director); !status.Ok())
         return status;
 
+      // FIXME: Add Main Loop
       // if (auto loop = director->template GetComponent<ApplicationLoop>())
       //   loop->Run();
 
