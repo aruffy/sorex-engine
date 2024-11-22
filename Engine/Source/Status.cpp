@@ -110,6 +110,10 @@ namespace Sorex
         return "Bad Address";
       case EStatusCode::Busy:
         return "Busy";
+      case EStatusCode::Canceled:
+        return "Operation Canceled";
+      case EStatusCode::Interrupted:
+        return "Operation Interrupted";
       case EStatusCode::Try_Again:
         return "Try Again";
       default:

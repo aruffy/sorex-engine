@@ -58,6 +58,8 @@ namespace Sorex
     Bad_File,
     Bad_Address,
     Busy,
+    Canceled,
+    Interrupted,
     Try_Again
   };
 

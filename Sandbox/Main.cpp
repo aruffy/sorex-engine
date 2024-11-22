@@ -5,6 +5,7 @@
 #include <Sorex/JournalManager.h>
 
 #include <Sorex/Time.h>
+#include <Sorex/Launcher.h>
 
 using namespace Sorex;
 

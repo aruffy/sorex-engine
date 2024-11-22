@@ -58,6 +58,9 @@ public:
     };
 
 public:
+    virtual Status Initialize() { return SRX_OK; }
+    virtual void   Shutdown() {}
+
     // Components
     template<typename T, typename... Args>
       requires std::is_base_of_v<Component, T>
