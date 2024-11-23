@@ -26,9 +26,20 @@
 /**************************************************************************/
 
 #include <Sorex/Director.h>
+#include <Sorex/Time.h>
 
 namespace Sorex
 {
+  Director::Director() SRX_NOEXCEPT
+    : mDeltaTime(0.001f)
+    , mFrameRate(kDefaultFrameRate)
+    , mIsExitRequested(false)
+  {}
+
+  int32 mFrameRate;
+  float mDeltaTime;
+  bool  mIsExitRequested;
+
   Status Director::Initialize()
   {
     Status status;
@@ -60,6 +71,64 @@ namespace Sorex
 
     mComponents.Clear();
   }
+
+  void Director::Run()
+  {
+    SRX_TRACE("[Director] Run director");
+
+    if (Status status = OnLaunch(); !status.Ok())
+    {
+      SRX_ERROR("[Director] Launching failed: {}", status.ToString());
+      return;
+    }
+
+    int32       millisec;
+    uint64      tmNow;
+    uint64      tmInterval;
+    uint64      tmLast = Time::GetSteadyCounter();
+    const int64 tmFrequency =
+      static_cast<int64>(Time::GetSteadyCounterFrequency()) - 1ULL;
+    const uint64 frameThreshold = mFrameRate ? (tmFrequency / mFrameRate) : 0u;
+
+    while (!IsExitRequested())
+    {
+      for (IListener* listener : mListeners)
+        listener->OnBeginFrame(mDeltaTime);
+
+      // UpdateApp();
+
+      if (IsExitRequested())
+        break;
+
+      // RenderScene();
+
+      for (IListener* listener : mListeners)
+        listener->OnFinishFrame(0.f);  // FIXME:
+
+      tmNow      = Time::GetSteadyCounter();
+      tmInterval = tmNow - tmLast;
+      tmLast     = tmNow;
+
+      if (mFrameRate && tmInterval < frameThreshold)
+      {
+        const int64 tmWait = frameThreshold - tmInterval;
+        millisec           = static_cast<int32>(tmWait * 1000LL / tmFrequency);
+
+        constexpr int64 kSleepTreshold = 25;
+        if (millisec > kSleepTreshold)
+        {
+          Thread::Sleep(millisec);
+          tmLast += tmWait;
+          tmInterval += tmWait;
+        }
+      }
+
+      mDeltaTime = static_cast<float>(static_cast<double>(tmInterval * 1000ULL)
+                                      / static_cast<double>(tmFrequency));
+    }
+  }
+
+  // Component
 
   void Director::Component::Attach(Director& director)
   {

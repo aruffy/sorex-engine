@@ -29,6 +29,7 @@
 
 #include "CoreMinimal.h"
 #include "Containers/ObjectContainer.h"
+#include "Containers/ListenerContainer.h"
 
 namespace Sorex
 {
@@ -98,13 +99,18 @@ public:
     };
 
 public:
+    static constexpr uint16 kDefaultFrameRate = 60;
+
+public:
+    Director() SRX_NOEXCEPT;
+
     virtual Status Initialize();
     virtual void   Shutdown();
 
     /**
      * @brief Start main engine loop.
      */
-    virtual void Run() {}
+    virtual void Run();
 
     // Components
     template<typename T, typename... Args>
@@ -127,18 +133,12 @@ public:
     // Listeners
     SRX_INLINE bool AddListener(IListener* listener) SRX_NOEXCEPT
     {
-      // return mListeners.Add(listener);
-      return false;
+      return mListeners.Add(listener);
     }
 
-    /**
-     * @brief Remove the listener from rendering loop.
-     *
-     * @param listener - removed observer
-     */
     SRX_INLINE void RemoveListener(IListener* listener) SRX_NOEXCEPT
     {
-      // _listeners.Remove(listener);
+      mListeners.Remove(listener);
     }
 
     // FIXME: Add Impl
@@ -148,10 +148,18 @@ public:
     // virtual void  SetFrameRate(int32 frameRate) = 0;
 
 protected:
-    // TListenerContainer<Listener> _listeners;
+    virtual Status OnLaunch() { return SRX_OK; }
+
+protected:
+    TListenerContainer<IListener> mListeners;
 
 private:
     TObjectContainer<Component> mComponents;
+
+    float  mDeltaTime;
+    uint16 mFrameRate;
+
+    bool mIsExitRequested;
   };
 
   template<typename T, typename... Args>
