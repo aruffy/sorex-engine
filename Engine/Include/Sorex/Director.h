@@ -35,6 +35,8 @@ namespace Sorex
 {
   class SRX_API Director
   {
+    SRX_RTTI_BASE(Director);
+
 public:
     class Component
     {
@@ -71,10 +73,8 @@ public:
 
       /**
        * @brief Will be invoked after work to process frame is completed.
-       *
-       * @param frameTime - elipsis time from the begin frame to finis frame
        */
-      virtual void OnFinishFrame(const float frameTime) {}
+      virtual void OnFinishFrame() {}
 
       /**
        * @brief Will be invoked before the scene update. There must not be
@@ -103,6 +103,7 @@ public:
 
 public:
     Director() SRX_NOEXCEPT;
+    virtual ~Director() = default;
 
     virtual Status Initialize();
     virtual void   Shutdown();
@@ -110,7 +111,7 @@ public:
     /**
      * @brief Start main engine loop.
      */
-    virtual void Run();
+    virtual void MainLoop();
 
     // Components
     template<typename T, typename... Args>
@@ -141,14 +142,14 @@ public:
       mListeners.Remove(listener);
     }
 
-    // FIXME: Add Impl
-    virtual void Exit() {}
-    virtual bool IsExitRequested() { return false; }
+    virtual void Exit() { mIsExitRequested = true; }
+
     // virtual int32 GetFrameRate() const          = 0;
     // virtual void  SetFrameRate(int32 frameRate) = 0;
 
 protected:
     virtual Status OnLaunch() { return SRX_OK; }
+    virtual void   OnUpdate(const float deltaTime) {}
 
 protected:
     TListenerContainer<IListener> mListeners;

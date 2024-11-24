@@ -42,6 +42,7 @@ namespace Sorex
 
   Status Director::Initialize()
   {
+    SRX_TRACE("[{}] {}", GetRuntimeClass().GetName(), __FUNCTION__);
     Status status;
     for (auto& cmp : mComponents)
     {
@@ -63,6 +64,7 @@ namespace Sorex
 
   void Director::Shutdown()
   {
+    SRX_TRACE("[{}] {}", GetRuntimeClass().GetName(), __FUNCTION__);
     for (auto& cmp : mComponents)
     {
       if (cmp)
@@ -72,10 +74,9 @@ namespace Sorex
     mComponents.Clear();
   }
 
-  void Director::Run()
+  void Director::MainLoop()
   {
-    SRX_TRACE("[Director] Run director");
-
+    SRX_TRACE("[{}] {}", GetRuntimeClass().GetName(), __FUNCTION__);
     if (Status status = OnLaunch(); !status.Ok())
     {
       SRX_ERROR("[Director] Launching failed: {}", status.ToString());
@@ -90,20 +91,26 @@ namespace Sorex
       static_cast<int64>(Time::GetSteadyCounterFrequency()) - 1ULL;
     const uint64 frameThreshold = mFrameRate ? (tmFrequency / mFrameRate) : 0u;
 
-    while (!IsExitRequested())
+    while (!mIsExitRequested)
     {
       for (IListener* listener : mListeners)
         listener->OnBeginFrame(mDeltaTime);
 
-      // UpdateApp();
+      for (auto& cmp : mComponents)
+      {
+        if (cmp)
+          cmp->Update(mDeltaTime);
+      }
 
-      if (IsExitRequested())
+      OnUpdate(mDeltaTime);
+
+      if (mIsExitRequested)
         break;
 
       // RenderScene();
 
       for (IListener* listener : mListeners)
-        listener->OnFinishFrame(0.f);  // FIXME:
+        listener->OnFinishFrame();
 
       tmNow      = Time::GetSteadyCounter();
       tmInterval = tmNow - tmLast;
@@ -114,7 +121,7 @@ namespace Sorex
         const int64 tmWait = frameThreshold - tmInterval;
         millisec           = static_cast<int32>(tmWait * 1000LL / tmFrequency);
 
-        constexpr int64 kSleepTreshold = 25;
+        constexpr int64 kSleepTreshold = 1;
         if (millisec > kSleepTreshold)
         {
           Thread::Sleep(millisec);

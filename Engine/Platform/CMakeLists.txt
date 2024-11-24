@@ -15,3 +15,19 @@ if(PLATFORM_SOURCE_DIR)
     ${ENGINE_TARGET} PUBLIC "$<BUILD_INTERFACE:${PLATFORM_SOURCE_DIR}/Include>"
   )
 endif()
+
+if(DESKTOP)
+  add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/Desktop")
+endif()
+
+# TODO: Detect in the TargetPlatform
+set(DESKTOP TRUE)
+
+if(DESKTOP)
+  set(DESKTOP_SOURCE_DIR "${CMAKE_CURRENT_LIST_DIR}/Desktop")
+
+  sorex_target_source(${ENGINE_TARGET} "${DESKTOP_SOURCE_DIR}")
+  target_include_directories(
+    ${ENGINE_TARGET} PUBLIC "$<BUILD_INTERFACE:${DESKTOP_SOURCE_DIR}/Include>"
+  )
+endif()

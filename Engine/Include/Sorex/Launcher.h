@@ -129,11 +129,13 @@ private:
         MakeUnique<T>(std::forward<Args>(args)...);
 
       if (status = Initialize(*director); !status.Ok())
+      {
+        SRX_ERROR("[DirectorLauncher] Initilization failed: {}",
+                  status.ToString());
         return status;
+      }
 
-      // FIXME: Add Main Loop
-      // if (auto loop = director->template GetComponent<ApplicationLoop>())
-      //   loop->Run();
+      director->MainLoop();
 
       status = Deactivate(*director);
       director.reset();
