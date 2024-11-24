@@ -169,6 +169,10 @@ private:
   {
     if (T* const cmp = mComponents.Add<T>(std::forward<Args>(args)...))
     {
+      SRX_TRACE("[{}] Add Component {}",
+                GetRuntimeClass().GetName(),
+                cmp->GetRuntimeClass().GetName());
+
       cmp->Attach(*this);
       return cmp;
     }
@@ -181,7 +185,13 @@ private:
   SRX_INLINE void Director::RemoveComponent() SRX_NOEXCEPT
   {
     if (auto cmp = mComponents.Release<T>())
+    {
+      SRX_TRACE("[{}] Remove Component {}",
+                GetRuntimeClass().GetName(),
+                cmp->GetRuntimeClass().GetName());
+
       cmp->Shutdown();
+    }
   }
 
   template<typename T>

@@ -45,3 +45,10 @@
 
 #include <Sorex/Color.h>
 #include <Sorex/Bitmask.h>
+
+#ifdef SOREX_DEBUG_HIGH
+#  define SRX_CLSFUN_TRACE() \
+    SRX_TRACE("[{}] {}", this->GetRuntimeClass().GetName(), __FUNCTION__)
+#else
+#  define SRX_CLSFUN_TRACE() SRX_IDLE
+#endif

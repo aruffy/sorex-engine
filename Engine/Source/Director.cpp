@@ -42,7 +42,7 @@ namespace Sorex
 
   Status Director::Initialize()
   {
-    SRX_TRACE("[{}] {}", GetRuntimeClass().GetName(), __FUNCTION__);
+    SRX_CLSFUN_TRACE();
     Status status;
     for (auto& cmp : mComponents)
     {
@@ -64,7 +64,7 @@ namespace Sorex
 
   void Director::Shutdown()
   {
-    SRX_TRACE("[{}] {}", GetRuntimeClass().GetName(), __FUNCTION__);
+    SRX_CLSFUN_TRACE();
     for (auto& cmp : mComponents)
     {
       if (cmp)
@@ -76,7 +76,7 @@ namespace Sorex
 
   void Director::MainLoop()
   {
-    SRX_TRACE("[{}] {}", GetRuntimeClass().GetName(), __FUNCTION__);
+    SRX_CLSFUN_TRACE();
     if (Status status = OnLaunch(); !status.Ok())
     {
       SRX_ERROR("[Director] Launching failed: {}", status.ToString());
@@ -139,6 +139,7 @@ namespace Sorex
 
   void Director::Component::Attach(Director& director)
   {
+    SRX_CLSFUN_TRACE();
     SRX_CHECK(!IsAttached());
     mDirector = &director;
   }
@@ -149,6 +150,10 @@ namespace Sorex
     SRX_CHECK(component && !component->IsAttached());
     if (Component* const cmp = mComponents.Add(std::move(component)))
     {
+      SRX_TRACE("[{}] Add Component {}",
+                GetRuntimeClass().GetName(),
+                cmp->GetRuntimeClass().GetName());
+
       cmp->Attach(*this);
       return cmp;
     }
@@ -158,7 +163,13 @@ namespace Sorex
 
   bool Director::RemoveComponent(const Component* component) SRX_NOEXCEPT
   {
+    SRX_TRACE(
+      "[{}] Remove Component {}",
+      this->GetRuntimeClass().GetName(),
+      (component ? component->GetRuntimeClass().GetName() : String("null")));
+
     SRX_CHECK(component && component->GetDirector() == this);
+
     return mComponents.Remove(component);
   }
 }  // namespace
