@@ -65,9 +65,9 @@ namespace Sorex
   void Director::Shutdown()
   {
     SRX_CLSFUN_TRACE();
-    for (auto& cmp : mComponents)
+    for (auto it = mComponents.rbegin(); it != mComponents.rend(); ++it)
     {
-      if (cmp)
+      if (Component* const cmp = it->get(); cmp)
         cmp->Shutdown();
     }
 

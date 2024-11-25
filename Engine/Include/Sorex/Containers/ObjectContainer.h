@@ -63,6 +63,9 @@ public:
     ConstIterator cbegin() const { return mContainer.cbegin(); }
     ConstIterator cend() const { return mContainer.cend(); }
 
+    SRX_INLINE auto rbegin() SRX_NOEXCEPT { return mContainer.rbegin(); }
+    SRX_INLINE auto rend() SRX_NOEXCEPT { return mContainer.rend(); }
+
     /**
      * @param object - the object pointer
      *

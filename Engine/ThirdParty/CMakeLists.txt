@@ -7,6 +7,8 @@ cmake_policy(SET CMP0077 NEW)
 # Skip libraries installation
 set(SKIP_INSTALL_ALL ON)
 
+set(THIRD_PARTY_LIBRARIES "")
+
 # ##############################################################################
 # SPDLOG library
 # ##############################################################################
@@ -47,6 +49,56 @@ get_target_property(
 # message(CHECK_PASS "done")
 
 # ##############################################################################
+# GLAD library
+# ##############################################################################
+add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/glad")
+
+# ##############################################################################
+# GLFW library
+# ##############################################################################
+set(GLFW_SUBDIR "glfw")
+
+set(GLFW_BUILD_EXAMPLES
+    OFF
+    CACHE BOOL "Build the GLFW example programs"
+)
+set(GLFW_BUILD_TESTS
+    OFF
+    CACHE BOOL "Build the GLFW test programs"
+)
+set(GLFW_BUILD_DOCS
+    OFF
+    CACHE BOOL "Build the GLFW documentation"
+)
+set(GLFW_INSTALL
+    OFF
+    CACHE BOOL "Generate installation target"
+)
+# TODO: Keep as option
+set(GLFW_BUILD_X11
+    OFF
+    CACHE BOOL "Build support for X11"
+)
+
+message(CHECK_START "[${GLFW_SUBDIR}] subdir build")
+
+add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/${GLFW_SUBDIR}")
+
+set_target_properties(
+  glfw PROPERTIES FOLDER "${THIRD_PARTY_FOLDER}/${GLFW_SUBDIR}"
+)
+set_target_properties(
+  update_mappings PROPERTIES FOLDER "${THIRD_PARTY_FOLDER}/${GLFW_SUBDIR}"
+)
+
+set(GLFW_INCLUDE_DIR "${CMAKE_CURRENT_LIST_DIR}/${GLFW_SUBDIR}/include")
+
+list(APPEND THIRD_PARTY_LIBRARIES glfw)
+list(APPEND THIRD_PARTY_INCLUDE_DIRECTORIES ${GLFW_INCLUDE_DIR})
+
+message(CHECK_PASS "done")
+
+# ##############################################################################
 
 set(ENGINE_THIRD_PARTY_INCLUDE_DIRECTORIES
     ${THIRD_PARTY_INCLUDE_DIRECTORIES}
@@ -54,5 +106,9 @@ set(ENGINE_THIRD_PARTY_INCLUDE_DIRECTORIES
 )
 set(ENGINE_THIRD_PARTY_PUBLIC_LIBS
     ${THIRD_PARTY_PUBLIC_LIBS}
+    PARENT_SCOPE
+)
+set(ENGINE_THIRD_PARTY_LIBRARIES
+    ${THIRD_PARTY_LIBRARIES}
     PARENT_SCOPE
 )
