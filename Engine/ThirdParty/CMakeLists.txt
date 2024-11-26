@@ -83,7 +83,6 @@ set(GLFW_BUILD_X11
 message(CHECK_START "[${GLFW_SUBDIR}] subdir build")
 
 add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/${GLFW_SUBDIR}")
-
 set_target_properties(
   glfw PROPERTIES FOLDER "${THIRD_PARTY_FOLDER}/${GLFW_SUBDIR}"
 )
@@ -92,14 +91,12 @@ set_target_properties(
 )
 
 set(GLFW_INCLUDE_DIR "${CMAKE_CURRENT_LIST_DIR}/${GLFW_SUBDIR}/include")
+target_include_directories(${ENGINE_TARGET} PRIVATE "${GLFW_INCLUDE_DIR}")
 
 list(APPEND THIRD_PARTY_LIBRARIES glfw)
-list(APPEND THIRD_PARTY_INCLUDE_DIRECTORIES ${GLFW_INCLUDE_DIR})
-
 message(CHECK_PASS "done")
 
 # ##############################################################################
-
 set(ENGINE_THIRD_PARTY_INCLUDE_DIRECTORIES
     ${THIRD_PARTY_INCLUDE_DIRECTORIES}
     PARENT_SCOPE

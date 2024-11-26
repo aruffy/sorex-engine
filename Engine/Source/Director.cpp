@@ -135,8 +135,19 @@ namespace Sorex
     }
   }
 
-  // Component
+  bool Director::RemoveComponent(const Component* component) SRX_NOEXCEPT
+  {
+    SRX_TRACE(
+      "[{}] Remove Component {}",
+      this->GetRuntimeClass().GetName(),
+      (component ? component->GetRuntimeClass().GetName() : String("null")));
 
+    SRX_CHECK(component && component->GetDirector() == this);
+
+    return mComponents.Remove(component);
+  }
+
+  // Component
   void Director::Component::Attach(Director& director)
   {
     SRX_CLSFUN_TRACE();
@@ -159,17 +170,5 @@ namespace Sorex
     }
 
     return nullptr;
-  }
-
-  bool Director::RemoveComponent(const Component* component) SRX_NOEXCEPT
-  {
-    SRX_TRACE(
-      "[{}] Remove Component {}",
-      this->GetRuntimeClass().GetName(),
-      (component ? component->GetRuntimeClass().GetName() : String("null")));
-
-    SRX_CHECK(component && component->GetDirector() == this);
-
-    return mComponents.Remove(component);
   }
 }  // namespace

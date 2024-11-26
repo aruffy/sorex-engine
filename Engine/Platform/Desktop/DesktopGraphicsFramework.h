@@ -27,9 +27,6 @@
 
 #pragma once
 
-#include <glad/glad.h>
-// #include <GLFW/glfw3.h>
-
 #include <Sorex/CoreMinimal.h>
 #include <Sorex/Director.h>
 
@@ -39,20 +36,20 @@ namespace Sorex::Platform
    * Class that based on Graphics Library Framework (glfw).
    * Create window and context for OpenGL.
    */
-  class DesktopGraphicsFramework final
-    : private Director::Component
-    , private Director::IListener
+  class DesktopGraphicsFramework final: private Director::Component
+  // , private Director::IListener
   {
     SRX_RTTI(Platform::DesktopGraphicsFramework, Director::Component)
 
 public:
     static DesktopGraphicsFramework& GetInstance() SRX_NOEXCEPT;
-    virtual ~DesktopGraphicsFramework() override;
+    virtual ~DesktopGraphicsFramework() override {}
 
     DesktopGraphicsFramework(const DesktopGraphicsFramework& other) = delete;
     DesktopGraphicsFramework& operator=(const DesktopGraphicsFramework& other) =
       delete;
 
+    virtual Status Initialize() override;
     // InputEventDispatcher Interface
     // virtual bool AddEventHandler(InputEventHandler* handler) override;
     // virtual void RemoveEventHandler(InputEventHandler* handler) override;
@@ -156,7 +153,7 @@ protected:
 
 private:
     // Singleton
-    // DesktopGraphicsFramework() = default;
+    DesktopGraphicsFramework() = default;
 
     /**
      * @brief Start listen app main loop.
@@ -183,7 +180,7 @@ private:
 
 private:
     // Graphics::GLContextAttributes _glCtxAttribs;
-    // bool                          _isInitialized = false;
+    bool mIsInitialized = false;
     // GLFWwindow*                   _appMainWindow = nullptr;
 
     // ApplicationLoop* _appLoop = nullptr;

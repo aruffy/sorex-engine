@@ -91,11 +91,6 @@ sorex_target_source(${ENGINE_TARGET} "${CMAKE_CURRENT_LIST_DIR}/Source")
 sorex_target_source(${ENGINE_TARGET} "${CMAKE_CURRENT_LIST_DIR}/Include")
 
 # ##############################################################################
-# Platform Code
-# ##############################################################################
-add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/Platform")
-
-# ##############################################################################
 # Include ThirdParty Libraries
 # ##############################################################################
 set(THIRD_PARTY_LIBS_PATH "${CMAKE_CURRENT_LIST_DIR}/ThirdParty")
@@ -115,8 +110,15 @@ if(ENGINE_THIRD_PARTY_LIBRARIES)
     STATUS
       "[${ENGINE_TARGET}] third-party libs: ${ENGINE_THIRD_PARTY_LIBRARIES}"
   )
-  target_link_libraries(${ENGINE_TARGET} PRIVATE ${THIRD_PARTY_LIBRARIES})
+  target_link_libraries(
+    ${ENGINE_TARGET} PRIVATE ${ENGINE_THIRD_PARTY_LIBRARIES}
+  )
 endif()
+
+# ##############################################################################
+# Platform Code
+# ##############################################################################
+add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/Platform")
 
 # ##############################################################################
 # Create IDE source tree
