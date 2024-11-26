@@ -27,6 +27,8 @@
 
 #include <Sorex/DesktopLauncher.h>
 
+#include "DesktopGraphicsFramework.h"
+
 namespace Sorex::Platform
 {
   Status DesktopLauncher::OnStartup()
@@ -38,6 +40,10 @@ namespace Sorex::Platform
   Status DesktopLauncher::OnInitialize(Director& director)
   {
     SRX_TRACE("[DesktopLauncher] {}", __FUNCTION__);
+
+
+    director.AddComponent<DesktopGraphicsFramework>();
+
     return SRX_OK;
   }
 

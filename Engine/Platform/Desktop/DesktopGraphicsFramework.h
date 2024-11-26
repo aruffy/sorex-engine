@@ -30,36 +30,36 @@
 #include <Sorex/CoreMinimal.h>
 #include <Sorex/Director.h>
 
+struct GLFWwindow;
 namespace Sorex::Platform
 {
   /**
    * Class that based on Graphics Library Framework (glfw).
    * Create window and context for OpenGL.
    */
-  class DesktopGraphicsFramework final: private Director::Component
-  // , private Director::IListener
+  class DesktopGraphicsFramework final
+    : public Director::Component
+    , private Director::IListener
   {
     SRX_RTTI(Platform::DesktopGraphicsFramework, Director::Component)
 
 public:
-    static DesktopGraphicsFramework& GetInstance() SRX_NOEXCEPT;
-    virtual ~DesktopGraphicsFramework() override {}
+    DesktopGraphicsFramework() = default;
+    virtual ~DesktopGraphicsFramework() override;
 
     DesktopGraphicsFramework(const DesktopGraphicsFramework& other) = delete;
     DesktopGraphicsFramework& operator=(const DesktopGraphicsFramework& other) =
       delete;
 
+    // Interface Director::Component
+    virtual void   Attach(Director& director) override;
     virtual Status Initialize() override;
-    // InputEventDispatcher Interface
-    // virtual bool AddEventHandler(InputEventHandler* handler) override;
-    // virtual void RemoveEventHandler(InputEventHandler* handler) override;
+    virtual void   Shutdown() override;
+    virtual void   Update(const float deltaTime) override;
 
-    /**
-     * @brief Check if graphics framework is already initialized.
-     *
-     * @return True if Initialization has already been successfully done.
-     */
-    // inline bool IsInitialized() const { return _isInitialized; }
+    // Interface Director::IListener
+    virtual void OnFinishFrame() override;
+
 
     /**
      * @brief Create new glfw window object.
@@ -73,124 +73,19 @@ public:
      * @return The pointer to glfw window object or NULL if creation was't
      * successfully
      */
-    /* GLFWwindow* CreateWindow(const WString& title,
-                             const SizeInt& size,
-                             Window*        owner,
-                             Error*         error); */
-
+    TPair<Status, GLFWwindow*> CreateWindow(const WString& title,
+                                            const SizeInt& size) SRX_NOEXCEPT;
     /**
      * @brief Destroy glfw window object.
      *
      * @param window - the window object pointer that will be destroyed
      */
-    // void DestroyWindow(GLFWwindow* window);
-
-    /**
-     * @brief Retrieve actual window size.
-     *
-     * @param window - the pointer to glfw window object.
-     * @param outSize - out paremeter where to store the size of window
-     * @return Error::Ok if size saved in outSize parameter, elese error code
-     */
-    // int GetWindowSize(GLFWwindow* window, SizeInt& outSize) const;
-
-    /**
-     * @brief Set the size of window.
-     *
-     * @param window - the pointer to glfw window object
-     * @param size - desired window size
-     * @return Error::Ok success, else error code
-     */
-    // int SetWindowSize(GLFWwindow* window, const SizeInt& size);
-
-    /**
-     * @brief Set close flag to the window state.
-     *
-     * @param window - pointer to target glfw windows object
-     * @param bClose - value of close flag.
-     */
-    // void SetCloseWindonFlag(GLFWwindow* window, bool bClose = true);
-
-    /**
-     * @brief Check if button are being pressed. Return the cached value of
-     * button state.
-     *
-     * @note: checking uses main application window;
-     *
-     * @return True if key is being pressed;
-     */
-    // bool IsKeyDown(int key) const;
-
-protected:
-    // static void OnErrorCallback(int errorId, const char* errorDesc);
-
-    /* Mouse Events */
-    /* static void OnMouseClickCallback(GLFWwindow* window,
-                                     int         button,
-                                     int         action,
-                                     int         modify); */
-    // static void OnMouseMoveCallback(GLFWwindow* window, double x, double y);
-    // static void OnMouseScrollCallback(GLFWwindow* window, double x, double
-    // y);
-
-    /* Keyboard Events */
-    /* static void OnKeyCallback(GLFWwindow* window,
-                              int         key,
-                              int         scancode,
-                              int         action,
-                              int         mods); */
-    // static void OnCharCallback(GLFWwindow* window, unsigned int character);
-
-    /* Window Events */
-    // static void OnWindowFocusCallback(GLFWwindow* window, int focused);
-    // static void OnWindowPositionChanged(GLFWwindow* windows, int x, int y);
-    // static void OnWindowSizeChanged(GLFWwindow* window, int width, int
-    // height); static void OnWindowIconifyCallback(GLFWwindow* window, int
-    // iconified);
-
-    /* Framebuffer Events */
-    // static void OnFramebufferSizeChanged(GLFWwindow* window, int w, int h);
+    void DestroyWindow(GLFWwindow* window) SRX_NOEXCEPT;
 
 private:
-    // Singleton
-    DesktopGraphicsFramework() = default;
+    bool        mIsInitialized = false;
+    GLFWwindow* mMainWindow    = nullptr;
 
-    /**
-     * @brief Start listen app main loop.
-     *
-     * Can listen only one app loop.
-     * When is listening events from the loop perform pulling and emiting user
-     * input events; If the main application window will be closed the graphics
-     * framework send exit request;
-     *
-     * @param loop - new app loop to listen.
-     */
-    // void ListenApplicationLoop(ApplicationLoop* loop);
-
-    // ApplicationLoop Listener Interface
-    // virtual void OnUpdate(float deltaTime) override;
-    // virtual void OnFinishFrame() override;
-    // virtual void OnExit() override;
-
-    // void RequestApplicationExit() const;
-
-    // Events
-    // void EmitMouseEvent(GLFWwindow* window, const MouseEvent& event);
-    // void EmitKeyboardEvent(GLFWwindow* window, const KeyboardEvent& event);
-
-private:
-    // Graphics::GLContextAttributes _glCtxAttribs;
-    bool mIsInitialized = false;
-    // GLFWwindow*                   _appMainWindow = nullptr;
-
-    // ApplicationLoop* _appLoop = nullptr;
-
-    // Event Dispatcher
-    // using HandlerList = TListenerContainer<InputEventHandler>;
-    // HandlerList _handlers;
-
-    // Input events
-    // TUniquePointer<MouseEvent>    _mouseEvent;
-    // TUniquePointer<KeyboardEvent> _keyboardEvent;
+    Director* mDirector = nullptr;
   };
 }

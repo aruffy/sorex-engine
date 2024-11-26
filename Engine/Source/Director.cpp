@@ -133,6 +133,9 @@ namespace Sorex
       mDeltaTime = static_cast<float>(static_cast<double>(tmInterval * 1000ULL)
                                       / static_cast<double>(tmFrequency));
     }
+
+    for (IListener* listener : mListeners)
+      listener->OnExit();
   }
 
   bool Director::RemoveComponent(const Component* component) SRX_NOEXCEPT

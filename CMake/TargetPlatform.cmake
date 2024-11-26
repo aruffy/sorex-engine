@@ -54,6 +54,7 @@ function(sorex_target_compile_options TARGET_NAME)
       target_compile_options(
         ${TARGET_NAME}
         PRIVATE "-g3"
+                "-gdwarf-4"
                 "-O0"
                 "-Wall"
                 "-Werror"
