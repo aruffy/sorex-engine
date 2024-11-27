@@ -76,41 +76,8 @@ namespace Sorex::Platform
                             desc);
     }
 
-    glfwSetErrorCallback(OnFrameworkError);
-    mIsInitialized = true;
-
-    // FIXME: move to director
-    CreateWindow(L"HELLO", SizeInt{ 800, 640 });
-
-    return SRX_OK;
-  }
-
-  void DesktopGraphicsFramework::Shutdown()
-  {
-    SRX_CLSFUN_TRACE();
-
-    if (mDirector)
-      mDirector->RemoveListener(this);
-
-    if (!mIsInitialized)
-      return;
-
-    // FIXME: for_each(windows.begin(), windows.end(), []);
-    if (mMainWindow)
-      glfwDestroyWindow(mMainWindow);
-
-    glfwTerminate();
-    mIsInitialized = false;
-  }
-
-  TPair<Status, GLFWwindow*> DesktopGraphicsFramework::CreateWindow(
-    const WString& title,
-    const SizeInt& size) SRX_NOEXCEPT
-  {
-    SRX_CHECK(mIsInitialized);
-
-    glfwWindowHint(GLFW_RESIZABLE,
-                   true ? GL_TRUE : GL_FALSE);  // TODO: Add option
+    // Window Hints
+    glfwWindowHint(GLFW_RESIZABLE, GL_TRUE);  // TODO: Add option
 
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -132,13 +99,45 @@ namespace Sorex::Platform
 glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 #endif
 */
-    // TODO : monitor
+    // Callbacks
+    glfwSetErrorCallback(OnFrameworkError);
+    mIsInitialized = true;
 
-    const String titleUtf8 =
-      !title.empty() ? /* StrUtils::ToUtf8String(title) */ "TODO: Make name"
-                     : "Main Window";
+    // FIXME: move to director: via WindowsManager
+    CreateWindow(L"HELLO", SizeInt{ 800, 640 });
+    return SRX_OK;
+  }
+
+  void DesktopGraphicsFramework::Shutdown()
+  {
+    SRX_CLSFUN_TRACE();
+
+    if (mDirector)
+      mDirector->RemoveListener(this);
+
+    if (!mIsInitialized)
+      return;
+
+    if (mMainWindow)
+    {
+      SRX_INFO("DESTROY MAIN WINDOW: {}", __FUNCTION__);
+      glfwDestroyWindow(mMainWindow);
+      mMainWindow = nullptr;
+    }
+
+    glfwTerminate();  // NOTE: Should destroy all windows
+    mIsInitialized = false;
+  }
+
+  TPair<Status, GLFWwindow*> DesktopGraphicsFramework::CreateWindow(
+    const WString& title,
+    const SizeInt& size) SRX_NOEXCEPT
+  {
+    SRX_CHECK(mIsInitialized);
+
+    // TODO : monitor
     GLFWwindow* window =
-      glfwCreateWindow(size.width, size.height, titleUtf8.c_str(), NULL, NULL);
+      glfwCreateWindow(size.width, size.height, "Window Name", NULL, NULL);
 
     if (window == nullptr)
     {
@@ -154,11 +153,13 @@ glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     }
 
     glfwMakeContextCurrent(window);
-
     if (!mMainWindow)
     {
+      SRX_DEBUG(
+        "[DesktopGraphicsFramework] Create main window: loading GL loader");
       if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
       {
+        // FIXME: use glad error, why glfw?
         const char* desc;
         const int   code = glfwGetError(&desc);
         glfwDestroyWindow(window);
@@ -170,9 +171,10 @@ glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
                          desc),
           nullptr);
       }
-      mMainWindow = window;
+      // mMainWindow = window;
     }
 
+    glfwDestroyWindow(window);
     return std::make_pair(SRX_OK, window);
   }
 
@@ -183,7 +185,6 @@ glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
     if (window == mMainWindow)
     {
-      // Shutdown();
       mMainWindow = nullptr;
       if (mDirector)
         mDirector->Exit();
@@ -192,12 +193,20 @@ glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     glfwDestroyWindow(window);
   }
 
-
   void DesktopGraphicsFramework::Update(const float deltaTime)
   {
     glfwPollEvents();
     if (mMainWindow && glfwWindowShouldClose(mMainWindow))
     {
+      if (mDirector)
+        mDirector->Exit();
+    }
+
+    static int i = 0;
+    ++i;
+    if (i >= 0xff)
+    {
+      SRX_INFO("EXIT");
       if (mDirector)
         mDirector->Exit();
     }

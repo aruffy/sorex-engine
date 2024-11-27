@@ -77,14 +77,6 @@ public:
       virtual void OnFinishFrame() {}
 
       /**
-       * @brief Will be invoked before the scene update. There must not be
-       * any rendering.
-       *
-       * @param deltaTime - time elapsed since the previous frame
-       */
-      virtual void OnUpdate(float deltaTime) {}
-
-      /**
        * @brief Will be invoked when frame is being rendered.
        *
        * @param stage - stage of rendering.

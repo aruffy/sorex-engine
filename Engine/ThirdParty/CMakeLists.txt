@@ -74,10 +74,13 @@ set(GLFW_INSTALL
     OFF
     CACHE BOOL "Generate installation target"
 )
-# TODO: Keep as option
-set(GLFW_BUILD_X11
+# TODO: Use Wayland: a valgrind output for the glfw 3.5.0 reports memory leaks.
+# Need to investigate the problem: `glfwCreateWindow`;
+
+# Force to use X11, Debian: `apt-get install xorg-dev` @see GLFW Documentation
+set(GLFW_BUILD_WAYLAND
     OFF
-    CACHE BOOL "Build support for X11"
+    CACHE BOOL "Build support for Wayland"
 )
 
 message(CHECK_START "[${GLFW_SUBDIR}] subdir build")
