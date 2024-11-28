@@ -30,9 +30,69 @@
 #include <Sorex/CoreMinimal.h>
 #include <Sorex/Director.h>
 
+#include <glad/glad.h>
+#include <GLFW/glfw3.h>
+
+namespace Sorex::Platform
+{
+  enum class EGraphicsFrameworkStatusCode
+  {
+    No_Error              = GLFW_NO_ERROR,
+    Not_Initialized       = GLFW_NOT_INITIALIZED,
+    No_Current_Contex     = GLFW_NO_CURRENT_CONTEXT,
+    Invalid_Enum          = GLFW_INVALID_ENUM,
+    Invalid_Value         = GLFW_INVALID_VALUE,
+    Out_Of_Memory         = GLFW_OUT_OF_MEMORY,
+    Api_Unavailable       = GLFW_API_UNAVAILABLE,
+    Version_Unavailable   = GLFW_VERSION_UNAVAILABLE,
+    Platform_Error        = GLFW_PLATFORM_ERROR,
+    Format_Unavailable    = GLFW_FORMAT_UNAVAILABLE,
+    No_Window_Context     = GLFW_NO_WINDOW_CONTEXT,
+    Cursor_Unavailable    = GLFW_CURSOR_UNAVAILABLE,
+    Feature_Unavailable   = GLFW_FEATURE_UNAVAILABLE,
+    Feature_Unimplemented = GLFW_FEATURE_UNIMPLEMENTED,
+    Platform_Unavailable  = GLFW_PLATFORM_UNAVAILABLE
+  };
+  namespace Details
+  {
+    class GraphicsFrameworkErrorCategory final: public std::error_category
+    {
+  public:
+      typedef EGraphicsFrameworkStatusCode EStatusCode;
+
+      const char* name() const noexcept override;
+      std::string message(int errcode) const override;
+
+      SRX_NODISCARD static SRX_INLINE std::error_code create(
+        const EStatusCode errcode = static_cast<EStatusCode>(0)) SRX_NOEXCEPT
+      {
+        static const GraphicsFrameworkErrorCategory errorCategory;
+        return std::error_code(static_cast<int>(errcode), errorCategory);
+      }
+
+  private:
+      GraphicsFrameworkErrorCategory() = default;
+    };
+  }  // namespace Details
+}  // namespace
+
+namespace std
+{
+  template<>
+  struct is_error_code_enum<Sorex::Platform::EGraphicsFrameworkStatusCode>
+    : public true_type
+  {};
+}
+
 struct GLFWwindow;
 namespace Sorex::Platform
 {
+  inline std::error_code make_error_code(
+    EGraphicsFrameworkStatusCode errcode) noexcept
+  {
+    return Details::GraphicsFrameworkErrorCategory::create(errcode);
+  }
+
   /**
    * Class that based on Graphics Library Framework (glfw).
    * Create window and context for OpenGL.
@@ -59,7 +119,6 @@ public:
 
     // Interface Director::IListener
     virtual void OnFinishFrame() override;
-
 
     /**
      * @brief Create new glfw window object.

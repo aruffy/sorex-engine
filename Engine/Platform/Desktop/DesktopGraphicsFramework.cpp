@@ -27,9 +27,6 @@
 
 #include "DesktopGraphicsFramework.h"
 
-#include <glad/glad.h>
-#include <GLFW/glfw3.h>
-
 namespace
 {
   // TODO: Add error handling
@@ -43,6 +40,54 @@ namespace
 
 namespace Sorex::Platform
 {
+  namespace Details
+  {
+    const char* GraphicsFrameworkErrorCategory::name() const noexcept
+    {
+      return "GLFW";
+    }
+
+    std::string GraphicsFrameworkErrorCategory::message(int errcode) const
+    {
+      switch (errcode)
+      {
+      case GLFW_NO_ERROR:
+        [[unlikely]] return "No Error";
+      case GLFW_NOT_INITIALIZED:
+        return "The GLFW library is not initialized";
+      case GLFW_NO_CURRENT_CONTEXT:
+        return "There is no current context";
+      case GLFW_INVALID_ENUM:
+        return "Invalid argument for enum parameter";
+      case GLFW_INVALID_VALUE:
+        return "Invalid value for parameter";
+      case GLFW_OUT_OF_MEMORY:
+        return "Out of memory";
+      case GLFW_API_UNAVAILABLE:
+        return "The requested API is unavailable";
+      case GLFW_VERSION_UNAVAILABLE:
+        return "The requested API version is unavailable";
+      case GLFW_PLATFORM_ERROR:
+        return "A platform-specific error occurred";
+      case GLFW_FORMAT_UNAVAILABLE:
+        return "The requested format is unavailable";
+      case GLFW_NO_WINDOW_CONTEXT:
+        return "The specified window has no context";
+      case GLFW_CURSOR_UNAVAILABLE:
+        return "The specified cursor shape is unavailable";
+      case GLFW_FEATURE_UNAVAILABLE:
+        return "The requested feature cannot be implemented for this platform";
+      case GLFW_FEATURE_UNIMPLEMENTED:
+        return "The requested feature has not yet been implemented for this "
+               "platform";
+      case GLFW_PLATFORM_UNAVAILABLE:
+        return "The requested platform is unavailable";
+      default:
+        [[unlikely]] return "Unknown Error Code";
+      }
+    }
+  }  // namespace Details
+
   DesktopGraphicsFramework::~DesktopGraphicsFramework()
   {
     // Shutdown();
@@ -69,8 +114,7 @@ namespace Sorex::Platform
     {
       const char* desc;
       const int   code = glfwGetError(&desc);
-      // FIXME: Make GLFW error_code
-      return SRX_STATUS_MSG(EStatusCode::Not_Permitted,
+      return SRX_STATUS_MSG(static_cast<EGraphicsFrameworkStatusCode>(code),
                             "[GLFW] Initialization failed ({}): {}",
                             code,
                             desc);
@@ -120,7 +164,6 @@ glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
     if (mMainWindow)
     {
-      SRX_INFO("DESTROY MAIN WINDOW: {}", __FUNCTION__);
       glfwDestroyWindow(mMainWindow);
       mMainWindow = nullptr;
     }
@@ -143,11 +186,9 @@ glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     {
       const char* desc;
       int         code = glfwGetError(&desc);
-      // FIXME: Add glfw error_code
       return std::make_pair(
-        SRX_STATUS_MSG(EStatusCode::Not_Available,
-                       "[GLFW] Window creation failed ({}): {}",
-                       code,
+        SRX_STATUS_MSG(static_cast<EGraphicsFrameworkStatusCode>(code),
+                       "[GLFW] Window creation failed: {}",
                        desc),
         nullptr);
     }
@@ -155,26 +196,25 @@ glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     glfwMakeContextCurrent(window);
     if (!mMainWindow)
     {
-      SRX_DEBUG(
-        "[DesktopGraphicsFramework] Create main window: loading GL loader");
+      SRX_DEBUG("[DesktopGraphicsFramework] Create main window: loading OpenGL "
+                "functions.");
+
       if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
       {
-        // FIXME: use glad error, why glfw?
         const char* desc;
-        const int   code = glfwGetError(&desc);
+        glfwGetError(&desc);
         glfwDestroyWindow(window);
-        // FIXME: Add glfw error_code
+
         return std::make_pair(
-          SRX_STATUS_MSG(EStatusCode::Not_Available,
-                         "[GLFW] Window creation failed ({}): {}",
-                         code,
-                         desc),
+          SRX_STATUS_MSG(
+            EStatusCode::Not_Available,
+            "[DesktopGraphicsFramework] Loading OpenGL functions failed: {}",
+            desc),
           nullptr);
       }
-      // mMainWindow = window;
+      mMainWindow = window;
     }
 
-    glfwDestroyWindow(window);
     return std::make_pair(SRX_OK, window);
   }
 
@@ -198,15 +238,6 @@ glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     glfwPollEvents();
     if (mMainWindow && glfwWindowShouldClose(mMainWindow))
     {
-      if (mDirector)
-        mDirector->Exit();
-    }
-
-    static int i = 0;
-    ++i;
-    if (i >= 0xff)
-    {
-      SRX_INFO("EXIT");
       if (mDirector)
         mDirector->Exit();
     }
