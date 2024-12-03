@@ -123,17 +123,14 @@ public:
     /**
      * @brief Create new glfw window object.
      *
-     * @param title - title of the window
-     * @param size - desired window size
-     * @param owner - real holder of glfw window object, will be associated with
-     * window.
-     * @param error - store error description if creation isn't done
-     * successfully
-     * @return The pointer to glfw window object or NULL if creation was't
-     * successfully
+     * @param title - utf8 string to name the window;
+     * @param size - desired window size, if null the full screen window;
+     * @param pos - position of new window;
      */
-    TPair<Status, GLFWwindow*> CreateWindow(const WString& title,
-                                            const SizeInt& size) SRX_NOEXCEPT;
+    TPair<Status, GLFWwindow*> CreateWindow(const WStringView& title,
+                                            const SizeInt*     size = nullptr,
+                                            const PointInt*    pos  = nullptr)
+      SRX_NOEXCEPT;
     /**
      * @brief Destroy glfw window object.
      *

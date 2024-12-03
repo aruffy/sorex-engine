@@ -27,6 +27,8 @@
 
 #include "DesktopGraphicsFramework.h"
 
+#include <Sorex/Utils/String.h>
+
 namespace
 {
   // TODO: Add error handling
@@ -36,6 +38,7 @@ namespace
               errorId,
               errorMsg);
   }
+
 }
 
 namespace Sorex::Platform
@@ -120,35 +123,13 @@ namespace Sorex::Platform
                             desc);
     }
 
-    // Window Hints
-    glfwWindowHint(GLFW_RESIZABLE, GL_TRUE);  // TODO: Add option
-
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-    // FIXME: Add macro to enable
-    // glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE);
-
-    /* glfwWindowHint(GLFW_RED_BITS, _glCtxAttribs.redBits);
-    glfwWindowHint(GLFW_GREEN_BITS, _glCtxAttribs.greenBits);
-    glfwWindowHint(GLFW_BLUE_BITS, _glCtxAttribs.blueBits);
-    glfwWindowHint(GLFW_ALPHA_BITS, _glCtxAttribs.alphaBits);
-
-    glfwWindowHint(GLFW_DEPTH_BITS, _glCtxAttribs.depthBits);
-    glfwWindowHint(GLFW_STENCIL_BITS, _glCtxAttribs.stencilBits); */
-
-    /*
-#if (PLATFORM_MAC)
-glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-#endif
-*/
     // Callbacks
     glfwSetErrorCallback(OnFrameworkError);
     mIsInitialized = true;
 
     // FIXME: move to director: via WindowsManager
-    CreateWindow(L"HELLO", SizeInt{ 800, 640 });
+    SizeInt winSize{ 800, 640 };
+    CreateWindow(L"HELLO", &winSize);
     return SRX_OK;
   }
 
@@ -173,15 +154,85 @@ glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
   }
 
   TPair<Status, GLFWwindow*> DesktopGraphicsFramework::CreateWindow(
-    const WString& title,
-    const SizeInt& size) SRX_NOEXCEPT
+    const WStringView& title,
+    const SizeInt*     size /* = nullptr */,
+    const PointInt*    pos /* = nullptr */) SRX_NOEXCEPT
   {
+    SRX_CLSFUN_TRACE();
     SRX_CHECK(mIsInitialized);
 
-    // TODO : monitor
-    GLFWwindow* window =
-      glfwCreateWindow(size.width, size.height, "Window Name", NULL, NULL);
+    SizeInt      wSize;
+    GLFWmonitor* monitor     = NULL;
+    int          redBits     = 8;
+    int          greenBits   = 8;
+    int          blueBits    = 8;
+    int          alphaBits   = 8;
+    int          depthBits   = 24;
+    int          stencilBits = 8;
 
+    if (mMainWindow)
+      glfwDefaultWindowHints();
+
+    if (size)
+    {
+      wSize = *size;
+      glfwWindowHint(GLFW_RESIZABLE, GL_TRUE);
+      glfwWindowHint(GLFW_DECORATED, GL_TRUE);
+
+      if (pos)
+      {
+        glfwWindowHint(GLFW_POSITION_X, pos->x);
+        glfwWindowHint(GLFW_POSITION_Y, pos->y);
+      }
+    }
+    else
+    {
+      monitor = glfwGetPrimaryMonitor();
+      if (const GLFWvidmode* mode = glfwGetVideoMode(monitor))
+      {
+        redBits      = mode->redBits;
+        greenBits    = mode->greenBits;
+        blueBits     = mode->blueBits;
+        wSize.width  = mode->width;
+        wSize.height = mode->height;
+
+        glfwWindowHint(GLFW_REFRESH_RATE, mode->refreshRate);
+      }
+
+      glfwWindowHint(GLFW_DECORATED, GL_FALSE);
+      glfwWindowHint(GLFW_CENTER_CURSOR, GL_TRUE);
+      glfwWindowHint(GLFW_FOCUS_ON_SHOW, GL_TRUE);
+    }
+
+#ifdef SOREX_PLATFORM_MACOSX
+    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+#else
+    glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_API);
+#endif
+
+    // Context specific hints
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
+    glfwWindowHint(GLFW_RED_BITS, redBits);
+    glfwWindowHint(GLFW_GREEN_BITS, greenBits);
+    glfwWindowHint(GLFW_BLUE_BITS, blueBits);
+    glfwWindowHint(GLFW_ALPHA_BITS, alphaBits);
+    glfwWindowHint(GLFW_DEPTH_BITS, depthBits);
+    glfwWindowHint(GLFW_STENCIL_BITS, stencilBits);
+
+#ifdef SOREX_DEBUG_MEDIUM
+    glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE);
+#endif
+
+    const String wTitle =
+      !title.empty() ? Utils::ToUtf8String(title) : String("Sorex Window");
+    GLFWwindow* window = glfwCreateWindow(wSize.width,
+                                          wSize.height,
+                                          wTitle.c_str(),
+                                          monitor,
+                                          NULL);
     if (window == nullptr)
     {
       const char* desc;
@@ -220,6 +271,8 @@ glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
   void DesktopGraphicsFramework::DestroyWindow(GLFWwindow* window) SRX_NOEXCEPT
   {
+    SRX_CLSFUN_TRACE();
+
     if (window == nullptr)
       return;
 

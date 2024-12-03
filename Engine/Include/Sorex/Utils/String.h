@@ -412,4 +412,6 @@ namespace Sorex::Utils
 #endif
   }
 
+  SRX_API String ToUtf8String(WStringView wstr) SRX_NOEXCEPT;
+
 }  // namespace
