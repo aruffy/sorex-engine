@@ -25,37 +25,72 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#include <Sorex/DesktopLauncher.h>
-
-#include "DesktopGraphicsFramework.h"
 #include "DesktopWindow.h"
 
 namespace Sorex::Platform
 {
-  Status DesktopLauncher::OnStartup()
+
+  DesktopWindow::DesktopWindow(DesktopGraphicsFramework& glfw,
+                               const WStringView         title,
+                               SizeInt                   size) SRX_NOEXCEPT
+    : mGlfw(glfw)
+    , mTitle(title)
+    , mSize(size)
+    , mWindow(nullptr)
+    , mDirector(nullptr)
+  {}
+
+  Status DesktopWindow::Initialize()
   {
-    SRX_TRACE("[DesktopLauncher] {}", __FUNCTION__);
+    SRX_CLSFUN_TRACE();
+    SRX_CHECK(mSize.IsValid() && !mTitle.empty());
+
+    auto [status, window] = mGlfw.CreateWindow(mTitle, &mSize);
+    if (!status.Ok())
+      return status;
+
+    mWindow = window;
     return SRX_OK;
   }
 
-  Status DesktopLauncher::OnInitialize(Director& director)
+  void DesktopWindow::Shutdown()
   {
-    SRX_TRACE("[DesktopLauncher] {}", __FUNCTION__);
+    SRX_CLSFUN_TRACE();
 
-    auto glfw = director.AddComponent<DesktopGraphicsFramework>();
-    director.AddComponent<DesktopWindow>(*glfw, L"Sorex", SizeInt{ 800, 640 });
+    if (mDirector)
+    {
+      mDirector->RemoveListener(this);
+      mDirector = nullptr;
+    }
 
-    return SRX_OK;
+    if (mWindow)
+    {
+      mGlfw.DestroyWindow(mWindow);
+      mWindow = nullptr;
+    }
   }
 
-  Status DesktopLauncher::OnDeactivate(Director& director)
+  void DesktopWindow::Attach(Director& director)
   {
-    SRX_TRACE("[DesktopLauncher] {}", __FUNCTION__);
-    return SRX_OK;
+    SRX_CHECK(!mDirector);
+
+    Director::Component::Attach(director);
+
+    director.AddListener(this);
+    mDirector = &director;
   }
 
-  void DesktopLauncher::OnShutdown()
+  void DesktopWindow::Update(const float deltaTime)
   {
-    SRX_TRACE("[DesktopLauncher] {}", __FUNCTION__);
+    if (mWindow && glfwWindowShouldClose(mWindow))
+      Shutdown();
   }
-}
+
+  void DesktopWindow::OnFinishFrame()
+  {
+    SRX_CHECK(mWindow);
+
+    if (mWindow)
+      glfwSwapBuffers(mWindow);
+  }
+}  // namespace

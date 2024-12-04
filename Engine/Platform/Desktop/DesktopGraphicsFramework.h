@@ -97,9 +97,7 @@ namespace Sorex::Platform
    * Class that based on Graphics Library Framework (glfw).
    * Create window and context for OpenGL.
    */
-  class DesktopGraphicsFramework final
-    : public Director::Component
-    , private Director::IListener
+  class DesktopGraphicsFramework final: public Director::Component
   {
     SRX_RTTI(Platform::DesktopGraphicsFramework, Director::Component)
 
@@ -112,13 +110,9 @@ public:
       delete;
 
     // Interface Director::Component
-    virtual void   Attach(Director& director) override;
     virtual Status Initialize() override;
     virtual void   Shutdown() override;
     virtual void   Update(const float deltaTime) override;
-
-    // Interface Director::IListener
-    virtual void OnFinishFrame() override;
 
     /**
      * @brief Create new glfw window object.
@@ -141,7 +135,5 @@ public:
 private:
     bool        mIsInitialized = false;
     GLFWwindow* mMainWindow    = nullptr;
-
-    Director* mDirector = nullptr;
   };
 }

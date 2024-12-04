@@ -38,7 +38,6 @@ namespace
               errorId,
               errorMsg);
   }
-
 }
 
 namespace Sorex::Platform
@@ -96,15 +95,6 @@ namespace Sorex::Platform
     // Shutdown();
   }
 
-  void DesktopGraphicsFramework::Attach(Director& director)
-  {
-    Director::Component::Attach(director);
-
-    SRX_CHECK(!mDirector);
-    director.AddListener(this);
-    mDirector = &director;
-  }
-
   Status DesktopGraphicsFramework::Initialize()
   {
     SRX_CLSFUN_TRACE();
@@ -127,27 +117,17 @@ namespace Sorex::Platform
     glfwSetErrorCallback(OnFrameworkError);
     mIsInitialized = true;
 
-    // FIXME: move to director: via WindowsManager
-    SizeInt winSize{ 800, 640 };
-    CreateWindow(L"HELLO", &winSize);
     return SRX_OK;
   }
 
   void DesktopGraphicsFramework::Shutdown()
   {
     SRX_CLSFUN_TRACE();
-
-    if (mDirector)
-      mDirector->RemoveListener(this);
-
     if (!mIsInitialized)
       return;
 
     if (mMainWindow)
-    {
-      glfwDestroyWindow(mMainWindow);
       mMainWindow = nullptr;
-    }
 
     glfwTerminate();  // NOTE: Should destroy all windows
     mIsInitialized = false;
@@ -173,7 +153,7 @@ namespace Sorex::Platform
     if (mMainWindow)
       glfwDefaultWindowHints();
 
-    if (size)
+    if (size && size->IsValid())
     {
       wSize = *size;
       glfwWindowHint(GLFW_RESIZABLE, GL_TRUE);
@@ -279,8 +259,8 @@ namespace Sorex::Platform
     if (window == mMainWindow)
     {
       mMainWindow = nullptr;
-      if (mDirector)
-        mDirector->Exit();
+      if (auto director = GetDirector())
+        director->Exit();
     }
 
     glfwDestroyWindow(window);
@@ -289,17 +269,5 @@ namespace Sorex::Platform
   void DesktopGraphicsFramework::Update(const float deltaTime)
   {
     glfwPollEvents();
-    if (mMainWindow && glfwWindowShouldClose(mMainWindow))
-    {
-      if (mDirector)
-        mDirector->Exit();
-    }
-  }
-
-  void DesktopGraphicsFramework::OnFinishFrame()
-  {
-    // TODO: Check if needed for active/all windows
-    if (mMainWindow)
-      glfwSwapBuffers(mMainWindow);
   }
 }  // namespace

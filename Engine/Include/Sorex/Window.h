@@ -25,37 +25,25 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#include <Sorex/DesktopLauncher.h>
+#pragma once
 
-#include "DesktopGraphicsFramework.h"
-#include "DesktopWindow.h"
+#include "CoreMinimal.h"
+#include "Director.h"
 
-namespace Sorex::Platform
+namespace Sorex
 {
-  Status DesktopLauncher::OnStartup()
+  class SRX_API Window: public Director::Component
   {
-    SRX_TRACE("[DesktopLauncher] {}", __FUNCTION__);
-    return SRX_OK;
-  }
+    SRX_RTTI(Window, Director::Component)
 
-  Status DesktopLauncher::OnInitialize(Director& director)
-  {
-    SRX_TRACE("[DesktopLauncher] {}", __FUNCTION__);
+public:
+    virtual ~Window() = default;
 
-    auto glfw = director.AddComponent<DesktopGraphicsFramework>();
-    director.AddComponent<DesktopWindow>(*glfw, L"Sorex", SizeInt{ 800, 640 });
+    // virtual int            SetTitle(const WString& value) = 0;
+    // virtual const WString& GetTitle() const               = 0;
 
-    return SRX_OK;
-  }
+    virtual bool IsResizable() const { return false; }
 
-  Status DesktopLauncher::OnDeactivate(Director& director)
-  {
-    SRX_TRACE("[DesktopLauncher] {}", __FUNCTION__);
-    return SRX_OK;
-  }
-
-  void DesktopLauncher::OnShutdown()
-  {
-    SRX_TRACE("[DesktopLauncher] {}", __FUNCTION__);
-  }
-}
+    // virtual SizeInt GetSize() const = 0;
+  };
+}  // namespace

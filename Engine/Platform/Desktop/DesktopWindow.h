@@ -25,37 +25,41 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#include <Sorex/DesktopLauncher.h>
+#pragma once
+
+#include <Sorex/Window.h>
 
 #include "DesktopGraphicsFramework.h"
-#include "DesktopWindow.h"
 
 namespace Sorex::Platform
 {
-  Status DesktopLauncher::OnStartup()
+  class DesktopWindow final
+    : public Window
+    , private Director::IListener
   {
-    SRX_TRACE("[DesktopLauncher] {}", __FUNCTION__);
-    return SRX_OK;
-  }
+    SRX_RTTI(Platform::DesktopWindow, Window)
 
-  Status DesktopLauncher::OnInitialize(Director& director)
-  {
-    SRX_TRACE("[DesktopLauncher] {}", __FUNCTION__);
+public:
+    DesktopWindow(DesktopGraphicsFramework& glfw,
+                  const WStringView         title,
+                  SizeInt                   size) SRX_NOEXCEPT;
 
-    auto glfw = director.AddComponent<DesktopGraphicsFramework>();
-    director.AddComponent<DesktopWindow>(*glfw, L"Sorex", SizeInt{ 800, 640 });
+    // Interface Director::Component
+    virtual void   Attach(Director& director) override;
+    virtual Status Initialize() override;
+    virtual void   Shutdown() override;
+    virtual void   Update(const float deltaTime) override;
 
-    return SRX_OK;
-  }
+    // Interface Director::IListener
+    virtual void OnFinishFrame() override;
 
-  Status DesktopLauncher::OnDeactivate(Director& director)
-  {
-    SRX_TRACE("[DesktopLauncher] {}", __FUNCTION__);
-    return SRX_OK;
-  }
+private:
+    DesktopGraphicsFramework& mGlfw;
 
-  void DesktopLauncher::OnShutdown()
-  {
-    SRX_TRACE("[DesktopLauncher] {}", __FUNCTION__);
-  }
-}
+    WString mTitle;
+    SizeInt mSize;
+
+    GLFWwindow* mWindow;
+    Director*   mDirector;
+  };
+}  // namespace
