@@ -68,8 +68,8 @@ public:
 
     template<typename U>
       requires Concept::SafeIntegralConversion<U, T>
-    SRX_INLINE TIntegerSize(const TIntegerSize<U>& other)
-      SRX_NOEXCEPT  // cppcheck-suppress noExplicitConstructor
+    // cppcheck-suppress noExplicitConstructor
+    SRX_INLINE TIntegerSize(const TIntegerSize<U>& other) SRX_NOEXCEPT
       : width(static_cast<T>(other.width))
       , height(static_cast<T>(other.height))
     {}

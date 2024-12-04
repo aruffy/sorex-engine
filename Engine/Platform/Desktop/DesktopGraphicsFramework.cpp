@@ -230,6 +230,7 @@ namespace Sorex::Platform
       SRX_DEBUG("[DesktopGraphicsFramework] Create main window: loading OpenGL "
                 "functions.");
 
+      // cppcheck-suppress cstyleCast
       if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
       {
         const char* desc;

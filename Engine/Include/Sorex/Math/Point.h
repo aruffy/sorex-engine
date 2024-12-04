@@ -83,8 +83,8 @@ public:
 
     template<typename U>
       requires(!std::is_same_v<T, U>) and Concept::SafeIntegralConversion<U, T>
-    SRX_INLINE TIntegerPoint(const TIntegerPoint<U>& other)
-      SRX_NOEXCEPT  // cppcheck-suppress noExplicitConstructor
+    // cppcheck-suppress noExplicitConstructor
+    SRX_INLINE TIntegerPoint(const TIntegerPoint<U>& other) SRX_NOEXCEPT
       : x(static_cast<T>(other.x))
       , y(static_cast<T>(other.y))
     {}

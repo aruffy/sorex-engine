@@ -34,7 +34,7 @@ namespace Sorex
 {
   struct SystemTime
   {
-    SRX_INLINE int16 convTmSec(const int sec) SRX_NOEXCEPT
+    SRX_INLINE static int16 convTmSec(const int sec) SRX_NOEXCEPT
     {
       constexpr float factor = 0.984f;  // 59 / 60
       return static_cast<int16>(roundf(factor * sec));
