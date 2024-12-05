@@ -149,6 +149,16 @@ public:
     // cppcheck-suppress functionStatic
     SRX_INLINE Iterator end() SRX_NOEXCEPT { return Iterator(); }
 
+    template<typename Fn>
+    SRX_INLINE void Notify(Fn&& callback)
+    {
+      for (Listener* listener : (*this))
+      {
+        SRX_CHECK(listener);  // NOTE: iterator takes valid listener
+        callback(*listener);
+      }
+    }
+
 private:
     void Cleanup() SRX_NOEXCEPT;
 

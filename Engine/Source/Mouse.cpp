@@ -25,58 +25,32 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#pragma once
-
-#include <Sorex/CoreMinimal.h>
-#include <Sorex/Director.h>
-#include <Sorex/Window.h>
-
-#include <Sorex/Containers/ListenerContainer.h>
+#include <Sorex/Input/Mouse.h>
 
 namespace Sorex
 {
-  class InputSystem: public Director::Component
+  Vec2 MouseEvent::GetVector(const EMouseEvent evt) const SRX_NOEXCEPT
   {
-    SRX_RTTI(InputSystem, Director::Component)
+    SRX_CHECK(mType == evt && std::holds_alternative<Vec2>(mEventData));
 
-public:
-    class IListener
-    {
-  public:
-      virtual ~IListener() = default;
+    if (mType != evt)
+      return Vec2::Zero();
 
-      virtual void OnMouseEvent(Window* window) {}
-      virtual void OnKeyboardEvent(Window* window) {};
-      // virtual void OnTouchEvent() {}
-    };
-
-public:
-    InputSystem()                   = default;
-    virtual ~InputSystem() override = default;
-
-    InputSystem(const InputSystem& other)            = delete;
-    InputSystem& operator=(const InputSystem& other) = delete;
-
-    // Listeners
-    SRX_INLINE bool AddListener(IListener* listener) SRX_NOEXCEPT;
-    SRX_INLINE void RemoveListener(IListener* listener) SRX_NOEXCEPT;
-
-    // virtual Keyboard* GetKeyboard() = 0;
-    // virtual Mouse* GetMouse() = 0;
-    // virtual TouchScreen* GetTouchScreen() = 0;
-protected:
-    TListenerContainer<IListener> mListeners;
-
-private:
-  };
-
-  SRX_INLINE bool InputSystem::AddListener(IListener* listener) SRX_NOEXCEPT
-  {
-    return mListeners.Add(listener);
+    const Vec2* const vec = std::get_if<Vec2>(&mEventData);
+    return vec ? *vec : Vec2::Zero();
   }
 
-  SRX_INLINE void InputSystem::RemoveListener(IListener* listener) SRX_NOEXCEPT
+  EMouseButton MouseEvent::GetMouseButton() const SRX_NOEXCEPT
   {
-    mListeners.Remove(listener);
+    SRX_CHECK(
+      (mType == EMouseEvent::Button_Up || mType == EMouseEvent::Button_Down)
+      && std::holds_alternative<EMouseButton>(mEventData));
+
+    if (mType != EMouseEvent::Button_Up && mType != EMouseEvent::Button_Down)
+      return EMouseButton::None;
+
+    const EMouseButton* const btn = std::get_if<EMouseButton>(&mEventData);
+    return btn ? *btn : EMouseButton::None;
   }
-}
+
+}  // namespace
