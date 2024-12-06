@@ -29,6 +29,7 @@
 
 #include <Sorex/CoreMinimal.h>
 #include <Sorex/Director.h>
+#include <Sorex/Containers/ListenerContainer.h>
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -102,6 +103,27 @@ namespace Sorex::Platform
     SRX_RTTI(Platform::DesktopGraphicsFramework, Director::Component)
 
 public:
+    class IListener
+    {
+  public:
+      /**
+       * @brief Called when a new window is created.
+       * @param window Reference to the created GLFWwindow.
+       */
+      virtual void OnWindowCreate(GLFWwindow& window) {};
+
+      /**
+       * @brief Called when a window is destroyed.
+       * @param window Pointer to the GLFWwindow being destroyed. If null, all
+       * windows will be destroyed.
+       */
+      virtual void OnWindowDestroy(GLFWwindow* window) {};
+
+  protected:
+      virtual ~IListener() = default;
+    };
+
+public:
     DesktopGraphicsFramework() = default;
     virtual ~DesktopGraphicsFramework() override;
 
@@ -132,8 +154,20 @@ public:
      */
     void DestroyWindow(GLFWwindow* window) SRX_NOEXCEPT;
 
+    // Listeners
+    SRX_INLINE bool AddListener(IListener* listener) SRX_NOEXCEPT
+    {
+      return mListeners.Add(listener);
+    }
+    SRX_INLINE void RemoveListener(IListener* listener) SRX_NOEXCEPT
+    {
+      mListeners.Remove(listener);
+    }
+
 private:
     bool        mIsInitialized = false;
     GLFWwindow* mMainWindow    = nullptr;
+
+    TListenerContainer<IListener> mListeners;
   };
 }

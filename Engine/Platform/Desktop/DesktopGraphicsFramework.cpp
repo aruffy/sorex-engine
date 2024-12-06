@@ -127,7 +127,12 @@ namespace Sorex::Platform
       return;
 
     if (mMainWindow)
+    {
+      for (IListener* listener : mListeners)
+        listener->OnWindowDestroy(nullptr);
+
       mMainWindow = nullptr;
+    }
 
     glfwTerminate();  // NOTE: Should destroy all windows
     mIsInitialized = false;
@@ -247,6 +252,9 @@ namespace Sorex::Platform
       mMainWindow = window;
     }
 
+    for (IListener* listener : mListeners)
+      listener->OnWindowCreate(*window);
+
     return std::make_pair(SRX_OK, window);
   }
 
@@ -256,6 +264,9 @@ namespace Sorex::Platform
 
     if (window == nullptr)
       return;
+
+    for (IListener* listener : mListeners)
+      listener->OnWindowCreate(*window);
 
     if (window == mMainWindow)
     {

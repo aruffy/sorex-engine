@@ -3,7 +3,7 @@
 /*                                SOREX                                   */
 /*                 Simple OpenGL Rendering Engine eXtended                */
 /**************************************************************************/
-/* Copyright (c) 2022 Aleksandr Ershov (Ruffy).                           */
+/* Copyright (c) 2022-2024 Aleksandr Ershov (Ruffy).                      */
 /*                                                                        */
 /* Permission is hereby granted, free of charge, to any person obtaining  */
 /* a copy of this software and associated documentation files (the        */
@@ -25,39 +25,70 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#include <Sorex/DesktopLauncher.h>
-
-#include "DesktopGraphicsFramework.h"
 #include "DesktopInputSystem.h"
-#include "DesktopWindow.h"
+
+namespace
+{
+  using namespace Sorex;
+  Platform::DesktopInputSystem* inputSystem = nullptr;
+
+  void OnMouseClickCallback(GLFWwindow* window,
+                            int         button,
+                            int         action,
+                            int         modify) SRX_NOEXCEPT
+  {
+    SRX_CHECK(inputSystem);
+    SRX_DEBUG("Mouse Click {}", button);
+  }
+
+  void OnMouseMoveCallback(GLFWwindow* window, double x, double y) SRX_NOEXCEPT
+  {
+    SRX_CHECK(inputSystem);
+    SRX_DEBUG("Mouse Move {}x{}", x, y);
+  }
+
+  void OnMouseScrollCallback(GLFWwindow* window,
+                             double      x,
+                             double      y) SRX_NOEXCEPT
+  {
+    SRX_CHECK(inputSystem);
+    SRX_DEBUG("Mouse Scroll {}x{}", x, y);
+  }
+}  // namespace
 
 namespace Sorex::Platform
 {
-  Status DesktopLauncher::OnStartup()
+  DesktopInputSystem::DesktopInputSystem(DesktopGraphicsFramework& glfw)
+    SRX_NOEXCEPT: mGlfw(glfw)
   {
-    SRX_TRACE("[DesktopLauncher] {}", __FUNCTION__);
+    SRX_CHECK(inputSystem == nullptr);
+
+    inputSystem = this;
+    mGlfw.AddListener(this);
+  }
+
+  DesktopInputSystem::~DesktopInputSystem()
+  {
+    mGlfw.RemoveListener(this);
+    inputSystem = nullptr;
+  }
+
+  Status DesktopInputSystem::Initialize()
+  {
+    SRX_CLSFUN_TRACE();
+
     return SRX_OK;
   }
-
-  Status DesktopLauncher::OnInitialize(Director& director)
+  void DesktopInputSystem::Shutdown()
   {
-    SRX_TRACE("[DesktopLauncher] {}", __FUNCTION__);
+    SRX_CLSFUN_TRACE();
+  };
 
-    auto& glfw = *director.AddComponent<DesktopGraphicsFramework>();
-    director.AddComponent<DesktopInputSystem>(glfw);
-    director.AddComponent<DesktopWindow>(glfw, L"Sorex", SizeInt{ 800, 640 });
-
-    return SRX_OK;
-  }
-
-  Status DesktopLauncher::OnDeactivate(Director& director)
+  void DesktopInputSystem::OnWindowCreate(GLFWwindow& window)
   {
-    SRX_TRACE("[DesktopLauncher] {}", __FUNCTION__);
-    return SRX_OK;
+    /* Mouse callbacks */
+    glfwSetMouseButtonCallback(&window, OnMouseClickCallback);
+    glfwSetCursorPosCallback(&window, OnMouseMoveCallback);
+    glfwSetScrollCallback(&window, OnMouseScrollCallback);
   }
-
-  void DesktopLauncher::OnShutdown()
-  {
-    SRX_TRACE("[DesktopLauncher] {}", __FUNCTION__);
-  }
-}
+}  // namespace

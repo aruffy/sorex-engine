@@ -94,6 +94,8 @@ public:
       return GetVector(EMouseEvent::Scroll);
     }
 
+    SRX_INLINE Mouse* GetMouse() const SRX_NOEXCEPT { return mMouse; }
+
 private:
     Vec2 GetVector(const EMouseEvent ent) const SRX_NOEXCEPT;
 

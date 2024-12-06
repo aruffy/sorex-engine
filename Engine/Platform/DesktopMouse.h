@@ -25,39 +25,31 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#include <Sorex/DesktopLauncher.h>
+#pragma once
 
-#include "DesktopGraphicsFramework.h"
-#include "DesktopInputSystem.h"
-#include "DesktopWindow.h"
+#include <Sorex/Input/Mouse.h>
 
 namespace Sorex::Platform
 {
-  Status DesktopLauncher::OnStartup()
+  class DesktopMouse final: public Mouse
   {
-    SRX_TRACE("[DesktopLauncher] {}", __FUNCTION__);
-    return SRX_OK;
-  }
+public:
+    virtual Point GetCursorPosition() const override { return Point(); }
+    virtual Vec2  GetCursorMovement() const override { return Vec2::Zero(); }
 
-  Status DesktopLauncher::OnInitialize(Director& director)
-  {
-    SRX_TRACE("[DesktopLauncher] {}", __FUNCTION__);
+    virtual const Vec2 GetScroll() const override { return Vec2::Zero(); }
+    virtual bool       IsButtonPressed(const EMouseButton button) const override
+    {
+      return false;
+    }
 
-    auto& glfw = *director.AddComponent<DesktopGraphicsFramework>();
-    director.AddComponent<DesktopInputSystem>(glfw);
-    director.AddComponent<DesktopWindow>(glfw, L"Sorex", SizeInt{ 800, 640 });
+private:
+    Point _position;
+    Point _prevPosition;
 
-    return SRX_OK;
-  }
+    TArray<bool, 8> _buttons;  ///< store true if button is being pressed
 
-  Status DesktopLauncher::OnDeactivate(Director& director)
-  {
-    SRX_TRACE("[DesktopLauncher] {}", __FUNCTION__);
-    return SRX_OK;
-  }
-
-  void DesktopLauncher::OnShutdown()
-  {
-    SRX_TRACE("[DesktopLauncher] {}", __FUNCTION__);
-  }
+    Vector2 _movement;
+    Vector2 _scroll;
+  };
 }

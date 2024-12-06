@@ -3,7 +3,7 @@
 /*                                SOREX                                   */
 /*                 Simple OpenGL Rendering Engine eXtended                */
 /**************************************************************************/
-/* Copyright (c) 2022 Aleksandr Ershov (Ruffy).                           */
+/* Copyright (c) 2022-2024 Aleksandr Ershov (Ruffy).                      */
 /*                                                                        */
 /* Permission is hereby granted, free of charge, to any person obtaining  */
 /* a copy of this software and associated documentation files (the        */
@@ -25,39 +25,32 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#include <Sorex/DesktopLauncher.h>
+#pragma once
+
+#include <Sorex/Input/InputSystem.h>
 
 #include "DesktopGraphicsFramework.h"
-#include "DesktopInputSystem.h"
-#include "DesktopWindow.h"
 
 namespace Sorex::Platform
 {
-  Status DesktopLauncher::OnStartup()
+  class DesktopInputSystem final
+    : public InputSystem
+    , public DesktopGraphicsFramework::IListener
   {
-    SRX_TRACE("[DesktopLauncher] {}", __FUNCTION__);
-    return SRX_OK;
-  }
+    SRX_RTTI(Platform::DesktopInputSystem, InputSystem);
 
-  Status DesktopLauncher::OnInitialize(Director& director)
-  {
-    SRX_TRACE("[DesktopLauncher] {}", __FUNCTION__);
+public:
+    explicit DesktopInputSystem(DesktopGraphicsFramework& glfw) SRX_NOEXCEPT;
+    virtual ~DesktopInputSystem() override;
 
-    auto& glfw = *director.AddComponent<DesktopGraphicsFramework>();
-    director.AddComponent<DesktopInputSystem>(glfw);
-    director.AddComponent<DesktopWindow>(glfw, L"Sorex", SizeInt{ 800, 640 });
+    // Interface Director::Component
+    virtual Status Initialize() override;
+    virtual void   Shutdown() override;
 
-    return SRX_OK;
-  }
+    // Interface DesktopGraphicsFramework::IListener
+    virtual void OnWindowCreate(GLFWwindow& window) override;
 
-  Status DesktopLauncher::OnDeactivate(Director& director)
-  {
-    SRX_TRACE("[DesktopLauncher] {}", __FUNCTION__);
-    return SRX_OK;
-  }
-
-  void DesktopLauncher::OnShutdown()
-  {
-    SRX_TRACE("[DesktopLauncher] {}", __FUNCTION__);
-  }
-}
+private:
+    DesktopGraphicsFramework& mGlfw;
+  };
+}  // namespace
