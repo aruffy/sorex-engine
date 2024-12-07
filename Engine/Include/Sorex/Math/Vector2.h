@@ -313,7 +313,7 @@ namespace Sorex::Math
   SRX_INLINE TVector2<T> operator-(const TVector2<T>& lhs,
                                    const TVector2<T>& rhs) SRX_NOEXCEPT
   {
-    return TVector<T>(lhs.x - rhs.x, lhs.y - rhs.y);
+    return TVector2<T>(lhs.x - rhs.x, lhs.y - rhs.y);
   }
 
   template<typename T>

@@ -44,7 +44,7 @@ namespace Sorex
     Button_5 = 4,
     Button_6 = 5,
     Button_7 = 6,
-    Button_8 = 7
+    Button_8 = 7,
   };
 
   class Mouse
@@ -54,8 +54,6 @@ public:
 
     virtual Point GetCursorPosition() const = 0;
     virtual Vec2  GetCursorMovement() const = 0;
-
-    virtual const Vec2 GetScroll() const = 0;
 
     virtual bool IsButtonPressed(const EMouseButton button) const = 0;
   };

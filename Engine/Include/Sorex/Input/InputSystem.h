@@ -33,6 +33,8 @@
 
 #include <Sorex/Containers/ListenerContainer.h>
 
+#include "Mouse.h"
+
 namespace Sorex
 {
   class InputSystem: public Director::Component
@@ -61,8 +63,8 @@ public:
     SRX_INLINE bool AddListener(IListener* listener) SRX_NOEXCEPT;
     SRX_INLINE void RemoveListener(IListener* listener) SRX_NOEXCEPT;
 
+    virtual Mouse* GetMouse() { return nullptr; }
     // virtual Keyboard* GetKeyboard() = 0;
-    // virtual Mouse* GetMouse() = 0;
     // virtual TouchScreen* GetTouchScreen() = 0;
 protected:
     TListenerContainer<IListener> mListeners;

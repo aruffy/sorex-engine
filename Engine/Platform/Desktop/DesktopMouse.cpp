@@ -25,31 +25,40 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#pragma once
-
-#include <Sorex/Input/Mouse.h>
+#include "DesktopMouse.h"
 
 namespace Sorex::Platform
 {
-  class DesktopMouse final: public Mouse
+  Point DesktopMouse::GetCursorPosition() const
   {
-public:
-    virtual Point GetCursorPosition() const override { return Point(); }
-    virtual Vec2  GetCursorMovement() const override { return Vec2::Zero(); }
+    return { mPosition.x, mPosition.y };
+  }
 
-    virtual const Vec2 GetScroll() const override { return Vec2::Zero(); }
-    virtual bool       IsButtonPressed(const EMouseButton button) const override
-    {
+  Vec2 DesktopMouse::GetCursorMovement() const
+  {
+    return mPrevPosition - mPosition;
+  }
+
+  bool DesktopMouse::IsButtonPressed(const EMouseButton button) const
+  {
+    const int index = static_cast<int>(button);
+    if (index < 0 || index >= kButtonNumber)
       return false;
+
+    return mButtons[index];
+  }
+
+  void DesktopMouse::SetButtonState(const EMouseButton button,
+                                    bool               bPressed) SRX_NOEXCEPT
+  {
+    const int index = static_cast<int>(button);
+    if (index < 0 || index >= kButtonNumber)
+    {
+      SRX_NOENTRY("invalid button");
+      return;
     }
 
-private:
-    Point _position;
-    Point _prevPosition;
+    mButtons[index] = bPressed;
+  }
 
-    TArray<bool, 8> _buttons;  ///< store true if button is being pressed
-
-    Vector2 _movement;
-    Vector2 _scroll;
-  };
-}
+}  // namespace

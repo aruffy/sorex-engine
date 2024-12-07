@@ -3,7 +3,7 @@
 /*                                SOREX                                   */
 /*                 Simple OpenGL Rendering Engine eXtended                */
 /**************************************************************************/
-/* Copyright (c) 2022-2024 Aleksandr Ershov (Ruffy).                      */
+/* Copyright (c) 2022 Aleksandr Ershov (Ruffy).                           */
 /*                                                                        */
 /* Permission is hereby granted, free of charge, to any person obtaining  */
 /* a copy of this software and associated documentation files (the        */
@@ -27,35 +27,34 @@
 
 #pragma once
 
-#include <Sorex/Input/InputSystem.h>
-
-#include "DesktopGraphicsFramework.h"
-#include "DesktopMouse.h"
+#include <Sorex/Input/Mouse.h>
 
 namespace Sorex::Platform
 {
-  class DesktopInputSystem final
-    : public InputSystem
-    , public DesktopGraphicsFramework::IListener
+  class DesktopMouse final: public Mouse
   {
-    SRX_RTTI(Platform::DesktopInputSystem, InputSystem);
+    static constexpr int kButtonNumber =
+      static_cast<int>(EMouseButton::Button_8) + 1;
 
 public:
-    explicit DesktopInputSystem(DesktopGraphicsFramework& glfw) SRX_NOEXCEPT;
-    virtual ~DesktopInputSystem() override;
+    // Interface Mouse
+    virtual Point GetCursorPosition() const override;
+    virtual Vec2  GetCursorMovement() const override;
+    virtual bool  IsButtonPressed(const EMouseButton button) const override;
 
-    // Interface Director::Component
-    virtual Status Initialize() override;
-    virtual void   Shutdown() override;
-
-    // Interface DesktopGraphicsFramework::IListener
-    virtual void OnWindowCreate(GLFWwindow& window) override;
-
-    // Interface InputSystem
-    virtual Mouse* GetMouse() override { return &mMouse; }
+    SRX_INLINE void SetCursorPosition(const Point& pos) SRX_NOEXCEPT;
+    void SetButtonState(const EMouseButton button, bool bPressed) SRX_NOEXCEPT;
 
 private:
-    DesktopGraphicsFramework& mGlfw;
-    DesktopMouse              mMouse;
+    Vec2                        mPosition;
+    Vec2                        mPrevPosition;
+    TArray<bool, kButtonNumber> mButtons;
   };
-}  // namespace
+
+  SRX_INLINE void DesktopMouse::SetCursorPosition(const Point& pos) SRX_NOEXCEPT
+  {
+    mPrevPosition = mPosition;
+    mPosition.x   = pos.x;
+    mPosition.y   = pos.y;
+  }
+}
