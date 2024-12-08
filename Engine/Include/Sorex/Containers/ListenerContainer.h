@@ -150,7 +150,7 @@ public:
     SRX_INLINE Iterator end() SRX_NOEXCEPT { return Iterator(); }
 
     template<typename Fn>
-    SRX_INLINE void Notify(Fn&& callback)
+    SRX_INLINE void Notify(Fn&& callback) const
     {
       for (Listener* listener : (*this))
       {
