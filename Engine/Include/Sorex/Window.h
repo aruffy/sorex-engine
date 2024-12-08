@@ -25,39 +25,25 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#include <Sorex/Thread.h>
+#pragma once
+
+#include "CoreMinimal.h"
+#include "Director.h"
 
 namespace Sorex
 {
-  bool Thread::IsMainThread() SRX_NOEXCEPT
+  class SRX_API Window: public Director::Component
   {
-    return std::this_thread::get_id() == GetMainThreadId();
-  }
+    SRX_RTTI(Window, Director::Component)
 
-  void Thread::SetMainThread() SRX_NOEXCEPT
-  {
-    GetMainThreadId() = std::this_thread::get_id();
-  }
+public:
+    virtual ~Window() = default;
 
-  std::thread::id& Thread::GetMainThreadId()
-  {
-    static std::thread::id id;
-    return id;
-  }
+    // virtual int            SetTitle(const WString& value) = 0;
+    // virtual const WString& GetTitle() const               = 0;
 
-  void Thread::Sleep(const int64 milliseconds)
-  {
-    std::this_thread::sleep_for(std::chrono::milliseconds(milliseconds));
-  }
+    virtual bool IsResizable() const { return false; }
 
-  Thread::~Thread()
-  {
-    Join();
-  }
-
-  void Thread::Join()
-  {
-    if (mThreadObject.joinable())
-      mThreadObject.join();
-  }
-}
+    // virtual SizeInt GetSize() const = 0;
+  };
+}  // namespace

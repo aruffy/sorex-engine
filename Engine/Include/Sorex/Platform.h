@@ -63,7 +63,12 @@ namespace Sorex
     GCCE,
     CLANG
   };
-}
+}  // namespace
+
+#define SRX_IDLE \
+  do             \
+  {              \
+  } while (0)
 
 #if !defined(SOREX_DEBUG_MODE)
 #  define SOREX_DEBUG_LOW (1)
@@ -95,6 +100,8 @@ namespace Sorex
 #elif defined(TARGET_PLATFORM_LINUX)
 #  define SOREX_TARGET_PLATFORM (::Sorex::ETargetPlatform::Linux)
 #  define SOREX_PLATFORM_LINUX (1)
+
+#  include <Sorex/LinuxPlatform.h>
 
 #elif defined(__APPLE_CC__) || defined(TARGET_PLATFORM_MACOSX) \
   || defined(TARGET_PLATFORM_IOS)

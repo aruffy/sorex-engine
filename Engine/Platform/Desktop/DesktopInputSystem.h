@@ -27,28 +27,55 @@
 
 #pragma once
 
-#include <Sorex/Types.h>
-#include <Sorex/Platform.h>
-#include <Sorex/Assert.h>
+#include <Sorex/Input/InputSystem.h>
 
-#include <Sorex/Status.h>
-#include <Sorex/JournalManager.h>
+#include "DesktopGraphicsFramework.h"
+#include "DesktopMouse.h"
 
-#include <Sorex/RuntimeClass.h>
+namespace Sorex::Platform
+{
+  class DesktopInputSystem final
+    : public InputSystem
+    , public DesktopGraphicsFramework::IListener
+  {
+    SRX_RTTI(Platform::DesktopInputSystem, InputSystem);
 
-#include <Sorex/Math/Maths.h>
-#include <Sorex/Math/Point.h>
-#include <Sorex/Math/Vector2.h>
-#include <Sorex/Math/Vector3.h>
-#include <Sorex/Math/Vector4.h>
-#include <Sorex/Math/Rectangle.h>
+public:
+    static TUniquePointer<DesktopInputSystem> Create(
+      DesktopGraphicsFramework& glfw) SRX_NOEXCEPT;
 
-#include <Sorex/Color.h>
-#include <Sorex/Bitmask.h>
+    virtual ~DesktopInputSystem() override;
 
-#ifdef SOREX_DEBUG_HIGH
-#  define SRX_CLSFUN_TRACE() \
-    SRX_TRACE("[{}] {}", this->GetRuntimeClass().GetName(), __FUNCTION__)
-#else
-#  define SRX_CLSFUN_TRACE() SRX_IDLE
-#endif
+    DesktopInputSystem(const DesktopInputSystem& other)            = delete;
+    DesktopInputSystem& operator=(const DesktopInputSystem& other) = delete;
+
+    // Interface Director::Component
+    virtual Status Initialize() override;
+    virtual void   Shutdown() override;
+
+    // Interface DesktopGraphicsFramework::IListener
+    virtual void OnWindowCreate(GLFWwindow& window) override;
+
+    // Interface InputSystem
+    virtual Mouse* GetMouse() override { return &mMouse; }
+
+private:
+    explicit DesktopInputSystem(DesktopGraphicsFramework& glfw) SRX_NOEXCEPT;
+
+    static DesktopInputSystem* inputSystem;
+    static void                OnMouseClickCallback(GLFWwindow* window,
+                                                    int         button,
+                                                    int         action,
+                                                    int         modify) SRX_NOEXCEPT;
+    static void                OnMouseMoveCallback(GLFWwindow* window,
+                                                   double      x,
+                                                   double      y) SRX_NOEXCEPT;
+    static void                OnMouseScrollCallback(GLFWwindow* window,
+                                                     double      x,
+                                                     double      y) SRX_NOEXCEPT;
+
+private:
+    DesktopGraphicsFramework& mGlfw;
+    DesktopMouse              mMouse;
+  };
+}  // namespace

@@ -39,4 +39,44 @@ namespace Sorex::Utils
 
     return (str.rfind(prefix, 0) == 0);
   }
+
+  SRX_API String ToUtf8String(WStringView wstr) SRX_NOEXCEPT
+  {
+    if (wstr.empty())
+      return String();
+
+    String s;
+    s.reserve(wstr.length());
+
+    for (size_t i = 0; i < wstr.length(); ++i)
+    {
+      const WStringView::value_type ch  = wstr[i];
+      const uint32                  val = static_cast<uint32>(ch);
+      if (val < 0x0080U)
+      {
+        s += (char)ch;
+      }
+      else if (val < 0x0800U)
+      {
+        s += (char)(0xC0 | ((ch >> 6) & 0x1F));
+        s += (char)(0x80 | (ch & 0x3F));
+      }
+      else if (val < 0x10000U)
+      {
+        s += (char)(0xE0 | ((ch >> 12) & 0x0F));
+        s += (char)(0x80 | ((ch >> 6) & 0x3F));
+        s += (char)(0x80 | (ch & 0x3F));
+      }
+      else
+      {
+        s += (char)(0xF0 | ((ch >> 18) & 0x07));
+        s += (char)(0x80 | ((ch >> 12) & 0x3F));
+        s += (char)(0x80 | ((ch >> 6) & 0x3F));
+        s += (char)(0x80 | (ch & 0x3F));
+      }
+    }
+
+    return s;
+  }
+
 }  // namespace

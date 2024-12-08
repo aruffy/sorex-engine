@@ -25,39 +25,37 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#include <Sorex/Thread.h>
+#pragma once
+
+#include <Sorex/CoreMinimal.h>
 
 namespace Sorex
 {
-  bool Thread::IsMainThread() SRX_NOEXCEPT
+  enum class EInputEvent
   {
-    return std::this_thread::get_id() == GetMainThreadId();
-  }
+    None           = (0 << 0),
+    Touch          = (1 << 0),
+    Keyboard       = (1 << 1),
+    Mouse          = (1 << 2),
+    Focus          = (1 << 3),
+    GameController = (1 << 4),
+    Custom         = (1 << 5),
+    SRX_ENUM_BITMASK
+  };
 
-  void Thread::SetMainThread() SRX_NOEXCEPT
+  class InputEvent
   {
-    GetMainThreadId() = std::this_thread::get_id();
-  }
+    SRX_RTTI_BASE(InputEvent)
 
-  std::thread::id& Thread::GetMainThreadId()
-  {
-    static std::thread::id id;
-    return id;
-  }
+public:
+    SRX_INLINE explicit InputEvent(EInputEvent type) SRX_NOEXCEPT: mType(type)
+    {}
 
-  void Thread::Sleep(const int64 milliseconds)
-  {
-    std::this_thread::sleep_for(std::chrono::milliseconds(milliseconds));
-  }
+    virtual ~InputEvent() = default;
 
-  Thread::~Thread()
-  {
-    Join();
-  }
+    EInputEvent GetEventType() const { return mType; }
 
-  void Thread::Join()
-  {
-    if (mThreadObject.joinable())
-      mThreadObject.join();
-  }
-}
+private:
+    EInputEvent mType;
+  };
+}  // namespace

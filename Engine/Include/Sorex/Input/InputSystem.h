@@ -25,39 +25,60 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#include <Sorex/Thread.h>
+#pragma once
+
+#include <Sorex/CoreMinimal.h>
+#include <Sorex/Director.h>
+#include <Sorex/Window.h>
+
+#include <Sorex/Containers/ListenerContainer.h>
+
+#include "Mouse.h"
 
 namespace Sorex
 {
-  bool Thread::IsMainThread() SRX_NOEXCEPT
+  class InputSystem: public Director::Component
   {
-    return std::this_thread::get_id() == GetMainThreadId();
+    SRX_RTTI(InputSystem, Director::Component)
+
+public:
+    class IListener
+    {
+  public:
+      virtual ~IListener() = default;
+
+      virtual void OnMouseEvent(Window* window, const MouseEvent& event) {}
+      virtual void OnKeyboardEvent(Window* window) {};
+      // virtual void OnTouchEvent() {}
+    };
+
+public:
+    InputSystem()                   = default;
+    virtual ~InputSystem() override = default;
+
+    InputSystem(const InputSystem& other)            = delete;
+    InputSystem& operator=(const InputSystem& other) = delete;
+
+    // Listeners
+    SRX_INLINE bool AddListener(IListener* listener) SRX_NOEXCEPT;
+    SRX_INLINE void RemoveListener(IListener* listener) SRX_NOEXCEPT;
+
+    virtual Mouse* GetMouse() { return nullptr; }
+    // virtual Keyboard* GetKeyboard() = 0;
+    // virtual TouchScreen* GetTouchScreen() = 0;
+protected:
+    TListenerContainer<IListener> mListeners;
+
+private:
+  };
+
+  SRX_INLINE bool InputSystem::AddListener(IListener* listener) SRX_NOEXCEPT
+  {
+    return mListeners.Add(listener);
   }
 
-  void Thread::SetMainThread() SRX_NOEXCEPT
+  SRX_INLINE void InputSystem::RemoveListener(IListener* listener) SRX_NOEXCEPT
   {
-    GetMainThreadId() = std::this_thread::get_id();
-  }
-
-  std::thread::id& Thread::GetMainThreadId()
-  {
-    static std::thread::id id;
-    return id;
-  }
-
-  void Thread::Sleep(const int64 milliseconds)
-  {
-    std::this_thread::sleep_for(std::chrono::milliseconds(milliseconds));
-  }
-
-  Thread::~Thread()
-  {
-    Join();
-  }
-
-  void Thread::Join()
-  {
-    if (mThreadObject.joinable())
-      mThreadObject.join();
+    mListeners.Remove(listener);
   }
 }

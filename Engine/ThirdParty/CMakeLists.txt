@@ -7,6 +7,8 @@ cmake_policy(SET CMP0077 NEW)
 # Skip libraries installation
 set(SKIP_INSTALL_ALL ON)
 
+set(THIRD_PARTY_LIBRARIES "")
+
 # ##############################################################################
 # SPDLOG library
 # ##############################################################################
@@ -47,12 +49,66 @@ get_target_property(
 # message(CHECK_PASS "done")
 
 # ##############################################################################
+# GLAD library
+# ##############################################################################
+add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/glad")
 
+# ##############################################################################
+# GLFW library
+# ##############################################################################
+set(GLFW_SUBDIR "glfw")
+
+set(GLFW_BUILD_EXAMPLES
+    OFF
+    CACHE BOOL "Build the GLFW example programs"
+)
+set(GLFW_BUILD_TESTS
+    OFF
+    CACHE BOOL "Build the GLFW test programs"
+)
+set(GLFW_BUILD_DOCS
+    OFF
+    CACHE BOOL "Build the GLFW documentation"
+)
+set(GLFW_INSTALL
+    OFF
+    CACHE BOOL "Generate installation target"
+)
+# TODO: Use Wayland: a valgrind output for the glfw 3.5.0 reports memory leaks.
+# Need to investigate the problem: `glfwCreateWindow`;
+
+# Force to use X11, Debian: `apt-get install xorg-dev` @see GLFW Documentation
+set(GLFW_BUILD_WAYLAND
+    OFF
+    CACHE BOOL "Build support for Wayland"
+)
+
+message(CHECK_START "[${GLFW_SUBDIR}] subdir build")
+
+add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/${GLFW_SUBDIR}")
+set_target_properties(
+  glfw PROPERTIES FOLDER "${THIRD_PARTY_FOLDER}/${GLFW_SUBDIR}"
+)
+set_target_properties(
+  update_mappings PROPERTIES FOLDER "${THIRD_PARTY_FOLDER}/${GLFW_SUBDIR}"
+)
+
+set(GLFW_INCLUDE_DIR "${CMAKE_CURRENT_LIST_DIR}/${GLFW_SUBDIR}/include")
+target_include_directories(${ENGINE_TARGET} PRIVATE "${GLFW_INCLUDE_DIR}")
+
+list(APPEND THIRD_PARTY_LIBRARIES glfw)
+message(CHECK_PASS "done")
+
+# ##############################################################################
 set(ENGINE_THIRD_PARTY_INCLUDE_DIRECTORIES
     ${THIRD_PARTY_INCLUDE_DIRECTORIES}
     PARENT_SCOPE
 )
 set(ENGINE_THIRD_PARTY_PUBLIC_LIBS
     ${THIRD_PARTY_PUBLIC_LIBS}
+    PARENT_SCOPE
+)
+set(ENGINE_THIRD_PARTY_LIBRARIES
+    ${THIRD_PARTY_LIBRARIES}
     PARENT_SCOPE
 )

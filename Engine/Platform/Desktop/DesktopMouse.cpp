@@ -25,39 +25,49 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#include <Sorex/Thread.h>
+#include "DesktopMouse.h"
 
-namespace Sorex
+namespace Sorex::Platform
 {
-  bool Thread::IsMainThread() SRX_NOEXCEPT
+  Point DesktopMouse::GetCursorPosition() const
   {
-    return std::this_thread::get_id() == GetMainThreadId();
+    return { mPosition.x, mPosition.y };
   }
 
-  void Thread::SetMainThread() SRX_NOEXCEPT
+  Vec2 DesktopMouse::GetCursorMovement() const
   {
-    GetMainThreadId() = std::this_thread::get_id();
+    return mPrevPosition - mPosition;
   }
 
-  std::thread::id& Thread::GetMainThreadId()
+  bool DesktopMouse::IsButtonPressed(const EMouseButton button) const
   {
-    static std::thread::id id;
-    return id;
-  }
+    static auto conv = [](const EMouseButton btn) SRX_NOEXCEPT {
+      switch (btn)
+      {
+      case EMouseButton::Left:
+        return GLFW_MOUSE_BUTTON_LEFT;
+      case EMouseButton::Right:
+        return GLFW_MOUSE_BUTTON_RIGHT;
+      case EMouseButton::Middle:
+        GLFW_MOUSE_BUTTON_MIDDLE;
+      case EMouseButton::Button_4:
+        return GLFW_MOUSE_BUTTON_4;
+      case EMouseButton::Button_5:
+        return GLFW_MOUSE_BUTTON_5;
+      case EMouseButton::Button_6:
+        return GLFW_MOUSE_BUTTON_6;
+      case EMouseButton::Button_7:
+        return GLFW_MOUSE_BUTTON_7;
+      case EMouseButton::Button_8:
+        return GLFW_MOUSE_BUTTON_8;
+      default:
+        SRX_NOENTRY("invalid mosue button");
+        return -1;
+      }
+    };
 
-  void Thread::Sleep(const int64 milliseconds)
-  {
-    std::this_thread::sleep_for(std::chrono::milliseconds(milliseconds));
+    // TODO: push active window
+    return glfwGetMouseButton(mGlfw.GetMainWindow(), conv(button))
+           == GLFW_PRESS;
   }
-
-  Thread::~Thread()
-  {
-    Join();
-  }
-
-  void Thread::Join()
-  {
-    if (mThreadObject.joinable())
-      mThreadObject.join();
-  }
-}
+}  // namespace

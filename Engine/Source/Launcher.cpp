@@ -25,39 +25,32 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#include <Sorex/Thread.h>
+#include <Sorex/Launcher.h>
+
+#include <Sorex/Time.h>
 
 namespace Sorex
 {
-  bool Thread::IsMainThread() SRX_NOEXCEPT
+  DirectorLauncher::DirectorLauncher()
   {
-    return std::this_thread::get_id() == GetMainThreadId();
+    Thread::SetMainThread();
+
+#ifndef SOREX_DEBUG_MEDIUM
+    std::srand(Time::GetUnixTime());
+#endif
   }
 
-  void Thread::SetMainThread() SRX_NOEXCEPT
+  Status DirectorLauncher::Initialize(Director& director)
   {
-    GetMainThreadId() = std::this_thread::get_id();
+    if (Status status = OnInitialize(director); !status.Ok())
+      return status;
+
+    return director.Initialize();
   }
 
-  std::thread::id& Thread::GetMainThreadId()
+  Status DirectorLauncher::Deactivate(Director& director)
   {
-    static std::thread::id id;
-    return id;
+    director.Shutdown();
+    return OnDeactivate(director);
   }
-
-  void Thread::Sleep(const int64 milliseconds)
-  {
-    std::this_thread::sleep_for(std::chrono::milliseconds(milliseconds));
-  }
-
-  Thread::~Thread()
-  {
-    Join();
-  }
-
-  void Thread::Join()
-  {
-    if (mThreadObject.joinable())
-      mThreadObject.join();
-  }
-}
+}  // namespace

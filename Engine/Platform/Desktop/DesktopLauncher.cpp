@@ -25,39 +25,39 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#include <Sorex/Thread.h>
+#include <Sorex/DesktopLauncher.h>
 
-namespace Sorex
+#include "DesktopGraphicsFramework.h"
+#include "DesktopInputSystem.h"
+#include "DesktopWindow.h"
+
+namespace Sorex::Platform
 {
-  bool Thread::IsMainThread() SRX_NOEXCEPT
+  Status DesktopLauncher::OnStartup()
   {
-    return std::this_thread::get_id() == GetMainThreadId();
+    SRX_TRACE("[DesktopLauncher] {}", __FUNCTION__);
+    return SRX_OK;
   }
 
-  void Thread::SetMainThread() SRX_NOEXCEPT
+  Status DesktopLauncher::OnInitialize(Director& director)
   {
-    GetMainThreadId() = std::this_thread::get_id();
+    SRX_TRACE("[DesktopLauncher] {}", __FUNCTION__);
+
+    auto& glfw = *director.AddComponent<DesktopGraphicsFramework>();
+    director.AddComponent(DesktopInputSystem::Create(glfw));
+    director.AddComponent<DesktopWindow>(glfw, L"Sorex", SizeInt{ 800, 640 });
+
+    return SRX_OK;
   }
 
-  std::thread::id& Thread::GetMainThreadId()
+  Status DesktopLauncher::OnDeactivate(Director& director)
   {
-    static std::thread::id id;
-    return id;
+    SRX_TRACE("[DesktopLauncher] {}", __FUNCTION__);
+    return SRX_OK;
   }
 
-  void Thread::Sleep(const int64 milliseconds)
+  void DesktopLauncher::OnShutdown()
   {
-    std::this_thread::sleep_for(std::chrono::milliseconds(milliseconds));
-  }
-
-  Thread::~Thread()
-  {
-    Join();
-  }
-
-  void Thread::Join()
-  {
-    if (mThreadObject.joinable())
-      mThreadObject.join();
+    SRX_TRACE("[DesktopLauncher] {}", __FUNCTION__);
   }
 }

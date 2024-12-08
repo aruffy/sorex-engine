@@ -25,39 +25,42 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#include <Sorex/Thread.h>
+#pragma once
 
-namespace Sorex
+#include <Sorex/Input/Mouse.h>
+
+#include "DesktopGraphicsFramework.h"
+
+namespace Sorex::Platform
 {
-  bool Thread::IsMainThread() SRX_NOEXCEPT
+  class DesktopMouse final: public Mouse
   {
-    return std::this_thread::get_id() == GetMainThreadId();
-  }
+    static constexpr int kButtonNumber =
+      static_cast<int>(EMouseButton::Button_8) + 1;
 
-  void Thread::SetMainThread() SRX_NOEXCEPT
-  {
-    GetMainThreadId() = std::this_thread::get_id();
-  }
+public:
+    SRX_INLINE DesktopMouse(DesktopGraphicsFramework& glfw) SRX_NOEXCEPT
+      : mGlfw(glfw)
+    {}
 
-  std::thread::id& Thread::GetMainThreadId()
-  {
-    static std::thread::id id;
-    return id;
-  }
+    // Interface Mouse
+    virtual Point GetCursorPosition() const override;
+    virtual Vec2  GetCursorMovement() const override;
+    virtual bool  IsButtonPressed(const EMouseButton button) const override;
 
-  void Thread::Sleep(const int64 milliseconds)
-  {
-    std::this_thread::sleep_for(std::chrono::milliseconds(milliseconds));
-  }
+    SRX_INLINE void SetCursorPosition(const Point& pos) SRX_NOEXCEPT;
 
-  Thread::~Thread()
-  {
-    Join();
-  }
+private:
+    Vec2 mPosition;
+    Vec2 mPrevPosition;
 
-  void Thread::Join()
+    DesktopGraphicsFramework& mGlfw;
+  };
+
+  SRX_INLINE void DesktopMouse::SetCursorPosition(const Point& pos) SRX_NOEXCEPT
   {
-    if (mThreadObject.joinable())
-      mThreadObject.join();
+    mPrevPosition = mPosition;
+    mPosition.x   = pos.x;
+    mPosition.y   = pos.y;
   }
 }

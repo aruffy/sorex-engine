@@ -25,39 +25,25 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#include <Sorex/Thread.h>
+#pragma once
 
-namespace Sorex
+#include <Sorex/Launcher.h>
+
+namespace Sorex::Platform
 {
-  bool Thread::IsMainThread() SRX_NOEXCEPT
+  class DesktopLauncher final: public DirectorLauncher
   {
-    return std::this_thread::get_id() == GetMainThreadId();
-  }
+public:
+    DesktopLauncher() = default;
 
-  void Thread::SetMainThread() SRX_NOEXCEPT
-  {
-    GetMainThreadId() = std::this_thread::get_id();
-  }
+    DesktopLauncher(const DesktopLauncher& other)            = delete;
+    DesktopLauncher& operator=(const DesktopLauncher& other) = delete;
 
-  std::thread::id& Thread::GetMainThreadId()
-  {
-    static std::thread::id id;
-    return id;
-  }
+private:
+    virtual Status OnStartup() override;
+    virtual void   OnShutdown() override;
 
-  void Thread::Sleep(const int64 milliseconds)
-  {
-    std::this_thread::sleep_for(std::chrono::milliseconds(milliseconds));
-  }
-
-  Thread::~Thread()
-  {
-    Join();
-  }
-
-  void Thread::Join()
-  {
-    if (mThreadObject.joinable())
-      mThreadObject.join();
-  }
+    virtual Status OnInitialize(Director& director) override;
+    virtual Status OnDeactivate(Director& director) override;
+  };
 }

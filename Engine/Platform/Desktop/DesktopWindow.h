@@ -25,39 +25,41 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#include <Sorex/Thread.h>
+#pragma once
 
-namespace Sorex
+#include <Sorex/Window.h>
+
+#include "DesktopGraphicsFramework.h"
+
+namespace Sorex::Platform
 {
-  bool Thread::IsMainThread() SRX_NOEXCEPT
+  class DesktopWindow final
+    : public Window
+    , private Director::IListener
   {
-    return std::this_thread::get_id() == GetMainThreadId();
-  }
+    SRX_RTTI(Platform::DesktopWindow, Window)
 
-  void Thread::SetMainThread() SRX_NOEXCEPT
-  {
-    GetMainThreadId() = std::this_thread::get_id();
-  }
+public:
+    DesktopWindow(DesktopGraphicsFramework& glfw,
+                  const WStringView         title,
+                  SizeInt                   size) SRX_NOEXCEPT;
 
-  std::thread::id& Thread::GetMainThreadId()
-  {
-    static std::thread::id id;
-    return id;
-  }
+    // Interface Director::Component
+    virtual void   Attach(Director& director) override;
+    virtual Status Initialize() override;
+    virtual void   Shutdown() override;
+    virtual void   Update(const float deltaTime) override;
 
-  void Thread::Sleep(const int64 milliseconds)
-  {
-    std::this_thread::sleep_for(std::chrono::milliseconds(milliseconds));
-  }
+    // Interface Director::IListener
+    virtual void OnFinishFrame() override;
 
-  Thread::~Thread()
-  {
-    Join();
-  }
+private:
+    DesktopGraphicsFramework& mGlfw;
 
-  void Thread::Join()
-  {
-    if (mThreadObject.joinable())
-      mThreadObject.join();
-  }
-}
+    WString mTitle;
+    SizeInt mSize;
+
+    GLFWwindow* mWindow;
+    Director*   mDirector;
+  };
+}  // namespace

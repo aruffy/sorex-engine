@@ -25,39 +25,72 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#include <Sorex/Thread.h>
+#include "DesktopWindow.h"
 
-namespace Sorex
+namespace Sorex::Platform
 {
-  bool Thread::IsMainThread() SRX_NOEXCEPT
+
+  DesktopWindow::DesktopWindow(DesktopGraphicsFramework& glfw,
+                               const WStringView         title,
+                               SizeInt                   size) SRX_NOEXCEPT
+    : mGlfw(glfw)
+    , mTitle(title)
+    , mSize(size)
+    , mWindow(nullptr)
+    , mDirector(nullptr)
+  {}
+
+  Status DesktopWindow::Initialize()
   {
-    return std::this_thread::get_id() == GetMainThreadId();
+    SRX_CLSFUN_TRACE();
+    SRX_CHECK(mSize.IsValid() && !mTitle.empty());
+
+    auto [status, window] = mGlfw.CreateWindow(mTitle, &mSize);
+    if (!status.Ok())
+      return status;
+
+    mWindow = window;
+    return SRX_OK;
   }
 
-  void Thread::SetMainThread() SRX_NOEXCEPT
+  void DesktopWindow::Shutdown()
   {
-    GetMainThreadId() = std::this_thread::get_id();
+    SRX_CLSFUN_TRACE();
+
+    if (mDirector)
+    {
+      mDirector->RemoveListener(this);
+      mDirector = nullptr;
+    }
+
+    if (mWindow)
+    {
+      mGlfw.DestroyWindow(mWindow);
+      mWindow = nullptr;
+    }
   }
 
-  std::thread::id& Thread::GetMainThreadId()
+  void DesktopWindow::Attach(Director& director)
   {
-    static std::thread::id id;
-    return id;
+    SRX_CHECK(!mDirector);
+
+    Director::Component::Attach(director);
+
+    director.AddListener(this);
+    mDirector = &director;
   }
 
-  void Thread::Sleep(const int64 milliseconds)
+  void DesktopWindow::Update(const float deltaTime)
   {
-    std::this_thread::sleep_for(std::chrono::milliseconds(milliseconds));
+    if (mWindow && glfwWindowShouldClose(mWindow))
+      Shutdown();
   }
 
-  Thread::~Thread()
+  void DesktopWindow::OnFinishFrame()
   {
-    Join();
-  }
+    SRX_CHECK(mWindow);
 
-  void Thread::Join()
-  {
-    if (mThreadObject.joinable())
-      mThreadObject.join();
+    if (mWindow)
+      glfwSwapBuffers(mWindow);
   }
-}
+}  // namespace

@@ -13,7 +13,8 @@
         "CMAKE_C_COMPILER": "/usr/bin/clang",
         "CMAKE_CXX_COMPILER": "/usr/bin/clang++",
         "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
-        "SRXENG_ADDRESS_SANITIZER": "ON"
+        "SRXENG_ADDRESS_SANITIZER": "ON",
+        "TRACE":"ON"
       }
     },
     {

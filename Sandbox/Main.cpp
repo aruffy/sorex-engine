@@ -4,6 +4,12 @@
 #include <Sorex/Status.h>
 #include <Sorex/JournalManager.h>
 
+#include <Sorex/Time.h>
+#include <Sorex/Launcher.h>
+#include <Sorex/Director.h>
+
+#include <Sorex/DesktopLauncher.h>
+
 using namespace Sorex;
 
 int main(const int argc, const char* argv[])
@@ -12,7 +18,7 @@ int main(const int argc, const char* argv[])
 
   Status status =
     SRX_STATUS_MSG(Sorex::EStatusCode::Busy, "Status Busy {}", argc);
-  std::cout << status.DebugMessage() << std::endl;
+  std::cout << status.ToString() << std::endl;
 
   // FIXME: Assert
   /* SRX_ASSERT(JournalManager::GetInstance()
@@ -34,6 +40,12 @@ int main(const int argc, const char* argv[])
                                            "BAD_REQUEST");
 
   SRX_INFO("Hello, from main thread (MACRO)");
+
+  Platform::DesktopLauncher().Run<Director>();
+
+  SystemTime stm;
+  Time::GetLocalTime(stm);
+  std::cout << "Time: " << stm << std::endl;
 
   Sorex::Thread thr;
   thr.Execute([]() {

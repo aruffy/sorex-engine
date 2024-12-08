@@ -25,39 +25,45 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#include <Sorex/Thread.h>
+#include <Sorex/Input/Mouse.h>
 
 namespace Sorex
 {
-  bool Thread::IsMainThread() SRX_NOEXCEPT
+  Point MouseEvent::GetCursorPosition() const SRX_NOEXCEPT
   {
-    return std::this_thread::get_id() == GetMainThreadId();
+    SRX_CHECK(mType == EMouseEvent::Move
+              && std::holds_alternative<Point>(mEventData));
+
+    if (mType != EMouseEvent::Scroll)
+      return Point();
+
+    const Point* const pos = std::get_if<Point>(&mEventData);
+    return pos ? *pos : Point();
   }
 
-  void Thread::SetMainThread() SRX_NOEXCEPT
+  Vec2 MouseEvent::GetScroll() const SRX_NOEXCEPT
   {
-    GetMainThreadId() = std::this_thread::get_id();
+    SRX_CHECK(mType == EMouseEvent::Scroll
+              && std::holds_alternative<Vec2>(mEventData));
+
+    if (mType != EMouseEvent::Scroll)
+      return Vec2::Zero();
+
+    const Vec2* const vec = std::get_if<Vec2>(&mEventData);
+    return vec ? *vec : Vec2::Zero();
   }
 
-  std::thread::id& Thread::GetMainThreadId()
+  EMouseButton MouseEvent::GetMouseButton() const SRX_NOEXCEPT
   {
-    static std::thread::id id;
-    return id;
+    SRX_CHECK(
+      (mType == EMouseEvent::Button_Up || mType == EMouseEvent::Button_Down)
+      && std::holds_alternative<EMouseButton>(mEventData));
+
+    if (mType != EMouseEvent::Button_Up && mType != EMouseEvent::Button_Down)
+      return EMouseButton::None;
+
+    const EMouseButton* const btn = std::get_if<EMouseButton>(&mEventData);
+    return btn ? *btn : EMouseButton::None;
   }
 
-  void Thread::Sleep(const int64 milliseconds)
-  {
-    std::this_thread::sleep_for(std::chrono::milliseconds(milliseconds));
-  }
-
-  Thread::~Thread()
-  {
-    Join();
-  }
-
-  void Thread::Join()
-  {
-    if (mThreadObject.joinable())
-      mThreadObject.join();
-  }
-}
+}  // namespace

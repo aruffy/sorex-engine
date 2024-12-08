@@ -2,7 +2,7 @@
 
 #include "Platform.h"
 
-#define SOREX_ENUM_BITMASK __SorexEnumAsBitmask
+#define SRX_ENUM_BITMASK __SorexEnumAsBitmask
 
 namespace Sorex::Details
 {
@@ -17,7 +17,7 @@ namespace Sorex::Details
   /*! @copydoc TEnumAsBitmask */
   template<typename Type>
   struct SRX_API
-    TEnumAsBitmask<Type, std::void_t<decltype(Type::SOREX_ENUM_BITMASK)>>
+    TEnumAsBitmask<Type, std::void_t<decltype(Type::SRX_ENUM_BITMASK)>>
     : std::is_enum<Type>
   {};
 
