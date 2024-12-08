@@ -39,8 +39,8 @@ namespace Sorex::Platform
       static_cast<int>(EMouseButton::Button_8) + 1;
 
 public:
-    SRX_INLINE DesktopMouse(DesktopGraphicsFramework& glfw) SRX_NOEXCEPT
-      : mGlfw(glfw)
+    SRX_INLINE explicit DesktopMouse(DesktopGraphicsFramework& glfw)
+      SRX_NOEXCEPT: mGlfw(glfw)
     {}
 
     // Interface Mouse
