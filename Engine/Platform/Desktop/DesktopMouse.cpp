@@ -41,24 +41,33 @@ namespace Sorex::Platform
 
   bool DesktopMouse::IsButtonPressed(const EMouseButton button) const
   {
-    const int index = static_cast<int>(button);
-    if (index < 0 || index >= kButtonNumber)
-      return false;
+    static auto conv = [](const EMouseButton btn) SRX_NOEXCEPT {
+      switch (btn)
+      {
+      case EMouseButton::Left:
+        return GLFW_MOUSE_BUTTON_LEFT;
+      case EMouseButton::Right:
+        return GLFW_MOUSE_BUTTON_RIGHT;
+      case EMouseButton::Middle:
+        GLFW_MOUSE_BUTTON_MIDDLE;
+      case EMouseButton::Button_4:
+        return GLFW_MOUSE_BUTTON_4;
+      case EMouseButton::Button_5:
+        return GLFW_MOUSE_BUTTON_5;
+      case EMouseButton::Button_6:
+        return GLFW_MOUSE_BUTTON_6;
+      case EMouseButton::Button_7:
+        return GLFW_MOUSE_BUTTON_7;
+      case EMouseButton::Button_8:
+        return GLFW_MOUSE_BUTTON_8;
+      default:
+        SRX_NOENTRY("invalid mosue button");
+        return -1;
+      }
+    };
 
-    return mButtons[index];
+    // TODO: push active window
+    return glfwGetMouseButton(mGlfw.GetMainWindow(), conv(button))
+           == GLFW_PRESS;
   }
-
-  void DesktopMouse::SetButtonState(const EMouseButton button,
-                                    bool               bPressed) SRX_NOEXCEPT
-  {
-    const int index = static_cast<int>(button);
-    if (index < 0 || index >= kButtonNumber)
-    {
-      SRX_NOENTRY("invalid button");
-      return;
-    }
-
-    mButtons[index] = bPressed;
-  }
-
 }  // namespace

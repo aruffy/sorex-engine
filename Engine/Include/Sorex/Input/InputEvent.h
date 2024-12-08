@@ -53,7 +53,7 @@ public:
 
     virtual ~InputEvent() = default;
 
-    EInputEvent GetType() const { return mType; }
+    EInputEvent GetEventType() const { return mType; }
 
 private:
     EInputEvent mType;

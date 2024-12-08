@@ -29,11 +29,24 @@
 
 namespace Sorex
 {
-  Vec2 MouseEvent::GetVector(const EMouseEvent evt) const SRX_NOEXCEPT
+  Point MouseEvent::GetCursorPosition() const SRX_NOEXCEPT
   {
-    SRX_CHECK(mType == evt && std::holds_alternative<Vec2>(mEventData));
+    SRX_CHECK(mType == EMouseEvent::Move
+              && std::holds_alternative<Point>(mEventData));
 
-    if (mType != evt)
+    if (mType != EMouseEvent::Scroll)
+      return Point();
+
+    const Point* const pos = std::get_if<Point>(&mEventData);
+    return pos ? *pos : Point();
+  }
+
+  Vec2 MouseEvent::GetScroll() const SRX_NOEXCEPT
+  {
+    SRX_CHECK(mType == EMouseEvent::Scroll
+              && std::holds_alternative<Vec2>(mEventData));
+
+    if (mType != EMouseEvent::Scroll)
       return Vec2::Zero();
 
     const Vec2* const vec = std::get_if<Vec2>(&mEventData);

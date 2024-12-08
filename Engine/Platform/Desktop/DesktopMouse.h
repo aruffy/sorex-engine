@@ -29,6 +29,8 @@
 
 #include <Sorex/Input/Mouse.h>
 
+#include "DesktopGraphicsFramework.h"
+
 namespace Sorex::Platform
 {
   class DesktopMouse final: public Mouse
@@ -37,18 +39,22 @@ namespace Sorex::Platform
       static_cast<int>(EMouseButton::Button_8) + 1;
 
 public:
+    SRX_INLINE DesktopMouse(DesktopGraphicsFramework& glfw) SRX_NOEXCEPT
+      : mGlfw(glfw)
+    {}
+
     // Interface Mouse
     virtual Point GetCursorPosition() const override;
     virtual Vec2  GetCursorMovement() const override;
     virtual bool  IsButtonPressed(const EMouseButton button) const override;
 
     SRX_INLINE void SetCursorPosition(const Point& pos) SRX_NOEXCEPT;
-    void SetButtonState(const EMouseButton button, bool bPressed) SRX_NOEXCEPT;
 
 private:
-    Vec2                        mPosition;
-    Vec2                        mPrevPosition;
-    TArray<bool, kButtonNumber> mButtons;
+    Vec2 mPosition;
+    Vec2 mPrevPosition;
+
+    DesktopGraphicsFramework& mGlfw;
   };
 
   SRX_INLINE void DesktopMouse::SetCursorPosition(const Point& pos) SRX_NOEXCEPT

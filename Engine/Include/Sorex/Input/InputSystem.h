@@ -47,7 +47,7 @@ public:
   public:
       virtual ~IListener() = default;
 
-      virtual void OnMouseEvent(Window* window) {}
+      virtual void OnMouseEvent(Window* window, const MouseEvent& event) {}
       virtual void OnKeyboardEvent(Window* window) {};
       // virtual void OnTouchEvent() {}
     };

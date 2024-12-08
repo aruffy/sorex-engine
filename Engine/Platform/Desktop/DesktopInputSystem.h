@@ -41,8 +41,13 @@ namespace Sorex::Platform
     SRX_RTTI(Platform::DesktopInputSystem, InputSystem);
 
 public:
-    explicit DesktopInputSystem(DesktopGraphicsFramework& glfw) SRX_NOEXCEPT;
+    static TUniquePointer<DesktopInputSystem> Create(
+      DesktopGraphicsFramework& glfw) SRX_NOEXCEPT;
+
     virtual ~DesktopInputSystem() override;
+
+    DesktopInputSystem(const DesktopInputSystem& other)            = delete;
+    DesktopInputSystem& operator=(const DesktopInputSystem& other) = delete;
 
     // Interface Director::Component
     virtual Status Initialize() override;
@@ -53,6 +58,21 @@ public:
 
     // Interface InputSystem
     virtual Mouse* GetMouse() override { return &mMouse; }
+
+private:
+    explicit DesktopInputSystem(DesktopGraphicsFramework& glfw) SRX_NOEXCEPT;
+
+    static DesktopInputSystem* inputSystem;
+    static void                OnMouseClickCallback(GLFWwindow* window,
+                                                    int         button,
+                                                    int         action,
+                                                    int         modify) SRX_NOEXCEPT;
+    static void                OnMouseMoveCallback(GLFWwindow* window,
+                                                   double      x,
+                                                   double      y) SRX_NOEXCEPT;
+    static void                OnMouseScrollCallback(GLFWwindow* window,
+                                                     double      x,
+                                                     double      y) SRX_NOEXCEPT;
 
 private:
     DesktopGraphicsFramework& mGlfw;

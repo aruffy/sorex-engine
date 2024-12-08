@@ -37,9 +37,12 @@ namespace Sorex
   enum class EMouseButton
   {
     None     = -1,
-    Left     = 0,
-    Right    = 1,
-    Middle   = 2,
+    Button_1 = 0,
+    Left     = Button_1,
+    Button_2 = 1,
+    Right    = Button_2,
+    Button_3 = 2,
+    Middle   = Button_3,
     Button_4 = 3,
     Button_5 = 4,
     Button_6 = 5,
@@ -72,43 +75,37 @@ public:
     SRX_RTTI(MouseEvent, InputEvent)
 
 public:
-    SRX_INLINE MouseEvent(Mouse*      mouse,
-                          const Vec2& vec,
-                          bool        bMovement = true) SRX_NOEXCEPT;
+    SRX_INLINE MouseEvent(Mouse* mouse, const Point& pos) SRX_NOEXCEPT;
+    SRX_INLINE MouseEvent(Mouse* mouse, const Vec2& vec) SRX_NOEXCEPT;
     SRX_INLINE MouseEvent(Mouse*       mouse,
                           EMouseButton btn,
                           bool         bPress) SRX_NOEXCEPT;
 
-    SRX_INLINE EMouseEvent GetEventType() const { return mType; }
+    SRX_INLINE EMouseEvent GetMouseEventType() const { return mType; }
     EMouseButton           GetMouseButton() const SRX_NOEXCEPT;
 
-    SRX_INLINE Vec2 GetCursorMovement() const SRX_NOEXCEPT
-    {
-      return GetVector(EMouseEvent::Move);
-    }
-
-    SRX_INLINE Vec2 GetScroll() const SRX_NOEXCEPT
-    {
-      return GetVector(EMouseEvent::Scroll);
-    }
+    Point GetCursorPosition() const SRX_NOEXCEPT;
+    Vec2  GetScroll() const SRX_NOEXCEPT;
 
     SRX_INLINE Mouse* GetMouse() const SRX_NOEXCEPT { return mMouse; }
 
 private:
-    Vec2 GetVector(const EMouseEvent ent) const SRX_NOEXCEPT;
-
-private:
-    Mouse*                       mMouse;
-    EMouseEvent                  mType;
-    TVariant<Vec2, EMouseButton> mEventData;
+    Mouse*                              mMouse;
+    EMouseEvent                         mType;
+    TVariant<Point, Vec2, EMouseButton> mEventData;
   };
 
-  SRX_INLINE MouseEvent::MouseEvent(Mouse*      mouse,
-                                    const Vec2& vec,
-                                    bool bMovement /* = true */) SRX_NOEXCEPT
+  SRX_INLINE MouseEvent::MouseEvent(Mouse* mouse, const Point& pos) SRX_NOEXCEPT
     : InputEvent(EInputEvent::Mouse)
     , mMouse(mouse)
-    , mType(bMovement ? EMouseEvent::Move : EMouseEvent::Scroll)
+    , mType(EMouseEvent::Move)
+    , mEventData(Vec2(pos.x, pos.y))
+  {}
+
+  SRX_INLINE MouseEvent::MouseEvent(Mouse* mouse, const Vec2& vec) SRX_NOEXCEPT
+    : InputEvent(EInputEvent::Mouse)
+    , mMouse(mouse)
+    , mType(EMouseEvent::Scroll)
     , mEventData(vec)
   {}
 

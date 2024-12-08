@@ -44,7 +44,7 @@ namespace Sorex::Platform
     SRX_TRACE("[DesktopLauncher] {}", __FUNCTION__);
 
     auto& glfw = *director.AddComponent<DesktopGraphicsFramework>();
-    director.AddComponent<DesktopInputSystem>(glfw);
+    director.AddComponent(DesktopInputSystem::Create(glfw));
     director.AddComponent<DesktopWindow>(glfw, L"Sorex", SizeInt{ 800, 640 });
 
     return SRX_OK;

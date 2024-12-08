@@ -164,6 +164,8 @@ public:
       mListeners.Remove(listener);
     }
 
+    SRX_INLINE GLFWwindow* GetMainWindow() const { return mMainWindow; }
+
 private:
     bool        mIsInitialized = false;
     GLFWwindow* mMainWindow    = nullptr;
