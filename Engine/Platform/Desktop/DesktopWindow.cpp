@@ -29,7 +29,6 @@
 
 namespace Sorex::Platform
 {
-
   DesktopWindow::DesktopWindow(DesktopGraphicsFramework& glfw,
                                const WStringView         title,
                                SizeInt                   size) SRX_NOEXCEPT
@@ -48,6 +47,8 @@ namespace Sorex::Platform
     auto [status, window] = mGlfw.CreateWindow(mTitle, &mSize);
     if (!status.Ok())
       return status;
+
+    glfwSetWindowUserPointer(window, this);
 
     mWindow = window;
     return SRX_OK;
