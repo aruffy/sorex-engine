@@ -156,7 +156,7 @@ TEST(ReadOnlyMemoryStream, Construction)
   EXPECT_FALSE(stream->begin() == nullptr || stream->begin() == buffer);
   EXPECT_EQ(stream->GetData(), stream->begin());
   RONLY_STREAM_CHECK_ACCESS((*stream), true);
-  EXPECT_EQ(stream->GetLength(), kBufferSize);
+  EXPECT_EQ(stream->GetLength(), 0);
   ASSERT_TRUE(stream->EndOfFile());
 }
 

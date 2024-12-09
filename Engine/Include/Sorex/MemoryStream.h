@@ -473,11 +473,13 @@ private:
                                        ssize_t     length) SRX_NOEXCEPT
   {
     SRX_CHECK(IsOpen());
-    if (!IsOpen())
+    const bool bIsOpen = IsOpen();
+    if (!bIsOpen || EndOfFile())
     {
-      mStatus =
-        SRX_STATUS_MSG(EStatusCode::Invalid_State, "Read(): stream isn't open");
-      return false;
+      mStatus = SRX_STATUS_MSG(EStatusCode::Invalid_State,
+                               "Read(): stream {}",
+                               (bIsOpen ? "isn't open" : "eof"));
+      return SRX_READ_ERROR;
     }
 
     const size_t toRead = (length == SRX_UNKNOWN_SIZE)
