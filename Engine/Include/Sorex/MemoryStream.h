@@ -147,12 +147,21 @@ public:
      * @brief Retrieve current value of the stream and advance forward.
      *
      * @note: There is no checking stream state or range of data.
-     * Use Read(&value) if there is no guarantee that stream or range is valid.
+     * Use Next(&value) if there is no guarantee that stream or range is valid.
      *
      * @return value of the item in current position of the stream.
      */
     SRX_INLINE T NextUnsafe() SRX_NOEXCEPT;
-    SRX_INLINE TSpan<const ValueType> ReadUnsafe(const size_t length)
+
+    /**
+     * @brief Retrieve data view from current stream position and advance
+     * forward.
+     *
+     * @note: There is no checking stream state or range of data.
+     *
+     * @return span containing the data from current position.
+     */
+    SRX_INLINE TSpan<const ValueType> ViewUnsafe(const size_t length)
       SRX_NOEXCEPT;
 
     /**
@@ -392,7 +401,7 @@ private:
 
   template<typename T>
   SRX_INLINE TSpan<const typename TReadOnlyDataStream<T>::ValueType>
-  TReadOnlyDataStream<T>::ReadUnsafe(const size_t length) SRX_NOEXCEPT
+  TReadOnlyDataStream<T>::ViewUnsafe(const size_t length) SRX_NOEXCEPT
   {
     SRX_CHECK(IsOpen() && length < GetLength());
 

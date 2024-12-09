@@ -406,7 +406,7 @@ TEST(ReadOnlyMemoryStream, ReadIntUnsafe)
 TEST(ReadOnlyMemoryStream, Read)
 {
   // TODO: Make Test Prep
-  constexpr size_t kBufferSize = 256;
+  constexpr size_t kBufferSize = 0xFF;
   byte             buffer[kBufferSize];
 
   for (size_t i = 0; i < kBufferSize; ++i)
@@ -453,4 +453,35 @@ TEST(ReadOnlyMemoryStream, Read)
     for (size_t j = 0; j < i; ++j)
       ASSERT_EQ(buffer[pos + j], storage[j]);
   }
+}
+
+TEST(ReadOnlyMemoryStream, ViewUnsafe)
+{
+  // TODO: Make Test Prep
+  constexpr byte kBufferSize = 0xFF;
+  byte           buffer[kBufferSize];
+
+  for (size_t i = 0; i < kBufferSize; ++i)
+    buffer[i] = (byte)i;
+
+  ReadOnlyMemoryStream stream(buffer, kBufferSize);
+  RONLY_STREAM_CHECK_VALID(stream, buffer, kBufferSize);
+
+  auto dataView = stream.ViewUnsafe(10);
+  EXPECT_EQ(stream.GetStatus(), SRX_OK);
+  EXPECT_EQ(stream.GetLength(), kBufferSize - 10);
+
+  for (byte i = 0; i < dataView.size(); i++)
+    ASSERT_EQ(dataView[i], i);
+
+  byte b = 10;
+  for (; b < kBufferSize / 2; b++)
+    ASSERT_EQ(stream.NextUnsafe(), b);
+
+  dataView = stream.ViewUnsafe(stream.GetLength());
+  EXPECT_EQ(stream.GetStatus(), SRX_OK);
+  EXPECT_EQ(stream.GetLength(), 0);
+
+  for (size_t i = 0; b < dataView.size(); i++, b++)
+    ASSERT_EQ(dataView[i], b);
 }
