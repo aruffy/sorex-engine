@@ -481,6 +481,7 @@ TEST(ReadOnlyMemoryStream, ViewUnsafe)
   dataView = stream.ViewUnsafe(stream.GetLength());
   EXPECT_EQ(stream.GetStatus(), SRX_OK);
   EXPECT_EQ(stream.GetLength(), 0);
+  EXPECT_TRUE(stream.EndOfFile());
 
   for (size_t i = 0; b < dataView.size(); i++, b++)
     ASSERT_EQ(dataView[i], b);
