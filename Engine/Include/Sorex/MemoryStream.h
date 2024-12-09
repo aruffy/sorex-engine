@@ -29,24 +29,40 @@
 
 #include "CoreMinimal.h"
 #include "Stream.h"
+#include "Utils/BytesUtils.h"
 
 namespace Sorex
 {
   template<typename T>
-  class ReadOnlyDataStream final: public Stream
+  class TReadOnlyDataStream final: public Stream
   {
-    SRX_RTTI(ReadOnlyDataStream, Stream)
+    SRX_RTTI(TReadOnlyDataStream, Stream)
 
 public:
-    enum class EOption : uint8
+    /**
+     * @enum EParameters
+     * @brief Enumeration for various parameter settings.
+     *
+     * This enum defines options for data handling and byte swapping.
+     *
+     * @var EParameters::Default
+     * No data copy, enable integer bytes swapping for little endian system.
+     *
+     * @var EParameters::Integer_BytesSwap_Disable
+     * No integer bytes swapping.
+     *
+     * @var EParameters::Integer_BytesSwap_Enable
+     * Integers bytes swapping enabled.
+     *
+     * @var EParameters::Data_Copy
+     * Indicates that data copying is enabled. Stream holds copy of the data.
+     */
+    enum class EParameters : uint8
     {
-      Default                      = 0,
-      Integer_Bytes_Swap_Custom    = (1 << 0),
-      Endianness_Disable           = 0b01,
-      Integer_Bytes_Swap_Indicator = (1 << 1),
-      Endianness_Enable            = 0b11,
-
-      Data_Copy = (1 << 2),
+      Default                   = 0,
+      Integer_BytesSwap_Disable = 0b01,
+      Integer_BytesSwap_Enable  = 0b11,
+      Data_Copy                 = 0b100,
       SRX_ENUM_BITMASK
     };
 
@@ -57,55 +73,52 @@ public:
     using ConstIterator = const ValueType*;
 
 public:
-    ReadOnlyDataStream() = default;
-    ReadOnlyDataStream(ConstIterator it,
-                       size_t        size,
-                       uint8         flags = EOption::Default);
-    ReadOnlyDataStream(ConstIterator first,
-                       ConstIterator last,
-                       uint8         flags = EOption::Default);
+    TReadOnlyDataStream() = default;
+    TReadOnlyDataStream(ConstIterator it,
+                        size_t        size,
+                        EParameters flags = EParameters::Default) SRX_NOEXCEPT;
+    TReadOnlyDataStream(ConstIterator first,
+                        ConstIterator last,
+                        EParameters flags = EParameters::Default) SRX_NOEXCEPT;
 
-    virtual ~ReadOnlyDataStream() override;
+    virtual ~TReadOnlyDataStream() override;
 
-    ReadOnlyDataStream(const ReadOnlyDataStream& other);
+    TReadOnlyDataStream(const TReadOnlyDataStream& other) SRX_NOEXCEPT;
     // cppcheck-suppress operatorEqToSelf
-    ReadOnlyDataStream& operator=(const ReadOnlyDataStream& other);
+    TReadOnlyDataStream& operator=(const TReadOnlyDataStream& other)
+      SRX_NOEXCEPT;
 
-    ReadOnlyDataStream(ReadOnlyDataStream&& other);
-    ReadOnlyDataStream& operator=(ReadOnlyDataStream&& other) noexcept;
+    TReadOnlyDataStream(TReadOnlyDataStream&& other) SRX_NOEXCEPT;
+    TReadOnlyDataStream& operator=(TReadOnlyDataStream&& other) SRX_NOEXCEPT;
 
-    inline ConstIterator begin() const { return _begin; }
-    inline ConstIterator end() const { return _end; }
+    SRX_INLINE ConstIterator begin() const { return mBegin; }
+    SRX_INLINE ConstIterator end() const { return mEnd; }
 
-    inline const ValueType* GetData() const { return _begin; }
+    SRX_INLINE const ValueType* GetData() const { return mBegin; }
 
     /**
      * @brief Retrieve total size of items.
      *
      * @return total number of items.
      */
-    inline size_t GetSize() const noexcept { return (_end - _begin); }
-
-    /**
-     * @brief Retrieve number of remainded items.
-     *
-     * @return remaided number of items.
-     */
-    inline size_t GetTail() const noexcept { return (_end - _current); }
-
-    inline const ValueType& operator[](size_t i) const noexcept
+    SRX_INLINE size_t GetSize() const noexcept
     {
-      return _begin[i];
+      return static_cast<size_t>(mEnd - mBegin);
+    }
+
+    SRX_INLINE const ValueType& operator[](const size_t i) const SRX_NOEXCEPT
+    {
+      return mBegin[i];
     }
 
     /**
-     * @brief Retrieve value of item by index from begin of data.
+     * @brief Retrieve value of item by index from the begin of data.
      *
      * @param i - index of the item
      * @param val - out value
      * @return True if item is into data and saved into val, else False.
      */
-    bool Get(size_t i, ValueType& val) const;
+    bool Get(const size_t i, ValueType& val) const SRX_NOEXCEPT;
 
     /**
      * @brief Do step forward.
@@ -114,7 +127,10 @@ public:
      *
      * @param step - step size.
      */
-    inline void Advance(size_t step = 1) noexcept { _current += step; }
+    SRX_INLINE void Advance(const size_t step = 1) SRX_NOEXCEPT
+    {
+      std::advance(mCurrent, step);
+    }
 
     /**
      * @brief Do checked step forward if stream has more remained data than step
@@ -124,7 +140,7 @@ public:
      * @return True if position of stream moved forward on step size, else
      * False.
      */
-    bool AdvanceSafe(size_t step = 1);
+    bool AdvanceSafe(const size_t step = 1) SRX_NOEXCEPT;
 
     /**
      * @brief Retrieve current value of the stream and advance forward.
@@ -134,392 +150,379 @@ public:
      *
      * @return value of the item in current position of the stream.
      */
-    inline T Next();
-
-    /**
-     * @brief Read data into from stream to buffer.
-     *
-     * The same as `Read` function but without checking stream state or range of
-     * data.
-     *
-     * @param buffer - pointer to a storage buffer
-     * @param length - number of read items
-     */
-    inline void Pull(ValueType* buffer, size_t length);
+    SRX_INLINE T NextUnsafe() SRX_NOEXCEPT;
+    SRX_INLINE TSpan<const ValueType> ReadUnsafe(const size_t length)
+      SRX_NOEXCEPT;
 
     /**
      * @brief Read integer value from stream to the value.
      *
      * @note: There is no checking stream state or range of data.
-     *  It swap bytes to the little endian order if the system has little
-     * endian.
+     *  It swap bytes if the parameter is set
      *
      * @param value - storage for integer value
      */
-    template<
-      typename Int,
-      typename Enable = RFY_TYPENAME TEnableIf_Type<TIsIntegral_Value<Int>>>
-    void Pull(Int& value);
+    template<std::integral Int>
+    void Pull(Int& value) SRX_NOEXCEPT;
 
     // Interface Stream
-    virtual bool Check(EAccessMode mode) override
+    virtual ssize_t GetLength() const SRX_NOEXCEPT override
     {
-      return mode == EAccessMode::Read && IsOpen();
+      return static_cast<ssize_t>(mEnd - mCurrent);
     }
 
-    virtual bool IsOpen() const override { return _begin && _end; }
-    virtual bool EndOfFile() override
+    virtual bool Check(const EAccessMode mode) const SRX_NOEXCEPT override
     {
-      return _current == nullptr || _current >= _end;
+      return (mode == EAccessMode::Read) && IsOpen();
     }
 
-    virtual StringView   GetName() override;
-    virtual const Error& GetError() override { return *GetErrorObject(); }
-
-    virtual int32 GetLength() override { return static_cast<int32>(GetSize()); }
-    virtual int32 GetPosition() override
+    virtual bool IsOpen() const SRX_NOEXCEPT override { return mBegin && mEnd; }
+    virtual bool EndOfFile() SRX_NOEXCEPT override
     {
-      return static_cast<int32>(_current - _begin);
+      return mCurrent == nullptr || mCurrent >= mEnd;
     }
 
-    virtual bool Seek(int32 pos) override;
-    virtual bool Peek(byte& value) override;
-
-    virtual int32 Read(void* buffer, int32 length) override;
-    virtual bool  Read(byte& value) override
+    virtual ssize_t GetPosition() const SRX_NOEXCEPT override
     {
-      return Read(&value, sizeof(byte)) == sizeof(byte);
+      SRX_CHECK(IsOpen());
+      return static_cast<ssize_t>(mCurrent - mBegin);
     }
 
-    virtual int32 Write(const void* buffer, int32 length) override;
+    virtual bool Seek(int32 pos, ESeekMode mode) SRX_NOEXCEPT override;
+    virtual bool Peek(byte& value) SRX_NOEXCEPT override;
 
-    virtual bool Reset() override;
+    virtual ssize_t Read(TSpan<byte> buffer, ssize_t length = SRX_UNKNOWN_SIZE)
+      SRX_NOEXCEPT override;
+
+    virtual ssize_t Write(TSpan<const byte> buffer) SRX_NOEXCEPT override;
+
+    virtual bool Reset() SRX_NOEXCEPT override;
 
 private:
-    inline void   Release();
-    inline Error* GetErrorObject();
+    SRX_INLINE void Release() SRX_NOEXCEPT;
 
 private:
-    ConstIterator _begin   = nullptr;
-    ConstIterator _current = nullptr;
-    ConstIterator _end     = nullptr;
+    ConstIterator mBegin   = nullptr;
+    ConstIterator mCurrent = nullptr;
+    ConstIterator mEnd     = nullptr;
 
-    ValueType* _data    = nullptr;
-    uint8      _options = EOption::Default_Options;
-
-    TUniquePointer<Error> _error;
+    ValueType*  mData    = nullptr;
+    EParameters mOptions = EParameters::Default;
   };
 
   template<typename T>
-  ReadOnlyDataStream<T>::ReadOnlyDataStream(
+  TReadOnlyDataStream<T>::TReadOnlyDataStream(
     ConstIterator it,
     size_t        size,
-    uint8         options /* = Default_Options */)
-    : _begin(it)
-    , _current(it)
-    , _end(it + size)
-    , _data(options & EOption::Data_Copy ? new ValueType[size] : nullptr)
-    , _options(options)
+    EParameters   options /* = Default */) SRX_NOEXCEPT
+    : mBegin(it)
+    , mCurrent(it)
+    , mEnd(it + size)
+    , mData(Utils::CheckBitmask(options, EParameters::Data_Copy)
+              ? new ValueType[size]
+              : nullptr)
+    , mOptions(options)
   {
-    if (_data)
+    if (mData)
     {
-      std::copy_n(it, size, _data);
-      _begin = _current = _data;
-      _end              = _data + size;
+      std::copy_n(it, size, mData);
+      mBegin = mCurrent = mData;
+      mEnd              = mData + size;
     }
 
-    if ((_options & EOption::Integer_Bytes_Swap_Custom) == 0)
+    // NOTE: We check only if 0000000X - bit isn't set, then use the default
+    if (!Utils::CheckBitmask(mOptions, EParameters::Integer_BytesSwap_Disable))
     {
-      if (IsLittleEndian())
-        _options |= EOption::Integer_Bytes_Swap_Indicator;
-      else
-        _options &= ~EOption::Integer_Bytes_Swap_Indicator;
+      if (Utils::IsLittleEndian())
+        mOptions |= EParameters::Integer_BytesSwap_Enable;
     }
   }
 
   template<typename T>
-  ReadOnlyDataStream<T>::ReadOnlyDataStream(
+  TReadOnlyDataStream<T>::TReadOnlyDataStream(
     ConstIterator first,
     ConstIterator last,
-    uint8         options /* = Default_Options */)
-    : ReadOnlyDataStream(first, last - first, options)
+    EParameters   options /* = Default */) SRX_NOEXCEPT
+    : TReadOnlyDataStream(first, last - first, options)
   {}
 
   template<typename T>
-  ReadOnlyDataStream<T>::~ReadOnlyDataStream()
+  TReadOnlyDataStream<T>::~TReadOnlyDataStream()
   {
     Release();
   }
 
   template<typename T>
-  ReadOnlyDataStream<T>::ReadOnlyDataStream(const ReadOnlyDataStream& other)
+  TReadOnlyDataStream<T>::TReadOnlyDataStream(const TReadOnlyDataStream& other)
+    SRX_NOEXCEPT
   {
-    if (!other._data)
-    {
-      _begin   = other._begin;
-      _current = other._current;
-      _end     = other._end;
-      _data    = nullptr;
-    }
-    else
-    {
-      const size_t size = other.GetSize();
-      _data             = new ValueType[size];
-
-      std::copy(other._begin, other._end, _data);
-
-      _begin   = _data;
-      _current = _data + (other._current - other._begin);
-      _end     = _data + size;
-    }
-
-    _options = other._options;
-    if (other._error)
-      *GetErrorObject() = *other._error;
-    else if (_error)
-      _error->Reset();
-  }
-
-  template<typename T>
-  ReadOnlyDataStream<T>& ReadOnlyDataStream<T>::operator=(
-    const ReadOnlyDataStream& other)
-  {
-    if (this == &other)
-    {
-      RFY_NOEXCEPT("operatorEqToSelf");
-      return *this;
-    }
-
-    if (other._data == nullptr)
+    if (!other.mData)
     {
       Release();
 
-      _begin   = other._begin;
-      _current = other._current;
-      _end     = other._end;
+      mBegin   = other.mBegin;
+      mCurrent = other.mCurrent;
+      mEnd     = other.mEnd;
     }
     else
     {
       const size_t size = other.GetSize();
-      if (_data == nullptr || size > GetSize())
-      {
-        delete[] _data;
-        _data = new ValueType[size];
-      }
+      mData             = new ValueType[size];
 
-      std::copy(other._begin, other._end, _data);
+      std::copy(other.mBegin, other.mEnd, mData);
 
-      _begin   = _data;
-      _current = _data + (other._current - other._begin);
-      _end     = _data + size;
+      mBegin   = mData;
+      mCurrent = mData + (other.mCurrent - other.mBegin);
+      mEnd     = mData + size;
     }
 
-    _options = other._options;
-    if (other._error)
-      *GetErrorObject() = *other._error;
-    else if (_error)
-      _error->Reset();
+    mOptions = other.mOptions;
+    mStatus  = other.mStatus;
+  }
+
+  template<typename T>
+  TReadOnlyDataStream<T>& TReadOnlyDataStream<T>::operator=(
+    const TReadOnlyDataStream& other) SRX_NOEXCEPT
+  {
+    if (this == &other)
+    {
+      SRX_NOEXCEPT("operatorEqToSelf");
+      return *this;
+    }
+
+    if (other.mData == nullptr)
+    {
+      Release();
+      mBegin   = other.mBegin;
+      mCurrent = other.mCurrent;
+      mEnd     = other.mEnd;
+    }
+    else
+    {
+      const size_t size = other.GetSize();
+      if (mData == nullptr || size > GetSize())
+      {
+        delete[] mData;
+        mData = new ValueType[size];
+      }
+
+      std::copy(other.mBegin, other.mEnd, mData);
+
+      mBegin   = mData;
+      mCurrent = mData + (other.mCurrent - other.mBegin);
+      mEnd     = mData + size;
+    }
+
+    mOptions = other.mOptions;
+    mStatus  = other.mStatus;
 
     return *this;
   }
 
   template<typename T>
-  ReadOnlyDataStream<T>::ReadOnlyDataStream(ReadOnlyDataStream&& other)
-    : _begin(other._begin)
-    , _current(other._current)
-    , _end(other._end)
-    , _data(other._data)
-    , _options(other._options)
-    , _error(std::move(other._error))
+  TReadOnlyDataStream<T>::TReadOnlyDataStream(TReadOnlyDataStream&& other)
+    SRX_NOEXCEPT
+    : mBegin(other.mBegin)
+    , mCurrent(other.mCurrent)
+    , mEnd(other.mEnd)
+    , mData(other.mData)
+    , mOptions(other.mOptions)
   {
-    other._data = nullptr;
+    other.mData = nullptr;
+    mStatus     = std::move(other.mStatus);
   }
 
   template<typename T>
-  ReadOnlyDataStream<T>& ReadOnlyDataStream<T>::operator=(
-    ReadOnlyDataStream&& other) noexcept
+  TReadOnlyDataStream<T>& TReadOnlyDataStream<T>::operator=(
+    TReadOnlyDataStream&& other) noexcept
   {
     if (this == &other)
     {
-      RFY_NOEXCEPT("operatorEqToSelf");
+      SRX_NOEXCEPT("operatorEqToSelf");
       return *this;
     }
 
     Release();
 
-    _begin   = other._begin;
-    _current = other._current;
-    _end     = other._end;
-    _data    = other._data;
-    _options = other._options;
-    _error   = std::move(other._error);
+    mBegin   = other.mBegin;
+    mCurrent = other.mCurrent;
+    mEnd     = other.mEnd;
+    mData    = other.mData;
+    mOptions = other.mOptions;
+    mStatus  = std::move(other.mStatus);
 
-    other._data = nullptr;
+    other.mData = nullptr;
     return *this;
   }
 
   template<typename T>
-  bool ReadOnlyDataStream<T>::Get(size_t i, ValueType& val) const
+  bool TReadOnlyDataStream<T>::Get(const size_t i,
+                                   ValueType&   val) const SRX_NOEXCEPT
   {
     if (i >= GetSize())
       return false;
 
-    val = _begin[i];
+    val = mBegin[i];
     return true;
   }
 
   template<typename T>
-  bool ReadOnlyDataStream<T>::AdvanceSafe(size_t step /* = 1 */)
+  bool TReadOnlyDataStream<T>::AdvanceSafe(const size_t step /* = 1 */)
+    SRX_NOEXCEPT
   {
     if (!IsOpen() || EndOfFile())
       return false;
 
-    if (step >= GetTail())
+    if (step >= GetLength())
       return false;
 
-    _current += step;
+    mCurrent += step;
     return true;
   }
 
   template<typename T>
-  inline T ReadOnlyDataStream<T>::Next()
+  SRX_INLINE T TReadOnlyDataStream<T>::NextUnsafe() SRX_NOEXCEPT
   {
-    RFY_CHECK(IsOpen() && !EndOfFile());
+    SRX_CHECK(IsOpen() && !EndOfFile());
 
-    T tmp = _current[0];
-    ++_current;
+    T tmp = mCurrent[0];
+    ++mCurrent;
     return tmp;
   }
 
   template<typename T>
-  inline void ReadOnlyDataStream<T>::Pull(ValueType* buffer, size_t length)
+  SRX_INLINE TSpan<const typename TReadOnlyDataStream<T>::ValueType>
+  TReadOnlyDataStream<T>::ReadUnsafe(const size_t length) SRX_NOEXCEPT
   {
-    RFY_CHECK(IsOpen() && length < GetTail());
+    SRX_CHECK(IsOpen() && length < GetLength());
 
-    std::copy_n(_current, length, buffer);
-    _current += length;
+    const TSpan<const ValueType> result{ mCurrent, length };
+    Advance(length);
+
+    return result;
   }
 
   template<typename T>
-  template<typename Int, typename Enable>
-  void ReadOnlyDataStream<T>::Pull(Int& value)
+  template<std::integral Int>
+  void TReadOnlyDataStream<T>::Pull(Int& value) SRX_NOEXCEPT
   {
     if constexpr (sizeof(Int) == 1)
     {
-      value = _current[0];
-      Advance();
+      value = NextUnsafe();
       return;
     }
 
-    Pull(reinterpret_cast<ValueType*>(&value), sizeof(value));
+    constexpr size_t n = sizeof(value);
+    std::copy_n(mCurrent, n, reinterpret_cast<ValueType*>(&value));
+    Advance(n);
 
-    if (_options & EOption::Integer_Bytes_Swap_Indicator)
+    if (Utils::CheckBitmask(mOptions, EParameters::Integer_BytesSwap_Enable))
       value = Utils::SwapBytes(value);
   }
 
   template<typename T>
-  StringView ReadOnlyDataStream<T>::GetName()
-  {
-    return IsOpen() ? StringView(reinterpret_cast<const char*>(_begin),
-                                 std::min(GetSize(), size_t(8)))
-                    : StringView();
-  }
-
-  template<typename T>
-  bool ReadOnlyDataStream<T>::Seek(int32 pos)
+  bool TReadOnlyDataStream<T>::Seek(int32 pos, ESeekMode mode) SRX_NOEXCEPT
   {
     if (!IsOpen())
     {
-      RFY_MAKE_ERR(GetErrorObject(),
-                   Error::Invalid_State,
-                   "Seek(): Stream isn't open");
+      mStatus =
+        SRX_STATUS_MSG(EStatusCode::Invalid_State, "Seek(): stream isn't open");
       return false;
     }
 
-    if (pos < 0 || static_cast<size_t>(pos) >= GetSize())
+    const size_t size = GetSize();
+    switch (mode)
     {
-      RFY_MAKE_ERR(GetErrorObject(), Error::Out_Of_Range, "Seek()");
+    case ESeekMode::Begin:
+      break;
+    case ESeekMode::Current:
+      pos = GetPosition() + pos;
+      break;
+    case ESeekMode::End:
+      pos = size + pos;
+      break;
+    default:
+      SRX_NOENTRY("invalid seek mode");
+      pos = -1;
       return false;
     }
 
-    _current = _begin + pos;
+    if (pos < 0 || (size_t)pos >= size)
+    {
+      mStatus = SRX_STATUS_MSG(EStatusCode::Out_Of_Range,
+                               "Seek(): position is out of range");
+      return false;
+    }
+
+    mCurrent = mBegin + pos;
     return true;
   }
 
   template<typename T>
-  bool ReadOnlyDataStream<T>::Peek(byte& value)
+  bool TReadOnlyDataStream<T>::Peek(byte& value) SRX_NOEXCEPT
   {
     if (EndOfFile())
       return false;
 
-    value = _current[0];
+    value = mCurrent[0];
     return true;
   }
 
   template<typename T>
-  int32 ReadOnlyDataStream<T>::Read(void* buffer, int32 length)
+  ssize_t TReadOnlyDataStream<T>::Read(TSpan<byte> buffer,
+                                       ssize_t     length) SRX_NOEXCEPT
   {
-    if (buffer == nullptr || length < 0)
+    SRX_CHECK(IsOpen());
+    if (!IsOpen())
     {
-      RFY_MAKE_ERR(GetErrorObject(),
-                   Error::Invalid_Argument,
-                   "Read(): length={}",
-                   length);
-      return -1;
+      mStatus =
+        SRX_STATUS_MSG(EStatusCode::Invalid_State, "Read(): stream isn't open");
+      return false;
     }
 
-    if (!IsOpen() || EndOfFile())
+    const size_t toRead = (length == SRX_UNKNOWN_SIZE)
+                            ? buffer.size()
+                            : std::min<size_t>(buffer.size(), length);
+    if (!toRead)
     {
-      RFY_MAKE_ERR(GetErrorObject(), Error::Invalid_State, "Read()");
-      return -1;
+      mStatus = SRX_STATUS_MSG(EStatusCode::Invalid_Argument,
+                               "Read(): invalid length to read");
+      return SRX_READ_ERROR;
     }
 
-    int32 n = std::min(length, static_cast<int32>(GetTail()));
-    std::copy_n(_current, n, reinterpret_cast<ValueType*>(buffer));
-    _current += n;
+    const size_t n = std::min(toRead, static_cast<size_t>(GetLength()));
+    std::copy_n(mCurrent, n, buffer.data());
+    mCurrent += n;
 
-    return n;
+    return static_cast<ssize_t>(n);
   }
 
   template<typename T>
-  int32 ReadOnlyDataStream<T>::Write(const void* buffer, int32 length)
+  ssize_t TReadOnlyDataStream<T>::Write(TSpan<const byte> buffer) SRX_NOEXCEPT
   {
-    RFY_MAKE_ERR(GetErrorObject(),
-                 Error::Not_Permitted,
-                 "Try write to read only stream");
-    return -1;
+    mStatus =
+      SRX_STATUS_MSG(EStatusCode::Not_Permitted, "Write(): read only stream");
+    return SRX_WRITE_ERROR;
   }
 
   template<typename T>
-  bool ReadOnlyDataStream<T>::Reset()
+  bool TReadOnlyDataStream<T>::Reset() SRX_NOEXCEPT
   {
-    _current = _begin;
-    _error.reset();
+    Stream::Reset();
 
+    mCurrent = mBegin;
     return true;
   }
 
   template<typename T>
-  inline void ReadOnlyDataStream<T>::Release()
+  SRX_INLINE void TReadOnlyDataStream<T>::Release() SRX_NOEXCEPT
   {
-    if (_data)
+    if (mData)
     {
-      delete[] _data;
-      _data = nullptr;
+      delete[] mData;
+      mData = nullptr;
     }
   }
 
-  template<typename T>
-  inline Error* ReadOnlyDataStream<T>::GetErrorObject()
-  {
-    if (!_error)
-      _error = MakeUnique<Error>();
-
-    return _error.get();
-  }
-}
-
-namespace Ruffy
-{
-  using ReadOnlyMemoryStream = Utils::ReadOnlyDataStream<byte>;
-}
+  using ReadOnlyMemoryStream = TReadOnlyDataStream<byte>;
+}  // namespace
