@@ -127,9 +127,10 @@ public:
      *
      * @param step - step size.
      */
-    SRX_INLINE void Advance(const size_t step = 1) SRX_NOEXCEPT
+    SRX_INLINE void AdvanceUnsafe(const size_t step = 1) SRX_NOEXCEPT
     {
-      std::advance(mCurrent, step);
+      SRX_CHECK(step < GetLength());
+      mCurrent += step;
     }
 
     /**
@@ -140,7 +141,7 @@ public:
      * @return True if position of stream moved forward on step size, else
      * False.
      */
-    bool AdvanceSafe(const size_t step = 1) SRX_NOEXCEPT;
+    bool Advance(const size_t step = 1) SRX_NOEXCEPT;
 
     /**
      * @brief Retrieve current value of the stream and advance forward.
@@ -163,7 +164,7 @@ public:
      * @param value - storage for integer value
      */
     template<std::integral Int>
-    void Pull(Int& value) SRX_NOEXCEPT;
+    void ReadIntUnsafe(Int& value) SRX_NOEXCEPT;
 
     // Interface Stream
     virtual ssize_t GetLength() const SRX_NOEXCEPT override
@@ -367,8 +368,7 @@ private:
   }
 
   template<typename T>
-  bool TReadOnlyDataStream<T>::AdvanceSafe(const size_t step /* = 1 */)
-    SRX_NOEXCEPT
+  bool TReadOnlyDataStream<T>::Advance(const size_t step /* = 1 */) SRX_NOEXCEPT
   {
     if (!IsOpen() || EndOfFile())
       return false;
@@ -397,14 +397,14 @@ private:
     SRX_CHECK(IsOpen() && length < GetLength());
 
     const TSpan<const ValueType> result{ mCurrent, length };
-    Advance(length);
+    AdvanceUnsafe(length);
 
     return result;
   }
 
   template<typename T>
   template<std::integral Int>
-  void TReadOnlyDataStream<T>::Pull(Int& value) SRX_NOEXCEPT
+  void TReadOnlyDataStream<T>::ReadIntUnsafe(Int& value) SRX_NOEXCEPT
   {
     if constexpr (sizeof(Int) == 1)
     {
@@ -414,7 +414,8 @@ private:
 
     constexpr size_t n = sizeof(value);
     std::copy_n(mCurrent, n, reinterpret_cast<ValueType*>(&value));
-    Advance(n);
+
+    AdvanceUnsafe(n);
 
     if (Utils::CheckBitmask(mOptions, EParameters::Integer_BytesSwap_Enable))
       value = Utils::SwapBytes(value);

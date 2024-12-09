@@ -16,9 +16,9 @@ using namespace Sorex;
   EXPECT_EQ((__stream).begin(), nullptr);                             \
   EXPECT_EQ((__stream).end(), nullptr);                               \
   EXPECT_EQ((__stream).GetData(), nullptr);                           \
-  EXPECT_FALSE((__stream).AdvanceSafe());                             \
-  EXPECT_FALSE((__stream).AdvanceSafe(0));                            \
-  EXPECT_FALSE((__stream).AdvanceSafe(8));                            \
+  EXPECT_FALSE((__stream).Advance());                                 \
+  EXPECT_FALSE((__stream).Advance(0));                                \
+  EXPECT_FALSE((__stream).Advance(8));                                \
   RONLY_STREAM_CHECK_ACCESS((__stream), false);                       \
   EXPECT_EQ((__stream).GetName(), StringView());                      \
   EXPECT_EQ((__stream).GetLength(), 0);                               \
@@ -261,7 +261,7 @@ TEST(ReadOnlyMemoryStream, Common)
     pos += i;
     if (pos >= kBufferSize)
     {
-      EXPECT_FALSE(stream.AdvanceSafe(i));
+      EXPECT_FALSE(stream.Advance(i));
       EXPECT_EQ(stream.GetPosition(), last);
     }
     else
@@ -277,7 +277,7 @@ TEST(ReadOnlyMemoryStream, Common)
       ASSERT_EQ(stream.GetPosition(), pos - i);
 
       // advance save
-      ASSERT_TRUE(stream.AdvanceSafe(i));
+      ASSERT_TRUE(stream.Advance(i));
       ASSERT_EQ(stream.GetPosition(), pos);
       ASSERT_EQ(stream.Get(pos, value), true);
       ASSERT_EQ(value, buffer[pos]);
@@ -285,17 +285,26 @@ TEST(ReadOnlyMemoryStream, Common)
       last = pos;
     }
   }
+}
 
-  EXPECT_TRUE(stream.Reset());
+TEST(ReadOnlyMemoryStream, ReadIntUnsafe)
+{
+  constexpr size_t kBufferSize         = 64;
+  byte             buffer[kBufferSize] = { 0 };
+
+  for (size_t i = 0; i < kBufferSize; ++i)
+    buffer[i] = i;
+
+  ReadOnlyMemoryStream stream(buffer, buffer + kBufferSize);
   RONLY_STREAM_CHECK_VALID(stream, buffer, kBufferSize);
 
-  // PULL
   const uint16 u16 = 0x0001;
   const int16  i16 = 0x0203;
   const uint32 u32 = 0x04050607;
   const int32  i32 = 0x08090a0b;
   const uint64 u64 = 0x0c0d0e0f10111213;
   const uint8  u8  = 0x14;
+  const int64  i64 = 0x15161718191a1b1c;
 
   uint16 tu16;
   int16  ti16;
@@ -303,23 +312,95 @@ TEST(ReadOnlyMemoryStream, Common)
   int32  ti32;
   uint64 tu64;
   uint8  tu8;
+  int64  ti64;
 
-  stream.Pull(tu16);
+  size_t n = 0;
+  stream.ReadIntUnsafe(tu16);
+  n += sizeof(tu16);
+  ASSERT_EQ(stream.GetLength(), kBufferSize - n);
   EXPECT_EQ(tu16, u16);
-  stream.Pull(ti16);
+
+  stream.ReadIntUnsafe(ti16);
+  n += sizeof(ti16);
+  ASSERT_EQ(stream.GetLength(), kBufferSize - n);
   EXPECT_EQ(ti16, i16);
-  stream.Pull(tu32);
+
+  stream.ReadIntUnsafe(tu32);
+  n += sizeof(tu32);
+  ASSERT_EQ(stream.GetLength(), kBufferSize - n);
   EXPECT_EQ(tu32, u32);
-  stream.Pull(ti32);
+
+  stream.ReadIntUnsafe(ti32);
+  n += sizeof(ti32);
+  ASSERT_EQ(stream.GetLength(), kBufferSize - n);
   EXPECT_EQ(ti32, i32);
-  stream.Pull(tu64);
+
+  stream.ReadIntUnsafe(tu64);
+  n += sizeof(tu64);
+  ASSERT_EQ(stream.GetLength(), kBufferSize - n);
   EXPECT_EQ(tu64, u64);
-  stream.Pull(tu8);
+
+  stream.ReadIntUnsafe(tu8);
+  n += sizeof(tu8);
+  ASSERT_EQ(stream.GetLength(), kBufferSize - n);
   EXPECT_EQ(tu8, u8);
 
+  stream.ReadIntUnsafe(ti64);
+  n += sizeof(ti64);
+  ASSERT_EQ(stream.GetLength(), kBufferSize - n);
+  EXPECT_EQ(ti64, i64);
 
-  EXPECT_TRUE(stream.Reset());
+  // Reverse bytes
+  const uint16 ru16 = 0x0100;
+  const int16  ri16 = 0x0302;
+  const uint32 ru32 = 0x07060504;
+  const int32  ri32 = 0x0b0a0908;
+  const uint64 ru64 = 0x131211100f0e0d0c;
+  const uint8  ru8  = 0x14;
+  const int64  ri64 = 0x1c1b1a1918171615;
+
+  const auto opt =
+    Utils::IsLittleEndian()
+      ? ReadOnlyMemoryStream::EParameters::Integer_BytesSwap_Disable
+      : ReadOnlyMemoryStream::EParameters::Integer_BytesSwap_Enable;
+  stream = ReadOnlyMemoryStream(buffer, kBufferSize, opt);
   RONLY_STREAM_CHECK_VALID(stream, buffer, kBufferSize);
+
+  n = 0;
+  stream.ReadIntUnsafe(tu16);
+  n += sizeof(tu16);
+  ASSERT_EQ(stream.GetLength(), kBufferSize - n);
+  EXPECT_EQ(tu16, ru16);
+
+  stream.ReadIntUnsafe(ti16);
+  n += sizeof(ti16);
+  ASSERT_EQ(stream.GetLength(), kBufferSize - n);
+  EXPECT_EQ(ti16, ri16);
+
+  stream.ReadIntUnsafe(tu32);
+  n += sizeof(tu32);
+  ASSERT_EQ(stream.GetLength(), kBufferSize - n);
+  EXPECT_EQ(tu32, ru32);
+
+  stream.ReadIntUnsafe(ti32);
+  n += sizeof(ti32);
+  ASSERT_EQ(stream.GetLength(), kBufferSize - n);
+  EXPECT_EQ(ti32, ri32);
+
+  stream.ReadIntUnsafe(tu64);
+  n += sizeof(tu64);
+  ASSERT_EQ(stream.GetLength(), kBufferSize - n);
+  EXPECT_EQ(tu64, ru64);
+
+  stream.ReadIntUnsafe(tu8);
+  n += sizeof(tu8);
+  ASSERT_EQ(stream.GetLength(), kBufferSize - n);
+  EXPECT_EQ(tu8, ru8);
+
+  stream.ReadIntUnsafe(ti64);
+  n += sizeof(ti64);
+  ASSERT_EQ(stream.GetLength(), kBufferSize - n);
+  EXPECT_EQ(ti64, ri64);
 }
 
 TEST(ReadOnlyMemoryStream, Read)
