@@ -25,6 +25,7 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
+#include "Sorex/Assert.h"
 #include <Sorex/Graphics/TextureBitmap.h>
 
 namespace Sorex::Graphics
@@ -54,69 +55,61 @@ namespace Sorex::Graphics
     Resize(width, height, format);
   }
 
-  size_t TextureBitmap::Resize(int32 width, int32 height)
+  size_t TextureBitmap::Resize(int32 width, int32 height) SRX_NOEXCEPT
   {
-    _size.Set(width, height);
-    const uint32 bytesPerPixel = GetPixelDepth();
-    const size_t size          = _size.height * (_size.width * bytesPerPixel);
-    _data.resize(size);
+    const SizeInt newSize(width, height);
+    if (!newSize.IsValid())
+    {
+      SRX_NOENTRY("invalid size");
+      return mData.size();
+    }
+
+    SRX_CHECK(GetPixelDepth() > 0);
+    const size_t size = newSize.height * newSize.width * GetPixelDepth();
+    mSize             = std::move(newSize);
+    mData.resize(size);
     return size;
   }
 
-  size_t TextureBitmap::Resize(int32 width, int32 height, EPixelFormat format)
+  TSpan<byte> TextureBitmap::GetScanLine(const size_t scanline) SRX_NOEXCEPT
   {
-    _format = format;
-    return Resize(width, height);
+    const size_t bytesPerLine = GetBytesPerLine();
+    if (!bytesPerLine)
+      return TSpan<byte>{};
+
+    const size_t pos = scanline * bytesPerLine;
+    if (pos + bytesPerLine > mData.size())
+      return TSpan<byte>{};
+
+    return TSpan<byte>{ &mData[pos], bytesPerLine };
   }
 
-  byte* TextureBitmap::GetScanLine(size_t  number,
-                                   size_t* length /* = nullptr */)
+  TSpan<const byte> TextureBitmap::GetScanLine(const size_t scanline) const
+    SRX_NOEXCEPT
   {
-    const size_t len = _size.width * GetPixelDepth();
-    if (!len)
-      return nullptr;
+    const size_t bytesPerLine = GetBytesPerLine();
+    if (!bytesPerLine)
+      return TSpan<const byte>{};
 
-    const size_t pos = number * len;
-    if (pos + len <= _data.size())
-    {
-      if (length)
-        *length = len;
-      return &_data[pos];
-    }
+    const size_t pos = scanline * bytesPerLine;
+    if (pos + bytesPerLine > mData.size())
+      return TSpan<const byte>{};
 
-    return nullptr;
+    return TSpan<const byte>{ &mData[pos], bytesPerLine };
   }
 
-  const byte* TextureBitmap::GetScanLine(size_t  number,
-                                         size_t* length /* = nullptr */) const
-  {
-    const size_t len = _size.width * GetPixelDepth();
-    if (!len)
-      return nullptr;
-
-    const size_t pos = number * len;
-    if (pos + len <= _data.size())
-    {
-      if (length)
-        *length = len;
-      return &_data[pos];
-    }
-
-    return nullptr;
-  }
-
-  void TextureBitmap::FlipVertically()
+  void TextureBitmap::FlipVertically() SRX_NOEXCEPT
   {
     if (IsEmpty())
       return;
 
-    byte*         data         = _data.data();
+    byte*         data         = mData.data();
     const int32   bytesPerLine = GetBytesPerLine();
     TVector<byte> line(bytesPerLine);
-    for (int32 i = 0; i < _size.height / 2; ++i)
+    for (int32 i = 0; i < mSize.height / 2; ++i)
     {
       byte* first = data + (i * bytesPerLine);
-      byte* last  = data + ((_size.height - i - 1) * bytesPerLine);
+      byte* last  = data + ((mSize.height - i - 1) * bytesPerLine);
 
       std::memcpy(line.data(), first, bytesPerLine);
       std::memcpy(first, last, bytesPerLine);
@@ -124,7 +117,7 @@ namespace Sorex::Graphics
     }
   }
 
-  bool TextureBitmap::ConvertToFormat(EPixelFormat format, Error* error)
+  /* bool TextureBitmap::ConvertToFormat(EPixelFormat format, Error* error)
   {
     if (_format == format)
       return true;
@@ -136,5 +129,5 @@ namespace Sorex::Graphics
                                                        Error*       error) const
   {
     return PixelConverter().Convert(this, format, error);
-  }
+  } */
 }

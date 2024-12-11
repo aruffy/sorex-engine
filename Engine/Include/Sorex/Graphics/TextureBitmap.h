@@ -121,7 +121,7 @@ public:
     SRX_INLINE Iterator      end() { return mData.end(); }
     SRX_INLINE ConstIterator cend() const { return mData.cend(); }
 
-    SRX_INLINE bool         IsEmpty() const;
+    SRX_INLINE bool         IsEmpty() const SRX_NOEXCEPT;
     SRX_INLINE EPixelFormat GetPixelFormat() const { return mFormat; }
 
     SRX_INLINE const SizeInt& GetSize() const { return mSize; }
@@ -149,14 +149,14 @@ public:
     byte& operator[](const size_t i) SRX_NOEXCEPT { return mData[i]; }
     byte  operator[](size_t i) const { return mData[i]; }
 
-    SRX_INLINE size_t Resize(const SizeInt& size)
+    SRX_INLINE size_t Resize(const SizeInt& size) SRX_NOEXCEPT
     {
       return Resize(size.width, size.height);
     }
 
-    SRX_INLINE size_t Resize(const int32 scanlines)
+    SRX_INLINE size_t Resize(const int32 scanlines) SRX_NOEXCEPT
     {
-      return Resize(_size.width, scanlines);
+      return Resize(mSize.width, scanlines);
     }
 
     SRX_INLINE size_t Resize(const SizeInt& s, EPixelFormat f)
@@ -164,19 +164,26 @@ public:
       return Resize(s.width, s.height, f);
     }
 
-    size_t Resize(int32 width, int32 height);
-    size_t Resize(int32 width, int32 height, EPixelFormat format);
+    SRX_INLINE size_t Resize(int32        width,
+                             int32        height,
+                             EPixelFormat format) SRX_NOEXCEPT
+    {
+      mFormat = format;
+      return Resize(width, height);
+    };
 
-    byte*       GetScanLine(size_t number, size_t* length = nullptr);
-    const byte* GetScanLine(size_t number, size_t* length = nullptr) const;
+    size_t Resize(int32 width, int32 height) SRX_NOEXCEPT;
 
-    void FlipVertically();
+    TSpan<byte>       GetScanLine(const size_t scanline) SRX_NOEXCEPT;
+    TSpan<const byte> GetScanLine(const size_t scanline) const SRX_NOEXCEPT;
 
-    Status                        ConvertToFormat(const EPixelFormat format);
-    TUniquePointer<TextureBitmap> Convert(EPixelFormat format,
-                                          Status*      status) const;
+    void FlipVertically() SRX_NOEXCEPT;
 
-    SRX_INLINE void Reset();
+    // Status                        ConvertToFormat(const EPixelFormat format);
+    // TUniquePointer<TextureBitmap> Convert(EPixelFormat format,
+    // Status*      status) const;
+
+    SRX_INLINE void Reset() SRX_NOEXCEPT;
     SRX_INLINE void Shrink() { mData.shrink_to_fit(); }
 
 private:
@@ -186,38 +193,41 @@ private:
     TVector<byte> mData;
   };
 
-  SRX_INLINE size_t TextureBitmap::Copy(const byte* data, size_t length)
+  SRX_INLINE size_t TextureBitmap::Copy(TSpan<const byte> buffer) SRX_NOEXCEPT
   {
-    const size_t n = std::min(_data.size(), length);
-
-    if (!data || n == 0)
+    const size_t n = std::min(mData.size(), buffer.size());
+    if (!n)
       return 0;
 
-    std::copy_n(data, n, _data.begin());
+    std::copy_n(buffer.begin(), n, mData.begin());
     return n;
   }
 
-  SRX_INLINE size_t TextureBitmap::Assign(const byte*  data,
-                                          int32        width,
-                                          int32        height,
-                                          EPixelFormat format)
+  SRX_INLINE size_t TextureBitmap::Assign(TSpan<const byte> data,
+                                          const SizeInt&    size,
+                                          EPixelFormat      format) SRX_NOEXCEPT
   {
-    if (!data || width <= 0 || height <= 0 || format == EPixelFormat::None)
+    size_t n = static_cast<size_t>(size.width * size.height);
+    if (!size.IsValid() || data.size() < n || format == EPixelFormat::None)
+    {
+      SRX_NOEXCEPT("invalid argument");
       return 0;
+    }
 
-    Resize(width, height, format);
-    return Copy(data, width * height);
+    n = Resize(size, format);
+    std::copy_n(data.begin(), n, mData.begin());
+    return n;
   }
 
-  SRX_INLINE bool TextureBitmap::IsEmpty() const
+  SRX_INLINE bool TextureBitmap::IsEmpty() const SRX_NOEXCEPT
   {
-    return (_format == EPixelFormat::None || _data.empty() || !_size.IsValid());
+    return (mFormat == EPixelFormat::None || mData.empty() || !mSize.IsValid());
   }
 
-  SRX_INLINE void TextureBitmap::Reset()
+  SRX_INLINE void TextureBitmap::Reset() SRX_NOEXCEPT
   {
-    _format = EPixelFormat::None;
-    _data.clear();
+    mFormat = EPixelFormat::None;
+    mData.clear();
   }
 
   SRX_INLINE int32 TextureBitmap::GetBytesPerLine() const SRX_NOEXCEPT
