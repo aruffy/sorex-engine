@@ -25,73 +25,38 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#include "DesktopWindow.h"
+#include <Sorex/Graphics/GraphicsTypes.h>
 
-namespace Sorex::Platform
+namespace Sorex::Graphics
 {
-  DesktopWindow::DesktopWindow(DesktopGraphicsFramework& glfw,
-                               const WStringView         title,
-                               SizeInt                   size) SRX_NOEXCEPT
-    : mGlfw(glfw)
-    , mTitle(title)
-    , mSize(size)
-    , mWindow(nullptr)
-    , mDirector(nullptr)
-  {}
-
-  Status DesktopWindow::Initialize()
+  namespace Utils
   {
-    SRX_CLSFUN_TRACE();
-    SRX_CHECK(mSize.IsValid() && !mTitle.empty());
-
-    auto [status, window] = mGlfw.CreateWindow(mTitle, &mSize);
-    if (!status.Ok())
-      return status;
-
-    glfwSetWindowUserPointer(window, this);
-
-    mWindow = window;
-    return SRX_OK;
-  }
-
-  void DesktopWindow::Shutdown()
-  {
-    SRX_CLSFUN_TRACE();
-
-    if (mDirector)
+    SRX_API Vec2 ToVector(const EAnchorPoint anchor) SRX_NOEXCEPT
     {
-      mDirector->RemoveListener(this);
-      mDirector = nullptr;
+      switch (anchor)
+      {
+      case EAnchorPoint::Middle:
+        return Vec2(0.5f, 0.5f);
+      case EAnchorPoint::Middle_Left:
+        return Vec2(0.0f, 0.5f);
+      case EAnchorPoint::Middle_Right:
+        return Vec2(1.0f, 0.5f);
+      case EAnchorPoint::Top_Middle:
+        return Vec2(0.5f, 0.0f);
+      case EAnchorPoint::Bottom_Middle:
+        return Vec2(0.5f, 1.0f);
+      case EAnchorPoint::Bottom_Left:
+        return Vec2(0.0f, 1.0f);
+      case EAnchorPoint::Bottom_Right:
+        return Vec2(1.0f, 1.0f);
+      case EAnchorPoint::Top_Left:
+        return Vec2(0.0f, 0.0f);
+      case EAnchorPoint::Top_Right:
+        return Vec2(1.0f, 0.0f);
+      default:
+        SRX_NOENTRY("invalid anchor point");
+        return Vec2::Zero();
+      }
     }
-
-    if (mWindow)
-    {
-      mGlfw.DestroyWindow(mWindow);
-      mWindow = nullptr;
-    }
-  }
-
-  void DesktopWindow::Attach(Director& director)
-  {
-    SRX_CHECK(!mDirector);
-
-    Director::Component::Attach(director);
-
-    director.AddListener(this);
-    mDirector = &director;
-  }
-
-  void DesktopWindow::Update(const float deltaTime)
-  {
-    if (mWindow && glfwWindowShouldClose(mWindow))
-      Shutdown();
-  }
-
-  void DesktopWindow::OnFinishFrame()
-  {
-    SRX_CHECK(mWindow);
-
-    if (mWindow)
-      glfwSwapBuffers(mWindow);
   }
 }  // namespace

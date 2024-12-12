@@ -25,73 +25,28 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#include "DesktopWindow.h"
+#pragma once
 
-namespace Sorex::Platform
+#include <Sorex/CoreMinimal.h>
+
+namespace Sorex::Graphics
 {
-  DesktopWindow::DesktopWindow(DesktopGraphicsFramework& glfw,
-                               const WStringView         title,
-                               SizeInt                   size) SRX_NOEXCEPT
-    : mGlfw(glfw)
-    , mTitle(title)
-    , mSize(size)
-    , mWindow(nullptr)
-    , mDirector(nullptr)
-  {}
-
-  Status DesktopWindow::Initialize()
+  enum class EAnchorPoint : uint8
   {
-    SRX_CLSFUN_TRACE();
-    SRX_CHECK(mSize.IsValid() && !mTitle.empty());
+    Middle = 0,
+    Middle_Left,
+    Middle_Right,
+    Bottom_Left,
+    Bottom_Right,
+    Bottom_Middle,
+    Top_Left,
+    Top_Right,
+    Top_Middle
+  };
 
-    auto [status, window] = mGlfw.CreateWindow(mTitle, &mSize);
-    if (!status.Ok())
-      return status;
-
-    glfwSetWindowUserPointer(window, this);
-
-    mWindow = window;
-    return SRX_OK;
+  namespace Utils
+  {
+    SRX_API Vec2 ToVector(const EAnchorPoint anchor) SRX_NOEXCEPT;
   }
 
-  void DesktopWindow::Shutdown()
-  {
-    SRX_CLSFUN_TRACE();
-
-    if (mDirector)
-    {
-      mDirector->RemoveListener(this);
-      mDirector = nullptr;
-    }
-
-    if (mWindow)
-    {
-      mGlfw.DestroyWindow(mWindow);
-      mWindow = nullptr;
-    }
-  }
-
-  void DesktopWindow::Attach(Director& director)
-  {
-    SRX_CHECK(!mDirector);
-
-    Director::Component::Attach(director);
-
-    director.AddListener(this);
-    mDirector = &director;
-  }
-
-  void DesktopWindow::Update(const float deltaTime)
-  {
-    if (mWindow && glfwWindowShouldClose(mWindow))
-      Shutdown();
-  }
-
-  void DesktopWindow::OnFinishFrame()
-  {
-    SRX_CHECK(mWindow);
-
-    if (mWindow)
-      glfwSwapBuffers(mWindow);
-  }
 }  // namespace
