@@ -119,6 +119,8 @@ public:
       : Status(make_error_code(errcode))
     {}
 
+    SRX_INLINE explicit Status(std::error_code&& errcode) SRX_NOEXCEPT;
+
     template<typename T>
     SRX_NODISCARD static SRX_INLINE
       std::enable_if_t<std::is_error_code_enum_v<T>, Status>
@@ -174,8 +176,6 @@ public:
     SRX_INLINE operator bool() const SRX_NOEXCEPT { return Ok(); }
 
 private:
-    SRX_INLINE explicit Status(std::error_code&& errcode) SRX_NOEXCEPT;
-
     /**
      * @brief Generates a debug message indicating the status of the operation.
      *

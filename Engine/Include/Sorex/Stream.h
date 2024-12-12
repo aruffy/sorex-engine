@@ -43,7 +43,9 @@ namespace Sorex
     None      = 0,
     Read      = (1 << 0),
     Write     = (1 << 1),
-    ReadWrite = Read | Write
+    ReadWrite = Read | Write,
+    SRX_ENUM_BITMASK
+
   };
 
   /**
@@ -89,7 +91,7 @@ public:
      *
      * @return True if stream reached end of data.
      */
-    virtual bool EndOfFile() SRX_NOEXCEPT { return true; }
+    virtual bool EndOfFile() const SRX_NOEXCEPT { return true; }
 
     /**
      * @brief Return name of stream.

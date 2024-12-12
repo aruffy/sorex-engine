@@ -27,7 +27,49 @@
 
 #include <Sorex/FileSystem/SxFile.h>
 
-// #include <Ruffy/FileSystem/FileUtils.h>
+namespace
+{
+
+  using namespace Sorex;
+
+#if defined(_MSC_VER)
+#  ifdef RSIZE_MAX
+  constexpr size_t kErrorMaxSize = (size_t)RSIZE_MAX;
+#  else
+  constexpr size_t kErrorMaxSize = (size_t)(SIZE_MAX >> 1);
+#  endif
+#endif
+
+  String GetFileMode(EAccessMode mode, File::EOpenMode flags) SRX_NOEXCEPT
+  {
+    if (mode == EAccessMode::None)
+      return 0;
+
+    String     res;
+    const bool bCreate = Utils::CheckBitmask(flags, File::EOpenMode::Create);
+    if (Utils::CheckBitmask(flags, File::EOpenMode::Append))
+    {
+      SRX_CHECK_MSG(bCreate, "Create flag is expected");
+      res.push_back('a');
+    }
+    else
+    {
+      if (mode == EAccessMode::Read && !bCreate)
+        res.push_back('r');
+      else
+        res.push_back('w');
+    }
+
+    if (bCreate || mode == EAccessMode::ReadWrite)
+      res.push_back('+');
+
+    if (Utils::CheckBitmask(flags, File::EOpenMode::Binary))
+      res.push_back('b');
+
+    return res;
+  }
+
+}
 
 namespace Sorex
 {
@@ -36,22 +78,90 @@ namespace Sorex
                                   EOpenMode   mode,
                                   Status*     status) SRX_NOEXCEPT
   {
-    FILE* const file = FileUtils::OpenFile(path, access, mode, error);
-    if (file == nullptr)
+    const String filemode = GetFileMode(access, mode);
+    if (filemode.empty())
+    {
+      if (status)
+        *status = SRX_STATUS_MSG(EStatusCode::Invalid_Argument,
+                                 "file '{}' invalid open options",
+                                 path);
       return nullptr;
+    }
+
+    FILE* file = nullptr;
+    int   errc = 0;
+
+#if defined(_MSC_VER)
+    errc = fopen_s(&file, path.data(), filemode.c_str());
+#else
+    file = fopen(path.data(), filemode.c_str());
+    errc = file == nullptr ? errno : 0;
+#endif
+
+    if (errc)
+    {
+      if (status)
+        *status = Status(std::error_code(errc, std::generic_category()));
+
+      if (file)
+      {
+        SRX_NOENTRY("invalid errno handling");
+        fclose(file);
+      }
+
+      return nullptr;
+    }
 
     return TUniquePointer<File>(new File(file, path, access, mode));
   }
 
-  File::File(StringView  path,
-             EAccessMode access /* = EAccessMode::Read */,
-             EOpenMode   mode /* = Binary */)
-    : _path(path)
-    , _access(access)
-    , _mode(mode)
-    , _file(nullptr)
-    , _length(-1)
+  File::File(FILE* file, StringView path, EAccessMode access, EOpenMode mode)
+    SRX_NOEXCEPT
+    : mPath(path)
+    , mAccess(access)
+    , mMode(mode)
+    , mFile(file)
   {
-    _file = FileUtils::OpenFile(path, access, mode, GetErrorObject());
+    SRX_CHECK(file);
+  }
+
+
+  File::~File()
+  {
+    if (mFile)
+      fclose(mFile);
+  }
+
+  bool File::Check(const EAccessMode mode) const SRX_NOEXCEPT
+  {
+    if (mode == EAccessMode::None && !IsOpen())
+      return false;
+
+    return Utils::CheckBitmask(mAccess, mode);
+  }
+
+  bool File::Flush() SRX_NOEXCEPT
+  {
+    const bool bWritable = Check(EAccessMode::Write);
+    if (!bWritable)
+    {
+      SRX_NOENTRY("File invalid or operation not allowed");
+      mStatus = SRX_STATUS_MSG(EStatusCode::Not_Permitted,
+                               "Write operation not allowed");
+      return false;
+    }
+
+    if (int errcode = fflush(mFile); errcode != 0)
+    {
+      mStatus = Status(std::error_code(errcode, std::generic_category()));
+      return false;
+    }
+
+    return true;
+  }
+
+  bool File::EndOfFile() const SRX_NOEXCEPT
+  {
+    return mFile && (feof(mFile) != 0);
   }
 }  // namespace

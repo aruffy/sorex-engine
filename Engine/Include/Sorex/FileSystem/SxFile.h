@@ -66,10 +66,10 @@ public:
     // Stream API
     virtual bool Check(const EAccessMode mode) const SRX_NOEXCEPT override;
 
-    virtual bool       IsOpen() const SRX_NOEXCEPT override { return _file; }
-    virtual StringView GetName() const SRX_NOEXCEPT override { return _path; }
+    virtual bool       IsOpen() const SRX_NOEXCEPT override { return mFile; }
+    virtual StringView GetName() const SRX_NOEXCEPT override { return mPath; }
 
-    virtual bool    EndOfFile() SRX_NOEXCEPT override;
+    virtual bool    EndOfFile() const SRX_NOEXCEPT override;
     virtual ssize_t GetLength() const SRX_NOEXCEPT override;
     virtual ssize_t GetPosition() const SRX_NOEXCEPT override;
 

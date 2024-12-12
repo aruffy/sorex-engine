@@ -187,7 +187,7 @@ public:
     }
 
     virtual bool IsOpen() const SRX_NOEXCEPT override { return mBegin && mEnd; }
-    virtual bool EndOfFile() SRX_NOEXCEPT override
+    virtual bool EndOfFile() const SRX_NOEXCEPT override
     {
       return mCurrent == nullptr || mCurrent >= mEnd;
     }
