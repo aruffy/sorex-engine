@@ -172,7 +172,7 @@ public:
      */
     virtual bool Reset() SRX_NOEXCEPT
     {
-      mStatus = SRX_OK;
+      mStatus = std::nullopt;
       return true;
     }
 
