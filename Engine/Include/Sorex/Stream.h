@@ -190,6 +190,6 @@ public:
     }
 
 protected:
-    TOptional<Status> mStatus;
+    mutable TOptional<Status> mStatus;
   };
 }

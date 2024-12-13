@@ -92,7 +92,8 @@ private:
     EAccessMode mAccess;
     EOpenMode   mMode;
 
-    FILE* mFile;
+    FILE*           mFile;
+    mutable ssize_t mTotalLength;  ///< Cached total length
   };
 }  // namespace
 

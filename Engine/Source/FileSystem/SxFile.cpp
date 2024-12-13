@@ -29,7 +29,6 @@
 
 namespace
 {
-
   using namespace Sorex;
 
 #if defined(_MSC_VER)
@@ -68,7 +67,6 @@ namespace
 
     return res;
   }
-
 }
 
 namespace Sorex
@@ -121,6 +119,7 @@ namespace Sorex
     , mAccess(access)
     , mMode(mode)
     , mFile(file)
+    , mTotalLength(SRX_UNKNOWN_SIZE)
   {
     SRX_CHECK(file);
   }
@@ -163,5 +162,136 @@ namespace Sorex
   bool File::EndOfFile() const SRX_NOEXCEPT
   {
     return mFile && (feof(mFile) != 0);
+  }
+
+  ssize_t File::GetLength() const SRX_NOEXCEPT
+  {
+    SRX_CHECK(IsOpen());
+
+    const auto pos = ftell(mFile);
+    if (pos < 0)
+    {
+      mStatus = Status(std::error_code(errno, std::generic_category()));
+      return SRX_UNKNOWN_SIZE;
+    }
+
+    if (mTotalLength == SRX_UNKNOWN_SIZE)
+    {
+      if (fseek(mFile, 0, SEEK_END) != 0)
+        return SRX_UNKNOWN_SIZE;
+
+      if (const auto len = ftell(mFile); len < 0)
+        mStatus = Status(std::error_code(errno, std::generic_category()));
+      else
+        mTotalLength = static_cast<ssize_t>(len);
+
+      SRX_VERIFY(fseek(mFile, pos, SEEK_SET));
+    }
+
+    return mTotalLength - pos;
+  }
+
+  ssize_t File::GetPosition() const SRX_NOEXCEPT
+  {
+    SRX_CHECK(IsOpen());
+
+    const auto position = ftell(mFile);
+    if (position < 0)
+    {
+      mStatus = Status(std::error_code(errno, std::generic_category()));
+      return SRX_UNKNOWN_SIZE;
+    }
+
+    return position;
+  }
+
+  bool File::Seek(int32 pos, ESeekMode mode) SRX_NOEXCEPT
+  {
+    SRX_CHECK(IsOpen());
+    if (!IsOpen())
+      return false;
+
+    int m;
+    switch (mode)
+    {
+    case ESeekMode::Begin:
+      m = SEEK_SET;
+      break;
+    case ESeekMode::Current:
+      m = SEEK_CUR;
+      break;
+    case ESeekMode::End:
+      m = SEEK_END;
+      break;
+    default:
+      return false;
+    }
+
+    return fseek(mFile, pos, m) == 0;
+  }
+
+  bool File::Peek(byte& value) SRX_NOEXCEPT
+  {
+    mStatus = SRX_STATUS_MSG(EStatusCode::Not_Implemented, "Peek()");
+    return false;
+  }
+
+  ssize_t File::Read(TSpan<byte> buffer, ssize_t length) SRX_NOEXCEPT
+  {
+    if (!Check(EAccessMode::Read))
+    {
+      SRX_NOENTRY("File invalid or operation not allowed");
+      mStatus = SRX_STATUS_MSG(EStatusCode::Invalid_State,
+                               "Read() operation not allowed");
+      return SRX_READ_ERROR;
+    }
+
+    const size_t toRead = (length == SRX_UNKNOWN_SIZE)
+                            ? buffer.size()
+                            : std::min<size_t>(buffer.size(), length);
+
+    const auto count = fread(buffer.data(), 1, length, mFile);
+    if (count == length || !ferror(mFile))
+      return static_cast<ssize_t>(count);
+
+    mStatus = SRX_STATUS_MSG(EStatusCode::Bad_File, "Read() failed");
+    return SRX_READ_ERROR;
+  }
+
+  ssize_t File::Write(TSpan<const byte> buffer) SRX_NOEXCEPT
+  {
+    if (buffer.empty())
+      return 0;
+
+    if (!Check(EAccessMode::Write))
+    {
+      SRX_NOENTRY("File invalid or operation not allowed");
+      mStatus = SRX_STATUS_MSG(EStatusCode::Invalid_State,
+                               "Write() operation not allowed");
+      return false;
+    }
+
+    const auto count = fwrite(buffer.data(), 1, buffer.size(), mFile);
+    mTotalLength += count;
+
+    if (count != buffer.size())
+    {
+      mStatus = SRX_STATUS_MSG(EStatusCode::Bad_File, "Write() failed");
+      return SRX_WRITE_ERROR;
+    }
+
+    return count;
+  }
+
+  bool File::Reset() SRX_NOEXCEPT
+  {
+    if (!IsOpen())
+      return true;
+
+    if (!Seek(0, ESeekMode::Begin))
+      return false;
+
+    Stream::Reset();
+    return true;
   }
 }  // namespace
