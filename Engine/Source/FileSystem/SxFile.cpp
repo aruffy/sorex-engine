@@ -25,7 +25,7 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#include <Sorex/FileSystem/SxFile.h>
+#include <Sorex/SxFile.h>
 
 namespace
 {
@@ -67,14 +67,11 @@ namespace
 
     return res;
   }
-}
 
-namespace Sorex
-{
-  TUniquePointer<File> File::Open(StringView  path,
-                                  EAccessMode access,
-                                  EOpenMode   mode,
-                                  Status*     status) SRX_NOEXCEPT
+  FILE* OpenFile(StringView      path,
+                 EAccessMode     access,
+                 File::EOpenMode mode,
+                 Status*         status) SRX_NOEXCEPT
   {
     const String filemode = GetFileMode(access, mode);
     if (filemode.empty())
@@ -96,7 +93,7 @@ namespace Sorex
     errc = file == nullptr ? errno : 0;
 #endif
 
-    if (errc)
+    if (errc || !file)
     {
       if (status)
         *status = Status(std::error_code(errc, std::generic_category()));
@@ -110,7 +107,37 @@ namespace Sorex
       return nullptr;
     }
 
-    return TUniquePointer<File>(new File(file, path, access, mode));
+    return file;
+  }
+}
+
+namespace Sorex
+{
+  TUniquePointer<File> File::Open(StringView  path,
+                                  EAccessMode access,
+                                  EOpenMode   mode,
+                                  Status*     status) SRX_NOEXCEPT
+  {
+    if (FILE* const f = OpenFile(path, access, mode, status))
+      return TUniquePointer<File>(new File(f, path, access, mode));
+
+    return nullptr;
+  }
+
+  File::File(StringView  path,
+             EAccessMode access /* = EAccessMode::Read */,
+             EOpenMode   mode /* = EileOpenMode::Binary */) SRX_NOEXCEPT
+    : mPath(path)
+    , mAccess(access)
+    , mMode(mode)
+    , mFile(nullptr)
+    , mTotalLength(SRX_UNKNOWN_SIZE)
+  {
+    Status status;
+    if (FILE* const f = OpenFile(path, access, mode, &status))
+      mFile = f;
+    else
+      mStatus = std::move(status);
   }
 
   File::File(FILE* file, StringView path, EAccessMode access, EOpenMode mode)
@@ -123,7 +150,6 @@ namespace Sorex
   {
     SRX_CHECK(file);
   }
-
 
   File::~File()
   {
@@ -250,7 +276,7 @@ namespace Sorex
                             ? buffer.size()
                             : std::min<size_t>(buffer.size(), length);
 
-    const auto count = fread(buffer.data(), 1, length, mFile);
+    const auto count = fread(buffer.data(), 1, toRead, mFile);
     if (count == length || !ferror(mFile))
       return static_cast<ssize_t>(count);
 
@@ -268,7 +294,7 @@ namespace Sorex
       SRX_NOENTRY("File invalid or operation not allowed");
       mStatus = SRX_STATUS_MSG(EStatusCode::Invalid_State,
                                "Write() operation not allowed");
-      return false;
+      return SRX_WRITE_ERROR;
     }
 
     const auto count = fwrite(buffer.data(), 1, buffer.size(), mFile);

@@ -47,9 +47,9 @@ public:
 
 public:
     static TUniquePointer<File> Open(StringView  path,
-                                     EAccessMode access,
-                                     EOpenMode   mode,
-                                     Status*     status) SRX_NOEXCEPT;
+                                     EAccessMode access = EAccessMode::Read,
+                                     EOpenMode   mode   = EOpenMode::Binary,
+                                     Status*     status = nullptr) SRX_NOEXCEPT;
 
 public:
     explicit File(StringView  path,
@@ -72,6 +72,7 @@ public:
     virtual bool    EndOfFile() const SRX_NOEXCEPT override;
     virtual ssize_t GetLength() const SRX_NOEXCEPT override;
     virtual ssize_t GetPosition() const SRX_NOEXCEPT override;
+
 
     virtual bool Seek(int32 pos, ESeekMode mode) SRX_NOEXCEPT override;
     virtual bool Peek(byte& value) SRX_NOEXCEPT override;
