@@ -42,8 +42,8 @@ namespace Sorex::Utils
    *
    * @return combined path in generic format
    */
-  String Combine(const TVector<StringView>& dirs) SRX_NOEXCEPT;
-  String Combine(const TVector<String>& dirs) SRX_NOEXCEPT;
+  String CombinePath(const TVector<StringView>& dirs) SRX_NOEXCEPT;
+  String CombinePath(const TVector<String>& dirs) SRX_NOEXCEPT;
 
   /**
    * @brief Ensure that path closed with slash.
@@ -157,14 +157,14 @@ namespace Sorex::Utils
    *
    * @return directory path in the generic format.
    */
-  FileSystem::Path GetUserAppsDataPath() SRX_NOEXCEPT;
+  // FileSystem::Path GetUserAppsDataPath() SRX_NOEXCEPT;
 
   /**
    * @brief Retrieve path to folder where application was started.
    *
    * @return directory path in the generic format
    */
-  FileSystem::Path GetApplicationPath() SRX_NOEXCEPT;
+  // FileSystem::Path GetApplicationPath() SRX_NOEXCEPT;
 }
 
 SRX_INLINE void Sorex::Utils::GetBaseName(StringView path,

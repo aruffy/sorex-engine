@@ -91,6 +91,7 @@ endif(GTEST_FOUND)
 
 target_include_directories(
   ${ENGINE_UNITTEST_TARGET} PRIVATE "${SOREX_ENGINE_DIR}/Include"
+                                    "${SOREX_ENGINE_DIR}/Source"
 )
 target_include_directories(
   ${ENGINE_UNITTEST_TARGET} PRIVATE ${GTEST_INCLUDE_DIR}

@@ -392,6 +392,49 @@ namespace Sorex::Utils
     return TrimRight(TrimLeft(BasicStringView<TChar>(str)));
   }
 
+  template<typename TChar>
+  BasicStringView<TChar> TrimLeft(BasicStringView<TChar> str,
+                                  const TChar            sym) SRX_NOEXCEPT
+  {
+    for (size_t i = 0; i < str.length(); ++i)
+      if (str[i] != sym)
+        return str.substr(i);
+
+    return BasicStringView<TChar>();
+  }
+
+  template<typename TChar>
+  SRX_INLINE BasicStringView<TChar> TrimLeft(const BasicString<TChar>& str,
+                                             const TChar sym) SRX_NOEXCEPT
+  {
+    return TrimLeft(BasicStringView<TChar>(str), sym);
+  }
+
+  template<typename TChar>
+  BasicStringView<TChar> TrimRight(BasicStringView<TChar> str,
+                                   const TChar            sym) SRX_NOEXCEPT
+  {
+    for (int32 i = static_cast<int32>(str.length() - 1); i >= 0; --i)
+      if (str[i] != sym)
+        return str.substr(0, i + 1);
+
+    return BasicStringView<TChar>();
+  }
+
+  template<typename TChar>
+  SRX_INLINE BasicStringView<TChar> Trim(BasicStringView<TChar> str,
+                                         const TChar sym) SRX_NOEXCEPT
+  {
+    return TrimRight(TrimLeft(str, sym), sym);
+  }
+
+  template<typename TChar>
+  SRX_INLINE BasicStringView<TChar> Trim(const BasicString<TChar>& str,
+                                         const TChar sym) SRX_NOEXCEPT
+  {
+    return TrimRight(TrimLeft(BasicStringView<TChar>(str), sym), sym);
+  }
+
   SRX_API SRX_INLINE bool CompareNoCase(const StringView& lhs,
                                         const StringView& rhs) SRX_NOEXCEPT
   {
