@@ -145,4 +145,23 @@ namespace Sorex
 
   template<typename T>
   using TOptional = std::optional<T>;
+
+  using Mutex   = std::mutex;
+  using ShMutex = std::shared_mutex;
+
+  template<typename T>
+  using TAtomic = std::atomic<T>;
+
+  template<typename T>
+  using TUniqueLock = std::unique_lock<T>;
+  using UniqueLock  = TUniqueLock<ShMutex>;
+
+  template<typename T>
+  using TSharedLock = std::shared_lock<T>;
+  using SharedLock  = TSharedLock<ShMutex>;
+
+  template<typename T>
+  using TMutexLock = std::lock_guard<T>;
+  using MutexLock  = TMutexLock<Mutex>;
+
 }

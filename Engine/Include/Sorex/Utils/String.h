@@ -6,6 +6,8 @@
 
 namespace Sorex::Utils
 {
+  inline static const String kEmptyString;
+
   /**
    * @brief Computes the hash of the given string view.
    *
