@@ -34,18 +34,31 @@
 
 namespace Sorex
 {
-
   // TODO: documentation: use /dir/to/file.txt format of directory. The
   // FileSystem should format and map it
   namespace FileSystem
   {
-    using Path = std::filesystem::path;
+    using Path     = std::filesystem::path;
+    using PathStr  = BasicString<Path::value_type>;
+    using PathView = BasicStringView<Path::value_type>;
     enum class EFileStatus
     {
       Unknown,  ///< Unknown file doesn't exists
       Missing,  ///< File is missing (exp. downloading)
       Existent  ///< File exists and ready to work
     };
+
+    SRX_API static SRX_INLINE hash_t GetHash(const Path& path) SRX_NOEXCEPT
+    {
+      return GetHash(PathView(path.native()));
+    }
+
+    SRX_API static SRX_INLINE hash_t GetHash(const PathView path) SRX_NOEXCEPT
+    {
+      static const THash<PathView> kPathViewHasher;
+      return kPathViewHasher(path);
+    }
+
   }  // namespace
 
   class IFileSystem
@@ -54,6 +67,7 @@ public:
     virtual ~IFileSystem() = default;
 
     virtual Status IndexFiles() SRX_NOEXCEPT = 0;
+
 
     /**
      * @brief Retrieve list of all files from filesystem by the path.
@@ -67,7 +81,8 @@ public:
      * @param path - path to search;
      * @param out files - list to store files;
      */
-    virtual void GetFiles(StringView path, TVector<String>& files) = 0;
+    virtual void GetFiles(StringView       path,
+                          TVector<String>& files) SRX_NOEXCEPT = 0;
 
     /**
      * @brief Retrive status of a file.
@@ -75,7 +90,8 @@ public:
      * @param filename - name of the file.
      * @return status of the file.
      */
-    virtual FileSystem::EFileStatus GetFileStatus(StringView filename) = 0;
+    virtual FileSystem::EFileStatus GetFileStatus(StringView filename)
+      SRX_NOEXCEPT = 0;
 
     /**
      * @brief Retrive the file index.
@@ -103,7 +119,7 @@ public:
      *
      * @return path to the file system.
      */
-    virtual FileSystem::Path GetSystemPath() SRX_NOEXCEPT = 0;
+    virtual FileSystem::Path GetSystemPath() const SRX_NOEXCEPT = 0;
 
     /**
      * @brief Open file.
