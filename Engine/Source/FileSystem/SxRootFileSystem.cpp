@@ -62,9 +62,7 @@ namespace Sorex
 
     MutexLock _lock(mMutex);
 
-    IFileSystem* fs  = nullptr;
     const hash_t key = Utils::GetHash(fsname);
-
     if (auto it = mFilesystems.find(key); it != mFilesystems.end())
       return SRX_STATUS_MSG(EStatusCode::Not_Unique,
                             "file system '{}' is already mounted",
@@ -79,7 +77,6 @@ namespace Sorex
         return status;
     }
 
-    fs                = dir.get();
     mFilesystems[key] = std::move(dir);
 
     // for (auto listener : _listeners)
@@ -172,25 +169,26 @@ namespace Sorex
 
   const String& RootFileSystem::GetAppDataPath() SRX_NOEXCEPT
   {
-    // @TODO:
     return Utils::kEmptyString;
 
+    // @TODO:
+
     /*  const Application* app = GetApp();
-     if (app == nullptr)
-     {
-       RFY_NOENTRY("Invalid application");
-       return _appDataPath;
-     }
+ if (app == nullptr)
+ {
+   RFY_NOENTRY("Invalid application");
+   return _appDataPath;
+ }
 
-     if (_appDataPath.empty())
-     {
-       const String syspath = PathUtils::GetUserAppsDataPath().generic_string();
-       const Application::Info& appInfo = app->GetInfo();
+ if (_appDataPath.empty())
+ {
+   const String syspath = PathUtils::GetUserAppsDataPath().generic_string();
+   const Application::Info& appInfo = app->GetInfo();
 
-       _appDataPath = PathUtils::Combine(
-         TVector<StringView>{ syspath, appInfo.vendor, appInfo.name });
-     }
+   _appDataPath = PathUtils::Combine(
+     TVector<StringView>{ syspath, appInfo.vendor, appInfo.name });
+ }
 
-     return _appDataPath; */
+ return _appDataPath; */
   }
 }

@@ -48,15 +48,15 @@ namespace Sorex
       Existent  ///< File exists and ready to work
     };
 
-    SRX_API static SRX_INLINE hash_t GetHash(const Path& path) SRX_NOEXCEPT
-    {
-      return GetHash(PathView(path.native()));
-    }
-
     SRX_API static SRX_INLINE hash_t GetHash(const PathView path) SRX_NOEXCEPT
     {
       static const THash<PathView> kPathViewHasher;
       return kPathViewHasher(path);
+    }
+
+    SRX_API static SRX_INLINE hash_t GetHash(const Path& path) SRX_NOEXCEPT
+    {
+      return GetHash(PathView(path.native()));
     }
 
     // @NOTE: Implemented in the Platform Code

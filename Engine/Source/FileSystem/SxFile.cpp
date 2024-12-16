@@ -129,7 +129,6 @@ namespace Sorex
              EOpenMode   mode /* = EileOpenMode::Binary */) SRX_NOEXCEPT
     : mPath(path)
     , mAccess(access)
-    , mMode(mode)
     , mFile(nullptr)
     , mTotalLength(SRX_UNKNOWN_SIZE)
   {
@@ -144,7 +143,6 @@ namespace Sorex
     SRX_NOEXCEPT
     : mPath(path)
     , mAccess(access)
-    , mMode(mode)
     , mFile(file)
     , mTotalLength(SRX_UNKNOWN_SIZE)
   {
@@ -277,7 +275,7 @@ namespace Sorex
                             : std::min<size_t>(buffer.size(), length);
 
     const auto count = fread(buffer.data(), 1, toRead, mFile);
-    if (count == length || !ferror(mFile))
+    if (count == toRead || !ferror(mFile))
       return static_cast<ssize_t>(count);
 
     mStatus = SRX_STATUS_MSG(EStatusCode::Bad_File, "Read() failed");

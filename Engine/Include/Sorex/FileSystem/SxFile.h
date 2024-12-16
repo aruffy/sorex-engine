@@ -88,10 +88,8 @@ private:
       SRX_NOEXCEPT;
 
 private:
-    String mPath;
-
+    String      mPath;
     EAccessMode mAccess;
-    EOpenMode   mMode;
 
     FILE*           mFile;
     mutable ssize_t mTotalLength;  ///< Cached total length
