@@ -25,14 +25,31 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#include <Sorex/SxRootFileSystem.h>
+#include <Sorex/FileSystem/SxRootFileSystem.h>
+
 #include <Sorex/Utils/String.h>
-#include <Sorex/SxDirectory.h>
+#include <Sorex/FileSystem/SxDirectory.h>
 
 #include "SxPathUtils.h"
 
 namespace Sorex
 {
+  Status RootFileSystem::Initialize()
+  {
+    SRX_CLSFUN_TRACE();
+    SRX_CHECK(!mInited);
+
+    const Status status = IndexFiles();
+    mInited             = status.Ok();
+
+    return status;
+  }
+
+  void RootFileSystem::Shutdown()
+  {
+    SRX_CLSFUN_TRACE();
+  }
+
   Status RootFileSystem::Mount(StringView path) SRX_NOEXCEPT
   {
     StringView fsname = GetFileSystemName(path);
@@ -133,7 +150,7 @@ namespace Sorex
 
   Path RootFileSystem::GetSystemPath() const SRX_NOEXCEPT
   {
-    static const Path appPath = Utils::GetApplicationPath();
+    static const Path appPath = FileSystem::GetAppPath();
     return appPath;
   }
 

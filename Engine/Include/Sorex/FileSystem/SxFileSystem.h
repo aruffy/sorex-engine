@@ -27,8 +27,8 @@
 
 #pragma once
 
-#include "CoreMinimal.h"
-#include "Stream.h"
+#include <Sorex/CoreMinimal.h>
+#include <Sorex/Stream.h>
 
 #include <filesystem>
 
@@ -59,6 +59,25 @@ namespace Sorex
       return kPathViewHasher(path);
     }
 
+    // @NOTE: Implemented in the Platform Code
+    // @TODO: Create/Remove File/Dir
+    // IsFileExist/IsDirExist
+
+    // Platform implementation
+
+    /**
+     * @brief Retrieve path to writable directory of the user.
+     *
+     * @return directory path in the generic format.
+     */
+    SRX_API Path GetUserAppsDataPath() SRX_NOEXCEPT;
+
+    /**
+     * @brief Retrieve path to folder where application was started.
+     *
+     * @return directory path in the generic format
+     */
+    SRX_API Path GetAppPath() SRX_NOEXCEPT;
   }  // namespace
 
   class IFileSystem

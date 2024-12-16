@@ -25,9 +25,9 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#include <Sorex/SxDirectory.h>
+#include <Sorex/FileSystem/SxDirectory.h>
+#include <Sorex/FileSystem/SxFile.h>
 
-#include <Sorex/SxFile.h>
 #include <Sorex/Utils/String.h>
 
 #include "SxPathUtils.h"
@@ -37,11 +37,13 @@ namespace
   static constexpr int kMaxDirDepth = 32;
 
   using namespace Sorex;
-  int32 CollectFiles(const FileSystem::Path&           path,
-                     const size_t                      offset,
-                     FileSystem::Directory::EntryList& entries,
-                     int32                             depth,
-                     Status&                           status) SRX_NOEXCEPT
+  using EntryList = THashMap<FileSystem::PathStr, TVector<String>>;
+
+  int32 CollectFiles(const FileSystem::Path& path,
+                     const size_t            offset,
+                     EntryList&              entries,
+                     int32                   depth,
+                     Status&                 status) SRX_NOEXCEPT
   {
     SRX_TRACE("[Directory] Collect '{}' depth={}", path.native(), depth);
 
@@ -109,7 +111,8 @@ namespace Sorex::FileSystem
     return mParent->GetSystemPath() / mBasepath.relative_path();
   }
 
-  int32 Directory::CollectFiles(EntryList& entries, Status& status) SRX_NOEXCEPT
+  int32 Directory::CollectFiles(THashMap<PathStr, TVector<String>>& entries,
+                                Status& status) SRX_NOEXCEPT
   {
     Path syspath = GetSystemPath();
     if (syspath.empty())

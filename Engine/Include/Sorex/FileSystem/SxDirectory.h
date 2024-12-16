@@ -27,7 +27,8 @@
 
 #pragma once
 
-#include "CoreMinimal.h"
+#include <Sorex/CoreMinimal.h>
+
 #include "SxFileSystem.h"
 
 namespace Sorex::FileSystem
@@ -45,8 +46,6 @@ public:
     IFileSystem* GetParent() const { return mParent; }
 
 protected:
-    using EntryList = THashMap<PathStr, TVector<String>>;
-
     struct FileIndex
     {
       size_t id   = 0;
@@ -86,7 +85,8 @@ protected:
      * @param error - error description;
      * @return total number of collected files.
      */
-    int32 CollectFiles(EntryList& entries, Status& status) SRX_NOEXCEPT;
+    int32 CollectFiles(THashMap<PathStr, TVector<String>>& entries,
+                       Status&                             status) SRX_NOEXCEPT;
 
 private:
     Path mBasepath;  ///< Contains related system path in a platform preferred

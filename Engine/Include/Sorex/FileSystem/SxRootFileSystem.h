@@ -27,8 +27,9 @@
 
 #pragma once
 
-#include "CoreMinimal.h"
-#include "Director.h"
+#include <Sorex/CoreMinimal.h>
+#include <Sorex/Director.h>
+
 #include "SxFileSystem.h"
 
 namespace Sorex
@@ -57,7 +58,8 @@ public:
       SRX_NOEXCEPT override;
 
     // Director::Component Interface
-    virtual void Shutdown() override;
+    virtual Status Initialize() override;
+    virtual void   Shutdown() override;
 
     /**
      * @brief Add the current path to the app file system.

@@ -28,7 +28,7 @@
 #pragma once
 
 #include <Sorex/CoreMinimal.h>
-#include <Sorex/SxFileSystem.h>
+#include <Sorex/FileSystem/SxFileSystem.h>
 
 namespace Sorex::Utils
 {
@@ -150,21 +150,6 @@ namespace Sorex::Utils
                               String&    root,
                               bool       bClosingSlash = false) SRX_NOEXCEPT;
 
-  // Platform implementation
-
-  /**
-   * @brief Retrieve path to writable directory of the user.
-   *
-   * @return directory path in the generic format.
-   */
-  // FileSystem::Path GetUserAppsDataPath() SRX_NOEXCEPT;
-
-  /**
-   * @brief Retrieve path to folder where application was started.
-   *
-   * @return directory path in the generic format
-   */
-  // FileSystem::Path GetApplicationPath() SRX_NOEXCEPT;
 }
 
 SRX_INLINE void Sorex::Utils::GetBaseName(StringView path,

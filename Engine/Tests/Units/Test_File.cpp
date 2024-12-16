@@ -3,7 +3,7 @@
 #include <array>
 #include <cstdio>
 
-#include <Sorex/SxFile.h>
+#include <Sorex/FileSystem/SxFile.h>
 
 using namespace Sorex;
 

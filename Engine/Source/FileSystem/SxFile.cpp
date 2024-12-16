@@ -25,7 +25,7 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#include <Sorex/SxFile.h>
+#include <Sorex/FileSystem/SxFile.h>
 
 namespace
 {
