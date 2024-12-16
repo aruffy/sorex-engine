@@ -202,10 +202,9 @@ namespace Sorex::FileSystem
       if (filename.empty() == false)
       {
         StringView ext = Utils::GetFileExtension(file.name, true);
-        StringView filename(file.name.data(),
-                            file.name.length() - ext.length());
+        StringView fname(file.name.data(), file.name.length() - ext.length());
 
-        if (filename != file.name)  // @TODO: Compare hashes
+        if (filename != fname)  // @TODO: Compare hashes
           continue;
       }
 
