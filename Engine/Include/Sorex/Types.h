@@ -67,7 +67,7 @@ namespace Sorex
 
   typedef float scalar_t;
 
-#ifdef SOREX_PLATFORM_WINDOWS
+#ifdef SOREX_PLATFORM_WIN32
   typedef std::size_t ssize_t;
 #else
   typedef ::ssize_t ssize_t;

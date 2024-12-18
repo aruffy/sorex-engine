@@ -2,6 +2,22 @@
   "version": 2,
   "configurePresets": [
     {
+      "name": "win_x64_debug",
+      "displayName": "Windows x64 (Debug)",
+      "description": "Using compilers for Visual Studio 17 2022 (x64 architecture)",
+      "generator": "Visual Studio 17 2022",
+      "toolset": "host=x64",
+      "architecture": "x64",
+      "binaryDir": "${sourceDir}/build",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_C_COMPILER": "cl.exe",
+        "CMAKE_CXX_COMPILER": "cl.exe",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "SRXENG_OPENGL_DEBUG_OUTPUT": "ON"
+      }
+    },
+    {
       "name": "unix_debug",
       "hidden": true,
       "displayName": "Unix Base (Debug)",
