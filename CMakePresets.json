@@ -14,7 +14,8 @@
         "CMAKE_C_COMPILER": "cl.exe",
         "CMAKE_CXX_COMPILER": "cl.exe",
         "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
-        "SRXENG_OPENGL_DEBUG_OUTPUT": "ON"
+        "SOREX_STATIC_LIBRARY": "ON",
+        "TRACE":"ON"
       }
     },
     {
