@@ -27,7 +27,7 @@
 
 #pragma once
 
-#include <Sorex/Input/Mouse.h>
+#include <Sorex/Input/SxMouse.h>
 
 #include "DesktopGraphicsFramework.h"
 

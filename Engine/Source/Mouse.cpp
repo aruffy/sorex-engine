@@ -25,7 +25,7 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#include <Sorex/Input/Mouse.h>
+#include <Sorex/Input/SxMouse.h>
 
 namespace Sorex
 {

@@ -33,7 +33,7 @@
 
 #include <Sorex/Containers/SxListenerContainer.h>
 
-#include "Mouse.h"
+#include "SxMouse.h"
 
 namespace Sorex
 {

@@ -29,7 +29,7 @@
 
 #include <Sorex/CoreMinimal.h>
 
-#include "InputEvent.h"
+#include "SxInputEvent.h"
 
 namespace Sorex
 {
