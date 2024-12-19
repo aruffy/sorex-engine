@@ -11,7 +11,7 @@ jobs:
         run: |
           sudo apt-get update && sudo apt-get -y install util-linux python3 pip
           sudo python3 -m pip install clang-format
-          echo $(clang-format --verison)
+          echo "clang-format: $(clang-format --version)"
 
       - name: Check out the repository
         uses: actions/checkout@v4
