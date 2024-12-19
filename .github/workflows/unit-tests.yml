@@ -10,13 +10,15 @@ on:
   push:
     branches: ["master", "develop"]
 
+env:
+  CI_ENGINE_GTEST_EXE: SorexEngineUnitTests
+
 jobs:
-  unit-tests:
+  unit-tests-unix:
     runs-on: ubuntu-latest
 
     env:
       CI_BUILD_TEST_PRESET: "unit_tests"
-      CI_ENGINE_GTEST_EXE: SorexEngineUnitTests
 
     steps:
       - name: Checkout repository
@@ -50,4 +52,54 @@ jobs:
         uses: mikepenz/action-junit-report@v4
         with:
           report_paths: '**/gtest-result.xml'
-          check_name: 'Unit Tests Report'
+          check_name: 'Unit Tests Report (Ubuntu)'
+
+  unit-tests-windows:
+    runs-on: windows-latest
+
+    env:
+      CI_CONFIG_TEST_PRESET: "win_x64_unit_tests"
+      CI_BUILD_TEST_PRESET: "win_x64_unit_tests_build"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Set up Visual Studio environment
+        shell: pwsh
+        run: |
+          echo "Setting up Visual Studio environment"
+          Install-Module -Name VSSetup -Force -Scope CurrentUser
+          Import-Module VSSetup
+          $vs = Get-VSSetupInstance -All -Prerelease | Select-Object -First 1
+          & "$($vs.InstallationPath)\VC\Auxiliary\Build\vcvars64.bat"
+
+      - name: Configure CMake Preset
+        shell: cmd
+        run: |
+          mkdir build
+          cmake --preset ${{ env.CI_CONFIG_TEST_PRESET }}
+
+      - name: Build Unit Tests
+        shell: cmd
+        run: cmake --build --preset ${{ env.CI_BUILD_TEST_PRESET }}
+
+      - name: Run Tests
+        shell: cmd
+        run: build\${{ env.CI_CONFIG_TEST_PRESET }}\Engine\Tests\Release\${{ env.CI_ENGINE_GTEST_EXE }} --gtest_output="xml:gtest-result.xml"
+
+      - name: Upload Test Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gtest-result
+          path: gtest-result.xml
+
+      - name: Publish test report
+        if: always()
+        uses: mikepenz/action-junit-report@v4
+        with:
+          report_paths: '**/gtest-result.xml'
+          check_name: 'Unit Tests Report (Windows)'
