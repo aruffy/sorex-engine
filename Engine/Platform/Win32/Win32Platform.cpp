@@ -42,7 +42,9 @@
 namespace
 {
 #ifdef _DEBUG
-  bool ShowQuitMessage(const char* message, const char* file, int line) SRX_NOEXCEPT
+  bool ShowQuitMessage(const char* message,
+                       const char* file,
+                       int         line) SRX_NOEXCEPT
   {
     MSG  msg;
     BOOL bQuit   = PeekMessage(&msg, NULL, WM_QUIT, WM_QUIT, PM_REMOVE);
@@ -58,7 +60,9 @@ namespace
 
 namespace Sorex::Platform
 {
-  int OnAssertionFailed(const char* message, const char* file, int line) SRX_NOEXCEPT
+  int OnAssertionFailed(const char* message,
+                        const char* file,
+                        int         line) SRX_NOEXCEPT
   {
 #ifdef _DEBUG
     if (!ShowQuitMessage(message, file, line))
@@ -68,7 +72,9 @@ namespace Sorex::Platform
     return 0;
   }
 
-  void OnCheckFailed(const char* message, const char* file, int line) SRX_NOEXCEPT
+  void OnCheckFailed(const char* message,
+                     const char* file,
+                     int         line) SRX_NOEXCEPT
   {
 #ifdef _DEBUG
     ShowQuitMessage(message, file, line);

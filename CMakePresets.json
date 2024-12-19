@@ -19,8 +19,8 @@
       }
     },
     {
-     "name": "win_x64_unit_tests",
-     "displayName": "Windows x64 (Unit Tests)",
+      "name": "win_x64_unit_tests",
+      "displayName": "Windows x64 (Unit Tests)",
       "description": "Engine unit tests",
       "generator": "Visual Studio 17 2022",
       "toolset": "host=x64",

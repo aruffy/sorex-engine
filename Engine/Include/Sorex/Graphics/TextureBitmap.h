@@ -174,6 +174,7 @@ public:
 
     size_t Resize(int32 width, int32 height) SRX_NOEXCEPT;
 
+    // cppcheck-suppress functionConst
     TSpan<byte>       GetScanLine(const size_t scanline) SRX_NOEXCEPT;
     TSpan<const byte> GetScanLine(const size_t scanline) const SRX_NOEXCEPT;
 

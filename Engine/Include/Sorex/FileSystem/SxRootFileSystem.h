@@ -71,8 +71,8 @@ public:
      * @param[out] error - description of error;
      * @return true if directory was mounted.
      */
-    Status        Mount(StringView path) SRX_NOEXCEPT;
-    const String& GetAppDataPath() SRX_NOEXCEPT;
+    Status Mount(StringView path) SRX_NOEXCEPT;
+    // const String& GetAppDataPath() SRX_NOEXCEPT;
 
 private:
     IFileSystem*       GetFileSystem(StringView path) SRX_NOEXCEPT;
