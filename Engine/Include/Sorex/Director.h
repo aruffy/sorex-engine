@@ -28,7 +28,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Containers/ObjectContainer.h"
+#include "Containers/SxObjectContainer.h"
 #include "Containers/SxListenerContainer.h"
 
 namespace Sorex
