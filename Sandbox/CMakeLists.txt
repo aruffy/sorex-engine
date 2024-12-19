@@ -18,7 +18,7 @@ sorex_target_compile_options(${SANDBOX_NAME})
 
 get_property(
   SRXENG_INCLUDE_DIRS
-  TARGET sorex
+  TARGET Sorex::Sorex
   PROPERTY INCLUDE_DIRECTORIES
 )
 

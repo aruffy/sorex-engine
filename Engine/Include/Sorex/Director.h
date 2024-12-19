@@ -48,7 +48,7 @@ public:
       virtual void Attach(Director& director);
 
       virtual Status Initialize() { return SRX_OK; }
-      virtual void   Shutdown() {};
+      virtual void   Shutdown() {}
 
       virtual void Update(const float deltaTime) {}
 
@@ -108,20 +108,51 @@ public:
     // Components
     template<typename T, typename... Args>
       requires std::is_base_of_v<Component, T>
-    SRX_INLINE T* AddComponent(Args&&... args) SRX_NOEXCEPT;
+    SRX_INLINE T* AddComponent(Args&&... args) SRX_NOEXCEPT
+    {
+      if (T* const cmp = mComponents.Add<T>(std::forward<Args>(args)...))
+      {
+        SRX_TRACE("[{}] Add Component {}",
+                  GetRuntimeClass().GetName(),
+                  cmp->GetRuntimeClass().GetName());
+
+        cmp->Attach(*this);
+        return cmp;
+      }
+
+      return nullptr;
+    }
+
     Component* AddComponent(TUniquePointer<Component>&& component) SRX_NOEXCEPT;
 
     template<typename T>
       requires std::is_base_of_v<Component, T>
-    SRX_INLINE void RemoveComponent() SRX_NOEXCEPT;
-    bool            RemoveComponent(const Component* component) SRX_NOEXCEPT;
+    SRX_INLINE void RemoveComponent() SRX_NOEXCEPT
+    {
+      if (auto cmp = mComponents.Release<T>())
+      {
+        SRX_TRACE("[{}] Remove Component {}",
+                  GetRuntimeClass().GetName(),
+                  cmp->GetRuntimeClass().GetName());
+
+        cmp->Shutdown();
+      }
+    }
+
+    bool RemoveComponent(const Component* component) SRX_NOEXCEPT;
 
     template<typename T>
       requires std::is_base_of_v<Component, T>
-    SRX_INLINE const T* GetComponent() const SRX_NOEXCEPT;
+    SRX_INLINE const T* GetComponent() const SRX_NOEXCEPT
+    {
+      return mComponents.Get<T>();
+    }
     template<typename T>
       requires std::is_base_of_v<Component, T>
-    SRX_INLINE T* GetComponent() SRX_NOEXCEPT;
+    SRX_INLINE T* GetComponent() SRX_NOEXCEPT
+    {
+      return mComponents.Get<T>();
+    }
 
     // Listeners
     SRX_INLINE bool AddListener(IListener* listener) SRX_NOEXCEPT
@@ -154,49 +185,4 @@ private:
 
     bool mIsExitRequested;
   };
-
-  template<typename T, typename... Args>
-    requires std::is_base_of_v<Director::Component, T>
-  SRX_INLINE T* Director::AddComponent(Args&&... args) SRX_NOEXCEPT
-  {
-    if (T* const cmp = mComponents.Add<T>(std::forward<Args>(args)...))
-    {
-      SRX_TRACE("[{}] Add Component {}",
-                GetRuntimeClass().GetName(),
-                cmp->GetRuntimeClass().GetName());
-
-      cmp->Attach(*this);
-      return cmp;
-    }
-
-    return nullptr;
-  }
-
-  template<typename T>
-    requires std::is_base_of_v<Director::Component, T>
-  SRX_INLINE void Director::RemoveComponent() SRX_NOEXCEPT
-  {
-    if (auto cmp = mComponents.Release<T>())
-    {
-      SRX_TRACE("[{}] Remove Component {}",
-                GetRuntimeClass().GetName(),
-                cmp->GetRuntimeClass().GetName());
-
-      cmp->Shutdown();
-    }
-  }
-
-  template<typename T>
-    requires std::is_base_of_v<Director::Component, T>
-  SRX_INLINE const T* Director::GetComponent() const SRX_NOEXCEPT
-  {
-    return mComponents.Get<T>();
-  }
-
-  template<typename T>
-    requires std::is_base_of_v<Director::Component, T>
-  SRX_INLINE T* Director::GetComponent() SRX_NOEXCEPT
-  {
-    return mComponents.Get<T>();
-  }
 }  // namespace

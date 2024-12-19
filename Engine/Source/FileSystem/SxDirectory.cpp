@@ -45,7 +45,9 @@ namespace
                      int32                   depth,
                      Status&                 status) SRX_NOEXCEPT
   {
-    SRX_TRACE("[Directory] Collect '{}' depth={}", path.native(), depth);
+    SRX_TRACE("[Directory] Collect '{}' depth={}",
+              path.generic_string(),
+              depth);
 
     if (depth > kMaxDirDepth)
     {
@@ -165,7 +167,7 @@ namespace Sorex::FileSystem
       if (dirname.back() == Utils::GetPathDelimiter())
         dirname.pop_back();
 
-      const hash_t dir_hash = GetHash(PathView(dirname));
+      const hash_t dir_hash = Utils::GetHash(dirname);
       auto         res =
         mDirs.emplace(dir_hash,
                       Catalog{ dir, std::move(dirname), files.size() });
@@ -219,8 +221,9 @@ namespace Sorex::FileSystem
     if (dirname.empty() || filename.empty())
       return EFileStatus::Unknown;
 
-    const hash_t dirHash = GetHash(dirname);
+    const hash_t dirHash = Utils::GetHash(dirname);
     auto         it      = mDirs.find(dirHash);
+
     if (it == mDirs.end())
       return EFileStatus::Unknown;
 

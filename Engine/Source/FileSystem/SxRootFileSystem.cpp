@@ -89,7 +89,9 @@ namespace Sorex
   {
     Status    status;
     MutexLock _lock(mMutex);
-    for (auto& [hash, fs] : mFilesystems)
+
+    // cppcheck-suppress unusedVariable
+    for (auto& [_, fs] : mFilesystems)
     {
       status = fs->IndexFiles();
       if (!status.Ok())
@@ -167,28 +169,29 @@ namespace Sorex
     return nullptr;
   }
 
-  const String& RootFileSystem::GetAppDataPath() SRX_NOEXCEPT
-  {
-    return Utils::kEmptyString;
+  /*
+    const String& RootFileSystem::GetAppDataPath() SRX_NOEXCEPT
+    {
+      return Utils::kEmptyString;
 
-    // @TODO:
+      // @TODO:
 
-    /*  const Application* app = GetApp();
- if (app == nullptr)
- {
-   RFY_NOENTRY("Invalid application");
+       const Application* app = GetApp();
+   if (app == nullptr)
+   {
+     RFY_NOENTRY("Invalid application");
+     return _appDataPath;
+   }
+
+   if (_appDataPath.empty())
+   {
+     const String syspath = PathUtils::GetUserAppsDataPath().generic_string();
+     const Application::Info& appInfo = app->GetInfo();
+
+     _appDataPath = PathUtils::Combine(
+       TVector<StringView>{ syspath, appInfo.vendor, appInfo.name });
+   }
+
    return _appDataPath;
- }
-
- if (_appDataPath.empty())
- {
-   const String syspath = PathUtils::GetUserAppsDataPath().generic_string();
-   const Application::Info& appInfo = app->GetInfo();
-
-   _appDataPath = PathUtils::Combine(
-     TVector<StringView>{ syspath, appInfo.vendor, appInfo.name });
- }
-
- return _appDataPath; */
-  }
+} */
 }

@@ -16,6 +16,11 @@ target_compile_definitions(
   ${ENGINE_UNITTEST_TARGET} PRIVATE ${TARGET_PLATFORM}=1
 )
 
+if(MSVC)
+  add_compile_options("/permissive-")
+  target_compile_options(${ENGINE_UNITTEST_TARGET} PRIVATE "/FS" "/utf-8")
+endif()
+
 find_package(GTest QUIET)
 
 if(GTEST_FOUND)

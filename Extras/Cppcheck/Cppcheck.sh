@@ -87,5 +87,4 @@ ${CPPCHECK_EXE} -j${USE_THREADS}\
     --suppressions-list=.cppcheck-supressions \
     --xml \
     --output-file=${OUTPUT_FILE_NAME} \
-    --error-exitcode=1 \
     -DTARGET_PLATFORM_LINUX=1

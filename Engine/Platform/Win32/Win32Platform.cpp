@@ -25,58 +25,69 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#include <Sorex/Utils/String.h>
+#include <Sorex/Win32Platform.h>
 
-namespace Sorex::Utils
+#include <cstdio>
+
+#include <Sorex/Assert.h>
+#include <Sorex/Platform.h>
+
+#include <Windows.h>
+
+#ifdef _DEBUG
+#  include <crtdbg.h>
+#  include <debugapi.h>
+#endif
+
+namespace
 {
-  SRX_API bool StartWith(StringView str, StringView prefix) SRX_NOEXCEPT
+#ifdef _DEBUG
+  bool ShowQuitMessage(const char* message,
+                       const char* file,
+                       int         line) SRX_NOEXCEPT
   {
-    if (prefix.size() > str.size())
-      return false;
+    MSG  msg;
+    BOOL bQuit   = PeekMessage(&msg, NULL, WM_QUIT, WM_QUIT, PM_REMOVE);
+    BOOL bResult = _CrtDbgReport(_CRT_ASSERT, file, line, NULL, "%s", message);
 
-    if (prefix.empty())
-      return true;
+    if (bQuit)
+      PostQuitMessage((int)msg.wParam);
 
-    return (str.rfind(prefix, 0) == 0);
+    return bResult == 0;
+  }
+#endif
+}
+
+namespace Sorex::Platform
+{
+  int OnAssertionFailed(const char* message,
+                        const char* file,
+                        int         line) SRX_NOEXCEPT
+  {
+#ifdef _DEBUG
+    if (!ShowQuitMessage(message, file, line))
+      ::DebugBreak();
+#endif
+
+    return 0;
   }
 
-  SRX_API String ToUtf8String(WStringView wstr) SRX_NOEXCEPT
+  void OnCheckFailed(const char* message,
+                     const char* file,
+                     int         line) SRX_NOEXCEPT
   {
-    if (wstr.empty())
-      return String();
-
-    String s;
-    s.reserve(wstr.length());
-
-    for (size_t i = 0; i < wstr.length(); ++i)
+#ifdef _DEBUG
+    ShowQuitMessage(message, file, line);
+#else
+    if (message && file)
     {
-      const uint32 ch  = wstr[i];
-      const uint32 val = static_cast<uint32>(ch);
-      if (val < 0x0080U)
-      {
-        s += (char)ch;
-      }
-      else if (val < 0x0800U)
-      {
-        s += (char)(0xC0 | ((ch >> 6) & 0x1F));
-        s += (char)(0x80 | (ch & 0x3F));
-      }
-      else if (val < 0x10000U)
-      {
-        s += (char)(0xE0 | ((ch >> 12) & 0x0F));
-        s += (char)(0x80 | ((ch >> 6) & 0x3F));
-        s += (char)(0x80 | (ch & 0x3F));
-      }
-      else
-      {
-        s += (char)(0xF0 | ((ch >> 18) & 0x07));
-        s += (char)(0x80 | ((ch >> 12) & 0x3F));
-        s += (char)(0x80 | ((ch >> 6) & 0x3F));
-        s += (char)(0x80 | (ch & 0x3F));
-      }
+      fprintf(stderr,
+              "[FATAL] %s:%i Check failed: '%s'\n",
+              file,
+              line,
+              message);
+      fflush(stderr);
     }
-
-    return s;
+#endif
   }
-
 }  // namespace

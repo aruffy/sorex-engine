@@ -238,8 +238,18 @@ namespace Sorex
     tm.tm_sec   = stm.second;
     tm.tm_isdst = 0;  // Not daylight saving
 
-    const std::time_t t     = std::mktime(&tm);
-    const std::tm*    local = std::localtime(&t);
+    const std::time_t t = std::mktime(&tm);
+#ifdef SOREX_COMPILER_MSVC
+    struct std::tm localTime;
+    if (localtime_s(&localTime, &t) != 0)
+    {
+      SRX_NOENTRY("timer conv failed");
+      return ostrm;
+    }
+    const std::tm* local = &localTime;
+#else
+    const std::tm* local = std::localtime(&t);
+#endif
 
     ostrm << std::put_time(local, "%b %d %Y %T");
     return ostrm;
