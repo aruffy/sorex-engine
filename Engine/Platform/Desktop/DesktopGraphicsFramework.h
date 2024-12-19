@@ -29,7 +29,7 @@
 
 #include <Sorex/CoreMinimal.h>
 #include <Sorex/Director.h>
-#include <Sorex/Containers/ListenerContainer.h>
+#include <Sorex/Containers/SxListenerContainer.h>
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>

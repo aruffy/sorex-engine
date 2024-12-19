@@ -29,7 +29,7 @@
 
 #include "CoreMinimal.h"
 #include "Containers/ObjectContainer.h"
-#include "Containers/ListenerContainer.h"
+#include "Containers/SxListenerContainer.h"
 
 namespace Sorex
 {

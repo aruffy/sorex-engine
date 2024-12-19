@@ -31,7 +31,7 @@
 #include <Sorex/Director.h>
 #include <Sorex/Window.h>
 
-#include <Sorex/Containers/ListenerContainer.h>
+#include <Sorex/Containers/SxListenerContainer.h>
 
 #include "Mouse.h"
 

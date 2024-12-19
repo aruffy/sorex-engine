@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include <Sorex/Containers/ListenerContainer.h>
+#include <Sorex/Containers/SxListenerContainer.h>
 
 using namespace Sorex;
 
