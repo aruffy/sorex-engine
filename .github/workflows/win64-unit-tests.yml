@@ -15,7 +15,7 @@ jobs:
     runs-on: windows-latest
 
     env:
-      CI_CONFIG_TEST_PRESET: "win_x64_debug"
+      CI_CONFIG_TEST_PRESET: "win_x64_unit_tests"
       CI_BUILD_TEST_PRESET: "win_x64_unit_tests_build"
       CI_ENGINE_GTEST_EXE: SorexEngineUnitTests
 
