@@ -25,73 +25,69 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#include "DesktopWindow.h"
+#include <Sorex/Win32Platform.h>
+
+#include <cstdio>
+
+#include <Sorex/Assert.h>
+#include <Sorex/Platform.h>
+
+#include <Windows.h>
+
+#ifdef _DEBUG
+#  include <crtdbg.h>
+#  include <debugapi.h>
+#endif
+
+namespace
+{
+#ifdef _DEBUG
+  bool ShowQuitMessage(const char* message,
+                       const char* file,
+                       int         line) SRX_NOEXCEPT
+  {
+    MSG  msg;
+    BOOL bQuit   = PeekMessage(&msg, NULL, WM_QUIT, WM_QUIT, PM_REMOVE);
+    BOOL bResult = _CrtDbgReport(_CRT_ASSERT, file, line, NULL, "%s", message);
+
+    if (bQuit)
+      PostQuitMessage((int)msg.wParam);
+
+    return bResult == 0;
+  }
+#endif
+}
 
 namespace Sorex::Platform
 {
-  DesktopWindow::DesktopWindow(DesktopGraphicsFramework& glfw,
-                               const WStringView         title,
-                               SizeInt                   size) SRX_NOEXCEPT
-    : mGlfw(glfw)
-    , mTitle(title)
-    , mSize(size)
-    , mWindow(nullptr)
-    , mDirector(nullptr)
-  {}
-
-  Status DesktopWindow::Initialize()
+  int OnAssertionFailed(const char* message,
+                        const char* file,
+                        int         line) SRX_NOEXCEPT
   {
-    SRX_CLSFUN_TRACE();
-    SRX_CHECK(mSize.IsValid() && !mTitle.empty());
+#ifdef _DEBUG
+    if (!ShowQuitMessage(message, file, line))
+      ::DebugBreak();
+#endif
 
-    auto [status, window] = mGlfw.CreateWindow(mTitle, &mSize);
-    if (!status.Ok())
-      return status;
-
-    glfwSetWindowUserPointer(window, this);
-
-    mWindow = window;
-    return SRX_OK;
+    return 0;
   }
 
-  void DesktopWindow::Shutdown()
+  void OnCheckFailed(const char* message,
+                     const char* file,
+                     int         line) SRX_NOEXCEPT
   {
-    SRX_CLSFUN_TRACE();
-
-    if (mDirector)
+#ifdef _DEBUG
+    ShowQuitMessage(message, file, line);
+#else
+    if (message && file)
     {
-      mDirector->RemoveListener(this);
-      mDirector = nullptr;
+      fprintf(stderr,
+              "[FATAL] %s:%i Check failed: '%s'\n",
+              file,
+              line,
+              message);
+      fflush(stderr);
     }
-
-    if (mWindow)
-    {
-      mGlfw.DestroyWindow(mWindow);
-      mWindow = nullptr;
-    }
-  }
-
-  void DesktopWindow::Attach(Director& director)
-  {
-    SRX_CHECK(!mDirector);
-
-    Director::Component::Attach(director);
-
-    director.AddListener(this);
-    mDirector = &director;
-  }
-
-  void DesktopWindow::Update(const float deltaTime)
-  {
-    if (mWindow && glfwWindowShouldClose(mWindow))
-      Shutdown();
-  }
-
-  void DesktopWindow::OnFinishFrame()
-  {
-    SRX_CHECK(mWindow);
-
-    if (mWindow)
-      glfwSwapBuffers(mWindow);
+#endif
   }
 }  // namespace

@@ -12,6 +12,9 @@
 
 using namespace Sorex;
 
+class MyDirector final: public Director
+{};
+
 int main(const int argc, const char* argv[])
 {
   Thread::SetMainThread();
@@ -41,7 +44,7 @@ int main(const int argc, const char* argv[])
 
   SRX_INFO("Hello, from main thread (MACRO)");
 
-  Platform::DesktopLauncher().Run<Director>();
+  Platform::DesktopLauncher().Run<MyDirector>();
 
   SystemTime stm;
   Time::GetLocalTime(stm);

@@ -145,7 +145,7 @@ namespace Sorex::Math
    */
   SRX_API SRX_INLINE scalar_t Random() SRX_NOEXCEPT
   {
-    const scalar_t r = rand();
+    const scalar_t r = static_cast<scalar_t>(rand());
     return r / (scalar_t)RAND_MAX;
   }
 

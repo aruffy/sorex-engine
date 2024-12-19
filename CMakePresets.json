@@ -2,6 +2,40 @@
   "version": 2,
   "configurePresets": [
     {
+      "name": "win_x64_debug",
+      "displayName": "Windows x64 (Debug)",
+      "description": "Using compilers for Visual Studio 17 2022 (x64 architecture)",
+      "generator": "Visual Studio 17 2022",
+      "toolset": "host=x64",
+      "architecture": "x64",
+      "binaryDir": "${sourceDir}/build",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_C_COMPILER": "cl.exe",
+        "CMAKE_CXX_COMPILER": "cl.exe",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "SOREX_STATIC_LIBRARY": "ON",
+        "TRACE":"ON"
+      }
+    },
+    {
+      "name": "win_x64_unit_tests",
+      "displayName": "Windows x64 (Unit Tests)",
+      "description": "Engine unit tests",
+      "generator": "Visual Studio 17 2022",
+      "toolset": "host=x64",
+      "architecture": "x64",
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_C_COMPILER": "cl.exe",
+        "CMAKE_CXX_COMPILER": "cl.exe",
+        "SOREX_STATIC_LIBRARY": "ON",
+        "SOREX_BUILD_SANDBOX": "OFF",
+        "SOREX_BUILD_TESTS": "ON"
+      }
+    },
+    {
       "name": "unix_debug",
       "hidden": true,
       "displayName": "Unix Base (Debug)",
@@ -41,6 +75,15 @@
         "SOREX_BUILD_SANDBOX": "OFF",
         "SOREX_BUILD_TESTS": "ON"
       }
+    }
+  ],
+  "buildPresets":[
+    {
+      "name": "win_x64_unit_tests_build",
+      "displayName": "Build Win x64 (Unit Tests)",
+      "description": "Build config for unit tests on Windows platform",
+      "configurePreset": "win_x64_unit_tests",
+      "configuration": "Release"
     }
   ]
 }

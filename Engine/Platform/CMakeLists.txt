@@ -5,6 +5,8 @@ include(TargetPlatform)
 
 if(TARGET_PLATFORM_LINUX)
   set(PLATFORM_SOURCE_DIR "${CMAKE_CURRENT_LIST_DIR}/Linux")
+elseif(TARGET_PLATFORM_WINDOWS)
+  set(PLATFORM_SOURCE_DIR "${CMAKE_CURRENT_LIST_DIR}/Win32")
 else()
   message(FATAL_ERROR "${TARGET_PLATFORM} platform isn't supported")
 endif()

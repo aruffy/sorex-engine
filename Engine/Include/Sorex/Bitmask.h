@@ -113,3 +113,14 @@ operator^=(Type& lhs, const Type rhs) SRX_NOEXCEPT
 {
   return (lhs = (lhs ^ rhs));
 }
+
+namespace Sorex::Utils
+{
+  template<typename Type>
+  SRX_NODISCARD SRX_INLINE constexpr std::
+    enable_if_t<Sorex::Details::enum_as_bitmask_v<Type>, bool>
+    CheckBitmask(const Type value, const Type bitmask) SRX_NOEXCEPT
+  {
+    return (value & bitmask) == bitmask;
+  }
+}

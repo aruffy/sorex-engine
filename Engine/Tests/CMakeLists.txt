@@ -16,6 +16,11 @@ target_compile_definitions(
   ${ENGINE_UNITTEST_TARGET} PRIVATE ${TARGET_PLATFORM}=1
 )
 
+if(MSVC)
+  add_compile_options("/permissive-")
+  target_compile_options(${ENGINE_UNITTEST_TARGET} PRIVATE "/FS" "/utf-8")
+endif()
+
 find_package(GTest QUIET)
 
 if(GTEST_FOUND)
@@ -91,6 +96,7 @@ endif(GTEST_FOUND)
 
 target_include_directories(
   ${ENGINE_UNITTEST_TARGET} PRIVATE "${SOREX_ENGINE_DIR}/Include"
+                                    "${SOREX_ENGINE_DIR}/Source"
 )
 target_include_directories(
   ${ENGINE_UNITTEST_TARGET} PRIVATE ${GTEST_INCLUDE_DIR}

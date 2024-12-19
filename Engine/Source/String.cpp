@@ -50,8 +50,8 @@ namespace Sorex::Utils
 
     for (size_t i = 0; i < wstr.length(); ++i)
     {
-      const WStringView::value_type ch  = wstr[i];
-      const uint32                  val = static_cast<uint32>(ch);
+      const uint32 ch  = wstr[i];
+      const uint32 val = static_cast<uint32>(ch);
       if (val < 0x0080U)
       {
         s += (char)ch;

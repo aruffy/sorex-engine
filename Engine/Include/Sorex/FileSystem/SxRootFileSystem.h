@@ -25,73 +25,66 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#include "DesktopWindow.h"
+#pragma once
 
-namespace Sorex::Platform
+#include <Sorex/CoreMinimal.h>
+#include <Sorex/Director.h>
+
+#include "SxFileSystem.h"
+
+namespace Sorex
 {
-  DesktopWindow::DesktopWindow(DesktopGraphicsFramework& glfw,
-                               const WStringView         title,
-                               SizeInt                   size) SRX_NOEXCEPT
-    : mGlfw(glfw)
-    , mTitle(title)
-    , mSize(size)
-    , mWindow(nullptr)
-    , mDirector(nullptr)
-  {}
-
-  Status DesktopWindow::Initialize()
+  using namespace Sorex::FileSystem;
+  /**
+   * @class App::FileSystem - represent the file system of the application.
+   *      Use genereic format of the path with the '/' slash separator.
+   */
+  class RootFileSystem final
+    : public Director::Component
+    , public IFileSystem
   {
-    SRX_CLSFUN_TRACE();
-    SRX_CHECK(mSize.IsValid() && !mTitle.empty());
+    SRX_RTTI(RootFileSystem, Director::Component);
 
-    auto [status, window] = mGlfw.CreateWindow(mTitle, &mSize);
-    if (!status.Ok())
-      return status;
+public:
+    // IFileSystem Interface
+    virtual Status      IndexFiles() SRX_NOEXCEPT override;
+    virtual void        GetFiles(StringView       path,
+                                 TVector<String>& files) SRX_NOEXCEPT override;
+    virtual EFileStatus GetFileStatus(StringView name) SRX_NOEXCEPT override;
 
-    glfwSetWindowUserPointer(window, this);
+    virtual Path GetSystemPath() const SRX_NOEXCEPT override;
 
-    mWindow = window;
-    return SRX_OK;
-  }
+    virtual TUniquePointer<Stream> OpenFile(StringView path, Status* status)
+      SRX_NOEXCEPT override;
 
-  void DesktopWindow::Shutdown()
-  {
-    SRX_CLSFUN_TRACE();
+    // Director::Component Interface
+    virtual Status Initialize() override;
+    virtual void   Shutdown() override;
 
-    if (mDirector)
-    {
-      mDirector->RemoveListener(this);
-      mDirector = nullptr;
-    }
+    /**
+     * @brief Add the current path to the app file system.
+     *
+     * @note The path must be subdir of the application folder with leading
+     * slash. Example: "/Textures/Props"
+     *
+     * @param path - path to directory to mount.
+     * @param[out] error - description of error;
+     * @return true if directory was mounted.
+     */
+    Status Mount(StringView path) SRX_NOEXCEPT;
+    // const String& GetAppDataPath() SRX_NOEXCEPT;
 
-    if (mWindow)
-    {
-      mGlfw.DestroyWindow(mWindow);
-      mWindow = nullptr;
-    }
-  }
+private:
+    IFileSystem*       GetFileSystem(StringView path) SRX_NOEXCEPT;
+    const IFileSystem* GetFileSystem(StringView path) const SRX_NOEXCEPT;
+    static StringView  GetFileSystemName(StringView path) SRX_NOEXCEPT;
 
-  void DesktopWindow::Attach(Director& director)
-  {
-    SRX_CHECK(!mDirector);
+private:
+    bool mInited = false;
 
-    Director::Component::Attach(director);
+    mutable Mutex                                 mMutex;
+    THashMap<hash_t, TUniquePointer<IFileSystem>> mFilesystems;
 
-    director.AddListener(this);
-    mDirector = &director;
-  }
-
-  void DesktopWindow::Update(const float deltaTime)
-  {
-    if (mWindow && glfwWindowShouldClose(mWindow))
-      Shutdown();
-  }
-
-  void DesktopWindow::OnFinishFrame()
-  {
-    SRX_CHECK(mWindow);
-
-    if (mWindow)
-      glfwSwapBuffers(mWindow);
-  }
-}  // namespace
+    String mAppDataPath;
+  };
+}

@@ -25,73 +25,31 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#include "DesktopWindow.h"
+#include <Sorex/FileSystem/SxFileSystem.h>
 
-namespace Sorex::Platform
+#include <unistd.h>
+
+namespace Sorex::FileSystem
 {
-  DesktopWindow::DesktopWindow(DesktopGraphicsFramework& glfw,
-                               const WStringView         title,
-                               SizeInt                   size) SRX_NOEXCEPT
-    : mGlfw(glfw)
-    , mTitle(title)
-    , mSize(size)
-    , mWindow(nullptr)
-    , mDirector(nullptr)
-  {}
-
-  Status DesktopWindow::Initialize()
+  SRX_API Path GetUserAppsDataPath() SRX_NOEXCEPT
   {
-    SRX_CLSFUN_TRACE();
-    SRX_CHECK(mSize.IsValid() && !mTitle.empty());
+    if (const char* path = getenv("XDG_CONFIG_HOME"))
+      return FileSystem::Path(path);
 
-    auto [status, window] = mGlfw.CreateWindow(mTitle, &mSize);
-    if (!status.Ok())
-      return status;
+    FileSystem::Path path = getenv("HOME");
+    SRX_ASSERT(!path.empty());
 
-    glfwSetWindowUserPointer(window, this);
-
-    mWindow = window;
-    return SRX_OK;
+    return path / ".config";
   }
 
-  void DesktopWindow::Shutdown()
+  SRX_API Path GetAppPath() SRX_NOEXCEPT
   {
-    SRX_CLSFUN_TRACE();
+    char    fullpath[PATH_MAX] = { 0 };
+    ssize_t length             = readlink("/proc/self/exe", fullpath, PATH_MAX);
 
-    if (mDirector)
-    {
-      mDirector->RemoveListener(this);
-      mDirector = nullptr;
-    }
+    SRX_ASSERT_MSG(length > 0 && length < PATH_MAX, "readlink() failed");
 
-    if (mWindow)
-    {
-      mGlfw.DestroyWindow(mWindow);
-      mWindow = nullptr;
-    }
-  }
-
-  void DesktopWindow::Attach(Director& director)
-  {
-    SRX_CHECK(!mDirector);
-
-    Director::Component::Attach(director);
-
-    director.AddListener(this);
-    mDirector = &director;
-  }
-
-  void DesktopWindow::Update(const float deltaTime)
-  {
-    if (mWindow && glfwWindowShouldClose(mWindow))
-      Shutdown();
-  }
-
-  void DesktopWindow::OnFinishFrame()
-  {
-    SRX_CHECK(mWindow);
-
-    if (mWindow)
-      glfwSwapBuffers(mWindow);
+    fullpath[length] = '\0';
+    return FileSystem::Path(fullpath).remove_filename();
   }
 }  // namespace

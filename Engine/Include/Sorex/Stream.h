@@ -43,7 +43,9 @@ namespace Sorex
     None      = 0,
     Read      = (1 << 0),
     Write     = (1 << 1),
-    ReadWrite = Read | Write
+    ReadWrite = Read | Write,
+    SRX_ENUM_BITMASK
+
   };
 
   /**
@@ -89,7 +91,7 @@ public:
      *
      * @return True if stream reached end of data.
      */
-    virtual bool EndOfFile() SRX_NOEXCEPT { return true; }
+    virtual bool EndOfFile() const SRX_NOEXCEPT { return true; }
 
     /**
      * @brief Return name of stream.
@@ -99,9 +101,9 @@ public:
     virtual StringView GetName() const SRX_NOEXCEPT { return {}; }
 
     /**
-     * @brief Retrieve the length of the stream data.
+     * @brief Retrieve the current length of the stream data.
      *
-     * This function calculates the length of the data in the stream.
+     * This function calculates the current length of the data in the stream.
      *
      * @return length of data in bytes. If the length of the stream cannot be
      * calculated or an error has occurred, it returns SRX_UNKNOWN_SIZE.
@@ -149,7 +151,7 @@ public:
      */
     virtual ssize_t Read(TSpan<byte> buffer,
                          ssize_t length = SRX_UNKNOWN_SIZE) SRX_NOEXCEPT = 0;
-    virtual bool    Read(byte& value) SRX_NOEXCEPT;
+    virtual bool    Next(byte& value) SRX_NOEXCEPT;
     virtual ssize_t ReadAll(TVector<byte>& buffer) SRX_NOEXCEPT;
 
     /**
@@ -172,22 +174,22 @@ public:
      */
     virtual bool Reset() SRX_NOEXCEPT
     {
-      mStatusCode = EStatusCode::No_Error;
+      mStatus = std::nullopt;
       return true;
     }
 
     /**
-     * @brief Retrieves the error code of the last failed operation.
+     * @brief Retrieves the status of the stream. The status holds error of the
+     * last failed operation or SRX_OK.
      *
-     * @return EStatusCode The error code representing the status of the failed
-     * last operation.
+     * @return stream status
      */
-    SRX_INLINE EStatusCode GetErrorCode() const SRX_NOEXCEPT
+    SRX_INLINE Status GetStatus() const SRX_NOEXCEPT
     {
-      return mStatusCode;
+      return mStatus.value_or(SRX_OK);
     }
 
 protected:
-    EStatusCode mStatusCode = EStatusCode::No_Error;
+    mutable TOptional<Status> mStatus;
   };
 }

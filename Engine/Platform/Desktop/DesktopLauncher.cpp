@@ -26,6 +26,7 @@
 /**************************************************************************/
 
 #include <Sorex/DesktopLauncher.h>
+#include <Sorex/FileSystem/SxRootFileSystem.h>
 
 #include "DesktopGraphicsFramework.h"
 #include "DesktopInputSystem.h"
@@ -46,6 +47,7 @@ namespace Sorex::Platform
     auto& glfw = *director.AddComponent<DesktopGraphicsFramework>();
     director.AddComponent(DesktopInputSystem::Create(glfw));
     director.AddComponent<DesktopWindow>(glfw, L"Sorex", SizeInt{ 800, 640 });
+    director.AddComponent<RootFileSystem>();
 
     return SRX_OK;
   }

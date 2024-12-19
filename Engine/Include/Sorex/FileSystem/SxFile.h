@@ -25,73 +25,75 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#include "DesktopWindow.h"
+#pragma once
 
-namespace Sorex::Platform
+#include <Sorex/CoreMinimal.h>
+#include <Sorex/Stream.h>
+
+namespace Sorex
 {
-  DesktopWindow::DesktopWindow(DesktopGraphicsFramework& glfw,
-                               const WStringView         title,
-                               SizeInt                   size) SRX_NOEXCEPT
-    : mGlfw(glfw)
-    , mTitle(title)
-    , mSize(size)
-    , mWindow(nullptr)
-    , mDirector(nullptr)
-  {}
-
-  Status DesktopWindow::Initialize()
+  class File final: public Stream
   {
-    SRX_CLSFUN_TRACE();
-    SRX_CHECK(mSize.IsValid() && !mTitle.empty());
+    SRX_RTTI(File, Stream)
 
-    auto [status, window] = mGlfw.CreateWindow(mTitle, &mSize);
-    if (!status.Ok())
-      return status;
-
-    glfwSetWindowUserPointer(window, this);
-
-    mWindow = window;
-    return SRX_OK;
-  }
-
-  void DesktopWindow::Shutdown()
-  {
-    SRX_CLSFUN_TRACE();
-
-    if (mDirector)
+public:
+    enum class EOpenMode : uint8
     {
-      mDirector->RemoveListener(this);
-      mDirector = nullptr;
-    }
+      Binary = (1 << 0),
+      Append = (1 << 1),
+      Create = (1 << 2),
+      SRX_ENUM_BITMASK
+    };
 
-    if (mWindow)
-    {
-      mGlfw.DestroyWindow(mWindow);
-      mWindow = nullptr;
-    }
-  }
+public:
+    static TUniquePointer<File> Open(StringView  path,
+                                     EAccessMode access = EAccessMode::Read,
+                                     EOpenMode   mode   = EOpenMode::Binary,
+                                     Status*     status = nullptr) SRX_NOEXCEPT;
 
-  void DesktopWindow::Attach(Director& director)
-  {
-    SRX_CHECK(!mDirector);
+public:
+    explicit File(StringView  path,
+                  EAccessMode access = EAccessMode::Read,
+                  EOpenMode   mode   = EOpenMode::Binary) SRX_NOEXCEPT;
 
-    Director::Component::Attach(director);
+    virtual ~File() override;
 
-    director.AddListener(this);
-    mDirector = &director;
-  }
+    File(const File& other)            = delete;
+    File& operator=(const File& other) = delete;
 
-  void DesktopWindow::Update(const float deltaTime)
-  {
-    if (mWindow && glfwWindowShouldClose(mWindow))
-      Shutdown();
-  }
+    bool Flush() SRX_NOEXCEPT;
 
-  void DesktopWindow::OnFinishFrame()
-  {
-    SRX_CHECK(mWindow);
+    // Stream API
+    virtual bool Check(const EAccessMode mode) const SRX_NOEXCEPT override;
 
-    if (mWindow)
-      glfwSwapBuffers(mWindow);
-  }
+    virtual bool       IsOpen() const SRX_NOEXCEPT override { return mFile; }
+    virtual StringView GetName() const SRX_NOEXCEPT override { return mPath; }
+
+    virtual bool    EndOfFile() const SRX_NOEXCEPT override;
+    virtual ssize_t GetLength() const SRX_NOEXCEPT override;
+    virtual ssize_t GetPosition() const SRX_NOEXCEPT override;
+
+
+    virtual bool Seek(int32 pos, ESeekMode mode) SRX_NOEXCEPT override;
+    virtual bool Peek(byte& value) SRX_NOEXCEPT override;
+
+    virtual ssize_t Read(TSpan<byte> buffer, ssize_t length = SRX_UNKNOWN_SIZE)
+      SRX_NOEXCEPT override;
+    virtual ssize_t Write(TSpan<const byte> buffer) SRX_NOEXCEPT override;
+
+    virtual bool Reset() SRX_NOEXCEPT override;
+
+private:
+    File(FILE* file, StringView path, EAccessMode access, EOpenMode mode)
+      SRX_NOEXCEPT;
+
+private:
+    String      mPath;
+    EAccessMode mAccess;
+
+    FILE*           mFile;
+    mutable ssize_t mTotalLength;  ///< Cached total length
+  };
 }  // namespace
+
+using SxFile = Sorex::File;

@@ -29,7 +29,7 @@
 
 namespace Sorex
 {
-  bool Stream::Read(byte& value) SRX_NOEXCEPT
+  bool Stream::Next(byte& value) SRX_NOEXCEPT
   {
     return Read({ &value, 1 }) == 1;
   }
