@@ -89,7 +89,7 @@ namespace Sorex
   {
     Status    status;
     MutexLock _lock(mMutex);
-    for (auto& [hash, fs] : mFilesystems)
+    for (auto& [_, fs] : mFilesystems)
     {
       status = fs->IndexFiles();
       if (!status.Ok())
