@@ -48,7 +48,7 @@ public:
       virtual void Attach(Director& director);
 
       virtual Status Initialize() { return SRX_OK; }
-      virtual void   Shutdown() {};
+      virtual void   Shutdown() {}
 
       virtual void Update(const float deltaTime) {}
 

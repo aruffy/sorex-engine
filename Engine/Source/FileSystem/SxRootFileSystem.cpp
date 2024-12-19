@@ -89,6 +89,8 @@ namespace Sorex
   {
     Status    status;
     MutexLock _lock(mMutex);
+
+    // cppcheck-suppress unusedVariable
     for (auto& [_, fs] : mFilesystems)
     {
       status = fs->IndexFiles();
