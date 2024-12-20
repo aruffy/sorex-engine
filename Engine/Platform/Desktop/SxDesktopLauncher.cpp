@@ -25,12 +25,12 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#include <Sorex/DesktopLauncher.h>
+#include <Sorex/SxDesktopLauncher.h>
 #include <Sorex/FileSystem/SxRootFileSystem.h>
 
-#include "DesktopGraphicsFramework.h"
-#include "DesktopInputSystem.h"
-#include "DesktopWindow.h"
+#include "SxDesktopGraphicsFramework.h"
+#include "SxDesktopInputSystem.h"
+#include "SxDesktopWindow.h"
 
 namespace Sorex::Platform
 {

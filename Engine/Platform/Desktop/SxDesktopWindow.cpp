@@ -25,49 +25,73 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#include "DesktopMouse.h"
+#include "SxDesktopWindow.h"
 
 namespace Sorex::Platform
 {
-  Point DesktopMouse::GetCursorPosition() const
+  DesktopWindow::DesktopWindow(DesktopGraphicsFramework& glfw,
+                               const WStringView         title,
+                               SizeInt                   size) SRX_NOEXCEPT
+    : mGlfw(glfw)
+    , mTitle(title)
+    , mSize(size)
+    , mWindow(nullptr)
+    , mDirector(nullptr)
+  {}
+
+  Status DesktopWindow::Initialize()
   {
-    return { mPosition.x, mPosition.y };
+    SRX_CLSFUN_TRACE();
+    SRX_CHECK(mSize.IsValid() && !mTitle.empty());
+
+    auto [status, window] = mGlfw.CreateWindow(mTitle, &mSize);
+    if (!status.Ok())
+      return status;
+
+    glfwSetWindowUserPointer(window, this);
+
+    mWindow = window;
+    return SRX_OK;
   }
 
-  Vec2 DesktopMouse::GetCursorMovement() const
+  void DesktopWindow::Shutdown()
   {
-    return mPrevPosition - mPosition;
+    SRX_CLSFUN_TRACE();
+
+    if (mDirector)
+    {
+      mDirector->RemoveListener(this);
+      mDirector = nullptr;
+    }
+
+    if (mWindow)
+    {
+      mGlfw.DestroyWindow(mWindow);
+      mWindow = nullptr;
+    }
   }
 
-  bool DesktopMouse::IsButtonPressed(const EMouseButton button) const
+  void DesktopWindow::Attach(Director& director)
   {
-    static auto conv = [](const EMouseButton btn) SRX_NOEXCEPT {
-      switch (btn)
-      {
-      case EMouseButton::Left:
-        return GLFW_MOUSE_BUTTON_LEFT;
-      case EMouseButton::Right:
-        return GLFW_MOUSE_BUTTON_RIGHT;
-      case EMouseButton::Middle:
-        GLFW_MOUSE_BUTTON_MIDDLE;
-      case EMouseButton::Button_4:
-        return GLFW_MOUSE_BUTTON_4;
-      case EMouseButton::Button_5:
-        return GLFW_MOUSE_BUTTON_5;
-      case EMouseButton::Button_6:
-        return GLFW_MOUSE_BUTTON_6;
-      case EMouseButton::Button_7:
-        return GLFW_MOUSE_BUTTON_7;
-      case EMouseButton::Button_8:
-        return GLFW_MOUSE_BUTTON_8;
-      default:
-        SRX_NOENTRY("invalid mosue button");
-        return -1;
-      }
-    };
+    SRX_CHECK(!mDirector);
 
-    // TODO: push active window
-    return glfwGetMouseButton(mGlfw.GetMainWindow(), conv(button))
-           == GLFW_PRESS;
+    Director::Component::Attach(director);
+
+    director.AddListener(this);
+    mDirector = &director;
+  }
+
+  void DesktopWindow::Update(const float deltaTime)
+  {
+    if (mWindow && glfwWindowShouldClose(mWindow))
+      Shutdown();
+  }
+
+  void DesktopWindow::OnFinishFrame()
+  {
+    SRX_CHECK(mWindow);
+
+    if (mWindow)
+      glfwSwapBuffers(mWindow);
   }
 }  // namespace

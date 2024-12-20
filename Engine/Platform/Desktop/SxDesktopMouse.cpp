@@ -3,7 +3,7 @@
 /*                                SOREX                                   */
 /*                 Simple OpenGL Rendering Engine eXtended                */
 /**************************************************************************/
-/* Copyright (c) 2022-2024 Aleksandr Ershov (Ruffy).                      */
+/* Copyright (c) 2022 Aleksandr Ershov (Ruffy).                           */
 /*                                                                        */
 /* Permission is hereby granted, free of charge, to any person obtaining  */
 /* a copy of this software and associated documentation files (the        */
@@ -25,57 +25,49 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#pragma once
-
-#include <Sorex/Input/SxInputSystem.h>
-
-#include "DesktopGraphicsFramework.h"
-#include "DesktopMouse.h"
+#include "SxDesktopMouse.h"
 
 namespace Sorex::Platform
 {
-  class DesktopInputSystem final
-    : public InputSystem
-    , public DesktopGraphicsFramework::IListener
+  Point DesktopMouse::GetCursorPosition() const
   {
-    SRX_RTTI(Platform::DesktopInputSystem, InputSystem);
+    return { mPosition.x, mPosition.y };
+  }
 
-public:
-    static TUniquePointer<DesktopInputSystem> Create(
-      DesktopGraphicsFramework& glfw) SRX_NOEXCEPT;
+  Vec2 DesktopMouse::GetCursorMovement() const
+  {
+    return mPrevPosition - mPosition;
+  }
 
-    virtual ~DesktopInputSystem() override;
+  bool DesktopMouse::IsButtonPressed(const EMouseButton button) const
+  {
+    static auto conv = [](const EMouseButton btn) SRX_NOEXCEPT {
+      switch (btn)
+      {
+      case EMouseButton::Left:
+        return GLFW_MOUSE_BUTTON_LEFT;
+      case EMouseButton::Right:
+        return GLFW_MOUSE_BUTTON_RIGHT;
+      case EMouseButton::Middle:
+        GLFW_MOUSE_BUTTON_MIDDLE;
+      case EMouseButton::Button_4:
+        return GLFW_MOUSE_BUTTON_4;
+      case EMouseButton::Button_5:
+        return GLFW_MOUSE_BUTTON_5;
+      case EMouseButton::Button_6:
+        return GLFW_MOUSE_BUTTON_6;
+      case EMouseButton::Button_7:
+        return GLFW_MOUSE_BUTTON_7;
+      case EMouseButton::Button_8:
+        return GLFW_MOUSE_BUTTON_8;
+      default:
+        SRX_NOENTRY("invalid mosue button");
+        return -1;
+      }
+    };
 
-    DesktopInputSystem(const DesktopInputSystem& other)            = delete;
-    DesktopInputSystem& operator=(const DesktopInputSystem& other) = delete;
-
-    // Interface Director::Component
-    virtual Status Initialize() override;
-    virtual void   Shutdown() override;
-
-    // Interface DesktopGraphicsFramework::IListener
-    virtual void OnWindowCreate(GLFWwindow& window) override;
-
-    // Interface InputSystem
-    virtual Mouse* GetMouse() override { return &mMouse; }
-
-private:
-    explicit DesktopInputSystem(DesktopGraphicsFramework& glfw) SRX_NOEXCEPT;
-
-    static DesktopInputSystem* inputSystem;
-    static void                OnMouseClickCallback(GLFWwindow* window,
-                                                    int         button,
-                                                    int         action,
-                                                    int         modify) SRX_NOEXCEPT;
-    static void                OnMouseMoveCallback(GLFWwindow* window,
-                                                   double      x,
-                                                   double      y) SRX_NOEXCEPT;
-    static void                OnMouseScrollCallback(GLFWwindow* window,
-                                                     double      x,
-                                                     double      y) SRX_NOEXCEPT;
-
-private:
-    DesktopGraphicsFramework& mGlfw;
-    DesktopMouse              mMouse;
-  };
+    // TODO: push active window
+    return glfwGetMouseButton(mGlfw.GetMainWindow(), conv(button))
+           == GLFW_PRESS;
+  }
 }  // namespace

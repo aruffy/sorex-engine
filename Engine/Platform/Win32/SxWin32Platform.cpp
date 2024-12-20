@@ -25,7 +25,7 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#include <Sorex/Win32Platform.h>
+#include <Sorex/SxWin32Platform.h>
 
 #include <cstdio>
 

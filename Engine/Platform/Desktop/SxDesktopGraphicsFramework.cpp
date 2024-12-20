@@ -25,7 +25,7 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#include "DesktopGraphicsFramework.h"
+#include "SxDesktopGraphicsFramework.h"
 
 #include <Sorex/Utils/SxString.h>
 

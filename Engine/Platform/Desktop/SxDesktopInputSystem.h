@@ -3,7 +3,7 @@
 /*                                SOREX                                   */
 /*                 Simple OpenGL Rendering Engine eXtended                */
 /**************************************************************************/
-/* Copyright (c) 2022 Aleksandr Ershov (Ruffy).                           */
+/* Copyright (c) 2022-2024 Aleksandr Ershov (Ruffy).                      */
 /*                                                                        */
 /* Permission is hereby granted, free of charge, to any person obtaining  */
 /* a copy of this software and associated documentation files (the        */
@@ -27,40 +27,55 @@
 
 #pragma once
 
-#include <Sorex/Input/SxMouse.h>
+#include <Sorex/Input/SxInputSystem.h>
 
-#include "DesktopGraphicsFramework.h"
+#include "SxDesktopGraphicsFramework.h"
+#include "SxDesktopMouse.h"
 
 namespace Sorex::Platform
 {
-  class DesktopMouse final: public Mouse
+  class DesktopInputSystem final
+    : public InputSystem
+    , public DesktopGraphicsFramework::IListener
   {
-    static constexpr int kButtonNumber =
-      static_cast<int>(EMouseButton::Button_8) + 1;
+    SRX_RTTI(Platform::DesktopInputSystem, InputSystem);
 
 public:
-    SRX_INLINE explicit DesktopMouse(DesktopGraphicsFramework& glfw)
-      SRX_NOEXCEPT: mGlfw(glfw)
-    {}
+    static TUniquePointer<DesktopInputSystem> Create(
+      DesktopGraphicsFramework& glfw) SRX_NOEXCEPT;
 
-    // Interface Mouse
-    virtual Point GetCursorPosition() const override;
-    virtual Vec2  GetCursorMovement() const override;
-    virtual bool  IsButtonPressed(const EMouseButton button) const override;
+    virtual ~DesktopInputSystem() override;
 
-    SRX_INLINE void SetCursorPosition(const Point& pos) SRX_NOEXCEPT;
+    DesktopInputSystem(const DesktopInputSystem& other)            = delete;
+    DesktopInputSystem& operator=(const DesktopInputSystem& other) = delete;
+
+    // Interface Director::Component
+    virtual Status Initialize() override;
+    virtual void   Shutdown() override;
+
+    // Interface DesktopGraphicsFramework::IListener
+    virtual void OnWindowCreate(GLFWwindow& window) override;
+
+    // Interface InputSystem
+    virtual Mouse* GetMouse() override { return &mMouse; }
 
 private:
-    Vec2 mPosition;
-    Vec2 mPrevPosition;
+    explicit DesktopInputSystem(DesktopGraphicsFramework& glfw) SRX_NOEXCEPT;
 
+    static DesktopInputSystem* inputSystem;
+    static void                OnMouseClickCallback(GLFWwindow* window,
+                                                    int         button,
+                                                    int         action,
+                                                    int         modify) SRX_NOEXCEPT;
+    static void                OnMouseMoveCallback(GLFWwindow* window,
+                                                   double      x,
+                                                   double      y) SRX_NOEXCEPT;
+    static void                OnMouseScrollCallback(GLFWwindow* window,
+                                                     double      x,
+                                                     double      y) SRX_NOEXCEPT;
+
+private:
     DesktopGraphicsFramework& mGlfw;
+    DesktopMouse              mMouse;
   };
-
-  SRX_INLINE void DesktopMouse::SetCursorPosition(const Point& pos) SRX_NOEXCEPT
-  {
-    mPrevPosition = mPosition;
-    mPosition.x   = pos.x;
-    mPosition.y   = pos.y;
-  }
-}
+}  // namespace

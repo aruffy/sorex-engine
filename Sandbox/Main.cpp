@@ -8,7 +8,7 @@
 #include <Sorex/SxLauncher.h>
 #include <Sorex/SxDirector.h>
 
-#include <Sorex/DesktopLauncher.h>
+#include <Sorex/SxDesktopLauncher.h>
 
 using namespace Sorex;
 

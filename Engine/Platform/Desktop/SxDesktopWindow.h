@@ -25,73 +25,41 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#include "DesktopWindow.h"
+#pragma once
+
+#include <Sorex/SxWindow.h>
+
+#include "SxDesktopGraphicsFramework.h"
 
 namespace Sorex::Platform
 {
-  DesktopWindow::DesktopWindow(DesktopGraphicsFramework& glfw,
-                               const WStringView         title,
-                               SizeInt                   size) SRX_NOEXCEPT
-    : mGlfw(glfw)
-    , mTitle(title)
-    , mSize(size)
-    , mWindow(nullptr)
-    , mDirector(nullptr)
-  {}
-
-  Status DesktopWindow::Initialize()
+  class DesktopWindow final
+    : public Window
+    , private Director::IListener
   {
-    SRX_CLSFUN_TRACE();
-    SRX_CHECK(mSize.IsValid() && !mTitle.empty());
+    SRX_RTTI(Platform::DesktopWindow, Window)
 
-    auto [status, window] = mGlfw.CreateWindow(mTitle, &mSize);
-    if (!status.Ok())
-      return status;
+public:
+    DesktopWindow(DesktopGraphicsFramework& glfw,
+                  const WStringView         title,
+                  SizeInt                   size) SRX_NOEXCEPT;
 
-    glfwSetWindowUserPointer(window, this);
+    // Interface Director::Component
+    virtual void   Attach(Director& director) override;
+    virtual Status Initialize() override;
+    virtual void   Shutdown() override;
+    virtual void   Update(const float deltaTime) override;
 
-    mWindow = window;
-    return SRX_OK;
-  }
+    // Interface Director::IListener
+    virtual void OnFinishFrame() override;
 
-  void DesktopWindow::Shutdown()
-  {
-    SRX_CLSFUN_TRACE();
+private:
+    DesktopGraphicsFramework& mGlfw;
 
-    if (mDirector)
-    {
-      mDirector->RemoveListener(this);
-      mDirector = nullptr;
-    }
+    WString mTitle;
+    SizeInt mSize;
 
-    if (mWindow)
-    {
-      mGlfw.DestroyWindow(mWindow);
-      mWindow = nullptr;
-    }
-  }
-
-  void DesktopWindow::Attach(Director& director)
-  {
-    SRX_CHECK(!mDirector);
-
-    Director::Component::Attach(director);
-
-    director.AddListener(this);
-    mDirector = &director;
-  }
-
-  void DesktopWindow::Update(const float deltaTime)
-  {
-    if (mWindow && glfwWindowShouldClose(mWindow))
-      Shutdown();
-  }
-
-  void DesktopWindow::OnFinishFrame()
-  {
-    SRX_CHECK(mWindow);
-
-    if (mWindow)
-      glfwSwapBuffers(mWindow);
-  }
+    GLFWwindow* mWindow;
+    Director*   mDirector;
+  };
 }  // namespace

@@ -101,7 +101,7 @@ namespace Sorex
 #  define SOREX_TARGET_PLATFORM (::Sorex::ETargetPlatform::Linux)
 #  define SOREX_PLATFORM_LINUX (1)
 
-#  include <Sorex/LinuxPlatform.h>
+#  include <Sorex/SxLinuxPlatform.h>
 
 #elif defined(__APPLE_CC__) || defined(TARGET_PLATFORM_MACOSX) \
   || defined(TARGET_PLATFORM_IOS)

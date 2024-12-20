@@ -25,7 +25,7 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#include "DesktopInputSystem.h"
+#include "SxDesktopInputSystem.h"
 
 namespace Sorex::Platform
 {

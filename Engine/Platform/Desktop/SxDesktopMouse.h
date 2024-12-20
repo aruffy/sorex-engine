@@ -27,39 +27,40 @@
 
 #pragma once
 
-#include <Sorex/SxWindow.h>
+#include <Sorex/Input/SxMouse.h>
 
-#include "DesktopGraphicsFramework.h"
+#include "SxDesktopGraphicsFramework.h"
 
 namespace Sorex::Platform
 {
-  class DesktopWindow final
-    : public Window
-    , private Director::IListener
+  class DesktopMouse final: public Mouse
   {
-    SRX_RTTI(Platform::DesktopWindow, Window)
+    static constexpr int kButtonNumber =
+      static_cast<int>(EMouseButton::Button_8) + 1;
 
 public:
-    DesktopWindow(DesktopGraphicsFramework& glfw,
-                  const WStringView         title,
-                  SizeInt                   size) SRX_NOEXCEPT;
+    SRX_INLINE explicit DesktopMouse(DesktopGraphicsFramework& glfw)
+      SRX_NOEXCEPT: mGlfw(glfw)
+    {}
 
-    // Interface Director::Component
-    virtual void   Attach(Director& director) override;
-    virtual Status Initialize() override;
-    virtual void   Shutdown() override;
-    virtual void   Update(const float deltaTime) override;
+    // Interface Mouse
+    virtual Point GetCursorPosition() const override;
+    virtual Vec2  GetCursorMovement() const override;
+    virtual bool  IsButtonPressed(const EMouseButton button) const override;
 
-    // Interface Director::IListener
-    virtual void OnFinishFrame() override;
+    SRX_INLINE void SetCursorPosition(const Point& pos) SRX_NOEXCEPT;
 
 private:
+    Vec2 mPosition;
+    Vec2 mPrevPosition;
+
     DesktopGraphicsFramework& mGlfw;
-
-    WString mTitle;
-    SizeInt mSize;
-
-    GLFWwindow* mWindow;
-    Director*   mDirector;
   };
-}  // namespace
+
+  SRX_INLINE void DesktopMouse::SetCursorPosition(const Point& pos) SRX_NOEXCEPT
+  {
+    mPrevPosition = mPosition;
+    mPosition.x   = pos.x;
+    mPosition.y   = pos.y;
+  }
+}
