@@ -30,6 +30,12 @@
 #include <Sorex/SxCoreMinimal.h>
 #include <Sorex/FileSystem/SxFileSystem.h>
 
+#ifdef SOREX_PLATFORM_WIN32
+#define SRX_PATH(str) (L##str)
+#else
+#define SRX_PATH(str) (str)
+#endif
+
 using namespace Sorex::FileSystem;
 
 namespace Sorex::Utils
@@ -49,7 +55,7 @@ namespace Sorex::Utils
    * @return combined path in generic format
    */
   PathString CombinePath(const TVector<PathStringView>& dirs) SRX_NOEXCEPT;
-  String     CombinePath(const TVector<String>& dirs) SRX_NOEXCEPT;
+  PathString CombinePath(const TVector<PathString>& dirs) SRX_NOEXCEPT;
 
   /**
    * @brief Ensure that path closed with slash.

@@ -70,15 +70,15 @@ namespace Sorex::Utils
     return result;
   }
 
-  String CombinePath(const TVector<String>& dirs) SRX_NOEXCEPT
+  PathString CombinePath(const TVector<PathString>& dirs) SRX_NOEXCEPT
   {
-    TVector<StringView> views;
+    TVector<PathStringView> views;
     views.resize(dirs.size());
 
     std::transform(dirs.begin(),
                    dirs.end(),
                    views.begin(),
-                   [](const String& s) { return StringView(s); });
+                   [](const PathString& s) { return PathStringView(s); });
 
     return CombinePath(views);
   }
