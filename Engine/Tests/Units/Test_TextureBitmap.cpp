@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include <Sorex/Graphics/TextureBitmap.h>
+#include <Sorex/Graphics/SxTextureBitmap.h>
 
 using namespace Sorex::Graphics;
 

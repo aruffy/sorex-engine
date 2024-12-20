@@ -29,7 +29,7 @@
 
 #include <Sorex/SxCoreMinimal.h>
 
-#include "GraphicsTypes.h"
+#include "SxGraphicsTypes.h"
 
 namespace Sorex::Graphics
 {

@@ -25,7 +25,7 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#include <Sorex/Graphics/GraphicsTypes.h>
+#include <Sorex/Graphics/SxGraphicsTypes.h>
 
 namespace Sorex::Graphics
 {
