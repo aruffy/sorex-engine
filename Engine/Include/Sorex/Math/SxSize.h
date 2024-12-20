@@ -27,7 +27,7 @@
 
 #pragma once
 
-#include <Sorex/Types.h>
+#include <Sorex/SxTypes.h>
 
 #include "SxPoint.h"
 

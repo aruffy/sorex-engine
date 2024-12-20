@@ -1,7 +1,7 @@
 #pragma once
 
-#include <Sorex/Types.h>
-#include <Sorex/Status.h>
+#include <Sorex/SxTypes.h>
+#include <Sorex/SxStatus.h>
 #include <Sorex/SxAssert.h>
 
 namespace Sorex::Utils

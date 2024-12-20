@@ -27,7 +27,7 @@
 
 #pragma once
 
-#include <Sorex/Launcher.h>
+#include <Sorex/SxLauncher.h>
 
 namespace Sorex::Platform
 {

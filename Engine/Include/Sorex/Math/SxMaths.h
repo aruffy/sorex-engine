@@ -29,8 +29,8 @@
 
 #include <random>
 
-#include <Sorex/Types.h>
-#include <Sorex/Platform.h>
+#include <Sorex/SxTypes.h>
+#include <Sorex/SxPlatform.h>
 #include <Sorex/SxAssert.h>
 
 #ifndef M_PI

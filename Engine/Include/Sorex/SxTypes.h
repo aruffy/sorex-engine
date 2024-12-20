@@ -44,7 +44,7 @@
 #include <variant>
 #include <optional>
 
-#include "Platform.h"
+#include "SxPlatform.h"
 
 namespace Sorex
 {

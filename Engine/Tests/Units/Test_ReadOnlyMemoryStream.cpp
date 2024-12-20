@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include <Sorex/MemoryStream.h>
+#include <Sorex/SxMemoryStream.h>
 
 using namespace Sorex;
 

@@ -25,7 +25,7 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#include <Sorex/Status.h>
+#include <Sorex/SxStatus.h>
 
 namespace Sorex
 {

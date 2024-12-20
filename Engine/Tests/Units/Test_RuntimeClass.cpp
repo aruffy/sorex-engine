@@ -1,9 +1,9 @@
-#include "Sorex/Types.h"
+#include "Sorex/SxTypes.h"
 #include <gtest/gtest.h>
 
 #include <chrono>
 
-#include <Sorex/RuntimeClass.h>
+#include <Sorex/SxRuntimeClass.h>
 
 using namespace Sorex;
 

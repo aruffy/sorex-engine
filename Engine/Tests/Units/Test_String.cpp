@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 
 #include <Sorex/Utils/SxString.h>
-#include <Sorex/Types.h>
+#include <Sorex/SxTypes.h>
 
 using namespace Sorex;
 

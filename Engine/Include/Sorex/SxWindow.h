@@ -28,7 +28,7 @@
 #pragma once
 
 #include "SxCoreMinimal.h"
-#include "Director.h"
+#include "SxDirector.h"
 
 namespace Sorex
 {

@@ -30,10 +30,10 @@
 #include <spdlog/spdlog.h>
 #include <spdlog/fmt/fmt.h>
 
-#include "Types.h"
-#include "Platform.h"
-#include "Status.h"
-#include "Thread.h"
+#include "SxTypes.h"
+#include "SxPlatform.h"
+#include "SxStatus.h"
+#include "SxThread.h"
 
 #ifndef SOREX_LOG_THREAD_NUM
 #  define SOREX_LOG_THREAD_NUM (2)

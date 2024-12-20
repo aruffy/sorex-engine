@@ -28,7 +28,7 @@
 #pragma once
 
 #include <Sorex/SxCoreMinimal.h>
-#include <Sorex/Director.h>
+#include <Sorex/SxDirector.h>
 #include <Sorex/Containers/SxListenerContainer.h>
 
 #include <glad/glad.h>

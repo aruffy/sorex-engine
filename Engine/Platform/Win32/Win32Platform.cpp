@@ -30,7 +30,7 @@
 #include <cstdio>
 
 #include <Sorex/SxAssert.h>
-#include <Sorex/Platform.h>
+#include <Sorex/SxPlatform.h>
 
 #include <Windows.h>
 

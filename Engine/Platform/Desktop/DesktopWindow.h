@@ -27,7 +27,7 @@
 
 #pragma once
 
-#include <Sorex/Window.h>
+#include <Sorex/SxWindow.h>
 
 #include "DesktopGraphicsFramework.h"
 

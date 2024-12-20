@@ -25,7 +25,7 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#include <Sorex/Time.h>
+#include <Sorex/SxTime.h>
 #include <Sorex/Math/SxMaths.h>
 
 #include <chrono>

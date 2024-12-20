@@ -25,7 +25,7 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#include <Sorex/Stream.h>
+#include <Sorex/SxStream.h>
 
 namespace Sorex
 {

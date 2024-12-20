@@ -27,7 +27,7 @@
 
 #pragma once
 
-#include "Platform.h"
+#include "SxPlatform.h"
 
 #ifdef SOREX_DEBUG_MEDIUM
 #  ifdef SOREX_COMPILER_MSVC

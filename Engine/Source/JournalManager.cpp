@@ -25,7 +25,7 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#include <Sorex/JournalManager.h>
+#include <Sorex/SxJournalManager.h>
 
 #include <Sorex/SxAssert.h>
 

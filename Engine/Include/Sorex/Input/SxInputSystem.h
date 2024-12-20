@@ -28,8 +28,8 @@
 #pragma once
 
 #include <Sorex/SxCoreMinimal.h>
-#include <Sorex/Director.h>
-#include <Sorex/Window.h>
+#include <Sorex/SxDirector.h>
+#include <Sorex/SxWindow.h>
 
 #include <Sorex/Containers/SxListenerContainer.h>
 

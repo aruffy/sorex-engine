@@ -27,8 +27,8 @@
 
 #pragma once
 
-#include <Sorex/Types.h>
-#include <Sorex/Platform.h>
+#include <Sorex/SxTypes.h>
+#include <Sorex/SxPlatform.h>
 #include <Sorex/Math/SxMaths.h>
 
 namespace Sorex::Concept

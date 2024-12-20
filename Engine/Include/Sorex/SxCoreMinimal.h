@@ -27,14 +27,14 @@
 
 #pragma once
 
-#include <Sorex/Types.h>
-#include <Sorex/Platform.h>
+#include <Sorex/SxTypes.h>
+#include <Sorex/SxPlatform.h>
 #include <Sorex/SxAssert.h>
 
-#include <Sorex/Status.h>
-#include <Sorex/JournalManager.h>
+#include <Sorex/SxStatus.h>
+#include <Sorex/SxJournalManager.h>
 
-#include <Sorex/RuntimeClass.h>
+#include <Sorex/SxRuntimeClass.h>
 
 #include <Sorex/Math/SxMaths.h>
 #include <Sorex/Math/SxPoint.h>

@@ -30,7 +30,7 @@
 #include <type_traits>
 
 #include <Sorex/SxCoreMinimal.h>
-#include <Sorex/RuntimeClass.h>
+#include <Sorex/SxRuntimeClass.h>
 
 namespace Sorex
 {

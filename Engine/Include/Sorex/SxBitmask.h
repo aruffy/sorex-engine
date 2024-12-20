@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Platform.h"
+#include "SxPlatform.h"
 
 #define SRX_ENUM_BITMASK __SorexEnumAsBitmask
 

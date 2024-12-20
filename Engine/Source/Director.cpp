@@ -25,8 +25,8 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#include <Sorex/Director.h>
-#include <Sorex/Time.h>
+#include <Sorex/SxDirector.h>
+#include <Sorex/SxTime.h>
 
 namespace Sorex
 {

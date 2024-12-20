@@ -28,8 +28,8 @@
 #pragma once
 
 #include "SxCoreMinimal.h"
-#include "Director.h"
-#include "Thread.h"
+#include "SxDirector.h"
+#include "SxThread.h"
 
 namespace Sorex
 {

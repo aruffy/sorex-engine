@@ -27,8 +27,8 @@
 
 #pragma once
 
-#include "Types.h"
-#include "Platform.h"
+#include "SxTypes.h"
+#include "SxPlatform.h"
 
 namespace Sorex
 {

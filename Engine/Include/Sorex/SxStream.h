@@ -27,10 +27,10 @@
 
 #pragma once
 
-#include "Types.h"
-#include "RuntimeClass.h"
-#include "Platform.h"
-#include "Status.h"
+#include "SxTypes.h"
+#include "SxRuntimeClass.h"
+#include "SxPlatform.h"
+#include "SxStatus.h"
 
 #define SRX_UNKNOWN_SIZE (static_cast<Sorex::ssize_t>(-1))
 #define SRX_READ_ERROR SRX_UNKNOWN_SIZE
