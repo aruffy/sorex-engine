@@ -27,8 +27,8 @@
 
 #pragma once
 
-#include <Sorex/Math/Vector3.h>
-#include <Sorex/Math/Vector4.h>
+#include <Sorex/Math/SxVector3.h>
+#include <Sorex/Math/SxVector4.h>
 
 namespace Sorex
 {

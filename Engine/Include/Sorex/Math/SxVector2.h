@@ -30,8 +30,8 @@
 #include <Sorex/Types.h>
 #include <Sorex/Platform.h>
 
-#include "Maths.h"
-#include "Point.h"
+#include "SxMaths.h"
+#include "SxPoint.h"
 
 #if defined(SOREX_COMPILER_MSVC)
 #  pragma warning( \

@@ -27,7 +27,7 @@
 
 #pragma once
 
-#include "Vector2.h"
+#include "SxVector2.h"
 
 #if defined(SOREX_COMPILER_MSVC)
 #  pragma warning( \

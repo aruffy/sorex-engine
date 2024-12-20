@@ -33,9 +33,9 @@
     disable : 4201)  // nonstandard extension used: nameless struct/union
 #endif
 
-#include "Vector2.h"
-#include "Vector3.h"
-#include "Point.h"
+#include "SxVector2.h"
+#include "SxVector3.h"
+#include "SxPoint.h"
 
 namespace Sorex::Math
 {

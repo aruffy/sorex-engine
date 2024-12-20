@@ -36,12 +36,12 @@
 
 #include <Sorex/RuntimeClass.h>
 
-#include <Sorex/Math/Maths.h>
-#include <Sorex/Math/Point.h>
-#include <Sorex/Math/Vector2.h>
-#include <Sorex/Math/Vector3.h>
-#include <Sorex/Math/Vector4.h>
-#include <Sorex/Math/Rectangle.h>
+#include <Sorex/Math/SxMaths.h>
+#include <Sorex/Math/SxPoint.h>
+#include <Sorex/Math/SxVector2.h>
+#include <Sorex/Math/SxVector3.h>
+#include <Sorex/Math/SxVector4.h>
+#include <Sorex/Math/SxRectangle.h>
 
 #include <Sorex/Color.h>
 #include <Sorex/Bitmask.h>

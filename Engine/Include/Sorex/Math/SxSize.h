@@ -29,7 +29,7 @@
 
 #include <Sorex/Types.h>
 
-#include "Point.h"
+#include "SxPoint.h"
 
 namespace Sorex::Concept
 {

@@ -29,7 +29,7 @@
 
 #include <Sorex/Types.h>
 #include <Sorex/Platform.h>
-#include <Sorex/Math/Maths.h>
+#include <Sorex/Math/SxMaths.h>
 
 namespace Sorex::Concept
 {

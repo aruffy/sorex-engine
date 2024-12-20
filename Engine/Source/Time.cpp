@@ -26,7 +26,7 @@
 /**************************************************************************/
 
 #include <Sorex/Time.h>
-#include <Sorex/Math/Maths.h>
+#include <Sorex/Math/SxMaths.h>
 
 #include <chrono>
 #include <iomanip>

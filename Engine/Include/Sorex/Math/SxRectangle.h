@@ -27,8 +27,8 @@
 
 #pragma once
 
-#include <Sorex/Math/Point.h>
-#include <Sorex/Math/Size.h>
+#include <Sorex/Math/SxPoint.h>
+#include <Sorex/Math/SxSize.h>
 
 namespace Sorex::Math
 {
