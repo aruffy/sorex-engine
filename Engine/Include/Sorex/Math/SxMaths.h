@@ -31,7 +31,7 @@
 
 #include <Sorex/Types.h>
 #include <Sorex/Platform.h>
-#include <Sorex/Assert.h>
+#include <Sorex/SxAssert.h>
 
 #ifndef M_PI
 #  define M_PI 3.14159265358979323846

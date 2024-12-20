@@ -27,7 +27,7 @@
 
 #include "DesktopGraphicsFramework.h"
 
-#include <Sorex/Utils/String.h>
+#include <Sorex/Utils/SxString.h>
 
 namespace
 {

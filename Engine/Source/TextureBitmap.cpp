@@ -25,7 +25,7 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#include "Sorex/Assert.h"
+#include "Sorex/SxAssert.h"
 #include <Sorex/Graphics/TextureBitmap.h>
 
 namespace Sorex::Graphics

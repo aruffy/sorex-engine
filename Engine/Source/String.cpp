@@ -25,7 +25,7 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#include <Sorex/Utils/String.h>
+#include <Sorex/Utils/SxString.h>
 
 namespace Sorex::Utils
 {

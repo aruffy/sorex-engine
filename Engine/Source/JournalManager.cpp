@@ -27,7 +27,7 @@
 
 #include <Sorex/JournalManager.h>
 
-#include <Sorex/Assert.h>
+#include <Sorex/SxAssert.h>
 
 #include <spdlog/async.h>
 #include <spdlog/sinks/stdout_sinks.h>

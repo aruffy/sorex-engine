@@ -25,7 +25,7 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#include <Sorex/Color.h>
+#include <Sorex/SxColor.h>
 
 using namespace Sorex;
 

@@ -29,7 +29,7 @@
 
 #include <Sorex/Types.h>
 #include <Sorex/Platform.h>
-#include <Sorex/Assert.h>
+#include <Sorex/SxAssert.h>
 
 #include <Sorex/Status.h>
 #include <Sorex/JournalManager.h>
@@ -43,8 +43,8 @@
 #include <Sorex/Math/SxVector4.h>
 #include <Sorex/Math/SxRectangle.h>
 
-#include <Sorex/Color.h>
-#include <Sorex/Bitmask.h>
+#include <Sorex/SxColor.h>
+#include <Sorex/SxBitmask.h>
 
 #ifdef SOREX_DEBUG_HIGH
 #  define SRX_CLSFUN_TRACE() \

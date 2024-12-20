@@ -27,9 +27,9 @@
 
 #pragma once
 
-#include "CoreMinimal.h"
+#include "SxCoreMinimal.h"
 #include "Stream.h"
-#include "Utils/BytesUtils.h"
+#include "Utils/SxBytesUtils.h"
 
 namespace Sorex
 {

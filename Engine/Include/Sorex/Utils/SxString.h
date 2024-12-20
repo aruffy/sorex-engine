@@ -2,7 +2,7 @@
 
 #include <Sorex/Types.h>
 #include <Sorex/Status.h>
-#include <Sorex/Assert.h>
+#include <Sorex/SxAssert.h>
 
 namespace Sorex::Utils
 {

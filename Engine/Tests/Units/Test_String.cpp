@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include <Sorex/Utils/String.h>
+#include <Sorex/Utils/SxString.h>
 #include <Sorex/Types.h>
 
 using namespace Sorex;

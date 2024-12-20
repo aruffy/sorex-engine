@@ -27,7 +27,7 @@
 
 #pragma once
 
-#include "CoreMinimal.h"
+#include "SxCoreMinimal.h"
 #include "Containers/SxObjectContainer.h"
 #include "Containers/SxListenerContainer.h"
 

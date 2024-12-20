@@ -29,7 +29,7 @@
 
 #include <Sorex/Types.h>
 #include <Sorex/Platform.h>
-#include <Sorex/Assert.h>
+#include <Sorex/SxAssert.h>
 
 namespace Sorex
 {

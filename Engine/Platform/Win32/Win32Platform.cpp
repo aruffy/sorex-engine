@@ -29,7 +29,7 @@
 
 #include <cstdio>
 
-#include <Sorex/Assert.h>
+#include <Sorex/SxAssert.h>
 #include <Sorex/Platform.h>
 
 #include <Windows.h>

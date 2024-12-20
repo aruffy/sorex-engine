@@ -1,4 +1,4 @@
-#include <Sorex/Assert.h>
+#include <Sorex/SxAssert.h>
 
 namespace Sorex::Platform
 {

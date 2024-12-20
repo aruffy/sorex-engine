@@ -27,7 +27,7 @@
 
 #pragma once
 
-#include "CoreMinimal.h"
+#include "SxCoreMinimal.h"
 #include "Director.h"
 #include "Thread.h"
 

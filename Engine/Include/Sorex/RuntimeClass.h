@@ -29,7 +29,7 @@
 
 #include <concepts>
 
-#include "CoreMinimal.h"
+#include "SxCoreMinimal.h"
 
 /**
  * Run-Time Type Information is a simple implementation of rtti system.

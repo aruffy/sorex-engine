@@ -29,7 +29,7 @@
 
 #include <type_traits>
 
-#include <Sorex/CoreMinimal.h>
+#include <Sorex/SxCoreMinimal.h>
 #include <Sorex/RuntimeClass.h>
 
 namespace Sorex

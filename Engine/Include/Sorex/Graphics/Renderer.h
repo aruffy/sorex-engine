@@ -27,7 +27,7 @@
 
 #pragma once
 
-#include <Sorex/CoreMinimal.h>
+#include <Sorex/SxCoreMinimal.h>
 
 #include "GraphicsTypes.h"
 
