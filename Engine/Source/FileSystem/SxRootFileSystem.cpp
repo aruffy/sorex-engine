@@ -27,7 +27,7 @@
 
 #include <Sorex/FileSystem/SxRootFileSystem.h>
 
-#include <Sorex/Utils/String.h>
+#include <Sorex/Utils/SxString.h>
 #include <Sorex/FileSystem/SxDirectory.h>
 
 #include "SxPathUtils.h"

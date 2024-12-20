@@ -27,8 +27,8 @@
 
 #pragma once
 
-#include <Sorex/CoreMinimal.h>
-#include <Sorex/Stream.h>
+#include <Sorex/SxCoreMinimal.h>
+#include <Sorex/SxStream.h>
 
 namespace Sorex
 {

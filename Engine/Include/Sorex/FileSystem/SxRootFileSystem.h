@@ -27,8 +27,8 @@
 
 #pragma once
 
-#include <Sorex/CoreMinimal.h>
-#include <Sorex/Director.h>
+#include <Sorex/SxCoreMinimal.h>
+#include <Sorex/SxDirector.h>
 
 #include "SxFileSystem.h"
 

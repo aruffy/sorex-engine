@@ -1,14 +1,14 @@
 #include <iostream>
 
-#include <Sorex/RuntimeClass.h>
-#include <Sorex/Status.h>
-#include <Sorex/JournalManager.h>
+#include <Sorex/SxRuntimeClass.h>
+#include <Sorex/SxStatus.h>
+#include <Sorex/SxJournalManager.h>
 
-#include <Sorex/Time.h>
-#include <Sorex/Launcher.h>
-#include <Sorex/Director.h>
+#include <Sorex/SxTime.h>
+#include <Sorex/SxLauncher.h>
+#include <Sorex/SxDirector.h>
 
-#include <Sorex/DesktopLauncher.h>
+#include <Sorex/SxDesktopLauncher.h>
 
 using namespace Sorex;
 

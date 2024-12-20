@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 
-#include <Sorex/Types.h>
-#include <Sorex/Containers/ObjectContainer.h>
+#include <Sorex/SxTypes.h>
+#include <Sorex/Containers/SxObjectContainer.h>
 
 namespace
 {

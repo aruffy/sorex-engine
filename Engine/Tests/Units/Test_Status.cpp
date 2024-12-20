@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include <Sorex/Status.h>
+#include <Sorex/SxStatus.h>
 #include <system_error>
 
 using namespace Sorex;
