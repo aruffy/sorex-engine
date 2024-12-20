@@ -69,6 +69,7 @@ namespace Sorex
         hash_t hash = offset;
         for (auto&& curr : view)
         {
+          // cppcheck-suppress useStlAlgorithm
           hash = (hash ^ static_cast<hash_t>(curr)) * prime;
         }
         return hash;
