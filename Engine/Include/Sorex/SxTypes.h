@@ -76,6 +76,9 @@ namespace Sorex
   typedef int errno_t;
 
   template<typename T>
+  using TRef = std::reference_wrapper<T>;
+
+  template<typename T>
   using THash = std::hash<T>;
 
   typedef std::string  String;
