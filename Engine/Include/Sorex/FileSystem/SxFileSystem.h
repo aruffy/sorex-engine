@@ -45,20 +45,11 @@ namespace Sorex::FileSystem
     Existent  ///< File exists and ready to work
   };
 
-  SRX_API static SRX_INLINE hash_t GetHash(PathStringView path) SRX_NOEXCEPT
-  {
-    static const THash<PathStringView> kPathViewHasher;
-    return kPathViewHasher(path);
-  }
-
+  SRX_API static hash_t            GetHash(PathStringView path) SRX_NOEXCEPT;
   SRX_API static SRX_INLINE hash_t GetHash(const Path& path) SRX_NOEXCEPT
   {
     return GetHash(PathStringView(path.native()));
   }
-
-  // @NOTE: Implemented in the Platform Code
-  // @TODO: Create/Remove File/Dir
-  // IsFileExist/IsDirExist
 
   // Platform implementation
 
@@ -106,12 +97,11 @@ public:
       TVariant<int, hash_t> descriptor;
       TVariant<std::monostate,
                Path,
-               TRef<Path>,
+               TRef<const Path>,
                PathString,
-               TRef<PathString>,
+               TRef<const PathString>,
                String,
-               TRef<String>,
-               TVector<byte>>
+               TRef<const String>>
         filepath;
     };
 
@@ -155,6 +145,16 @@ public:
      */
     virtual void GetFiles(PathStringView      path,
                           TVector<FileIndex>& files) SRX_NOEXCEPT = 0;
+
+    /**
+     * @brief Retrieve file status and its index if the file is found.
+     *
+     * @param filename - path to search for the file.
+     * @return pair of file status and file index if the file is found.
+     */
+    virtual TPair<EFileStatus, TOptional<FileIndex>> GetFile(
+      PathStringView filename) const SRX_NOEXCEPT = 0;
+
     /**
      * @brief Retrive status of a file.
      *
@@ -162,13 +162,7 @@ public:
      * @return status of the file.
      */
     virtual EFileStatus GetFileStatus(PathStringView filename) const
-      SRX_NOEXCEPT
-    {
-      return GetFile(filename).first;
-    }
-
-    virtual TPair<EFileStatus, TOptional<FileIndex>> GetFile(
-      PathStringView filename) const SRX_NOEXCEPT = 0;
+      SRX_NOEXCEPT;
 
     /**
      * @brief Check if file exists.
@@ -202,8 +196,25 @@ public:
      * @return A unique pointer to the opened file, or NULL if the operation
      * failed.
      */
-    virtual TUniquePointer<Stream> OpenFile(PathStringView path,
+    virtual TUniquePointer<Stream> OpenFile(const FileIndex& fileIndex,
                                             Status* status) SRX_NOEXCEPT = 0;
+
+    /**
+     * @brief Opens a file specified by the given filepath.
+     *
+     * This function attempts to open a file and returns a unique pointer to the
+     * stream if successful. If the file does not exist, it updates the provided
+     * status pointer with an error message.
+     *
+     * @param filepath The path of the file to be opened.
+     * @param status A pointer to a Status object that will be updated with
+     * error information if the file is not found.
+     *
+     * @return A unique pointer to the opened stream, or nullptr if the file
+     * does not exist.
+     */
+    virtual TUniquePointer<Stream> OpenFile(PathStringView filepath,
+                                            Status*        status) SRX_NOEXCEPT;
   };
 }  // namespace
 
