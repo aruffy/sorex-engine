@@ -202,25 +202,35 @@ TEST(PathUtils, Combine)
 
   const TVector<TestData> test_set = {
     TestData{ { SRX_PATH(""), SRX_PATH(""), SRX_PATH("") }, PathString() },
-    TestData{ { SRX_PATH("a"), SRX_PATH("b"), SRX_PATH("c") }, PathString(SRX_PATH("a/b/c")) }
-    // TestData{ { "/", "", "" }, PathString() },
-    // TestData{ { "/", "a", "//", "b/c//" }, PathString("/a/b/c") },
-    // TestData{ { "", "/", "" }, PathString() },
-    // TestData{ { "/", "/", "/" }, PathString() },
-    // TestData{ { "/var", "/path/", "file.txt" },
-    //           PathString("/var/path/file.txt") },
-    // TestData{ { "/usr/local", "bin", "executable.sh" },
-    //           PathString("/usr/local/bin/executable.sh") },
-    // TestData{ { "/usr/local" }, PathString("/usr/local") },
-    // TestData{ { "/usr/" }, PathString("/usr") },
-    // TestData{ { "/var/", "/log/", "/apache2/access.log/" },
-    //           PathString("/var/log/apache2/access.log") },
-    // TestData{ { "F:/Pictures/Picture Library", "Picture1.jpg" },
-    //           PathString("F:/Pictures/Picture Library/Picture1.jpg") },
-    // TestData{ { "G:/Videos/MovieLibrary/Movie1.mp4" },
-    //           PathString("G:/Videos/MovieLibrary/Movie1.mp4") },
-    // TestData{ { "G:", "Folder", "..", "Folder" },
-    //           PathString("G:/Folder/../Folder") }
+    TestData{ { SRX_PATH("a"), SRX_PATH("b"), SRX_PATH("c") },
+              PathString(SRX_PATH("a/b/c")) },
+    TestData{ { SRX_PATH("/"), (""), ("") }, PathString() },
+    TestData{
+      { SRX_PATH("/"), SRX_PATH("a"), SRX_PATH("//"), SRX_PATH("b/c//") },
+      PathString(SRX_PATH("/a/b/c")) },
+    TestData{ { SRX_PATH(""), SRX_PATH("/"), SRX_PATH("") }, PathString() },
+    TestData{ { SRX_PATH("/"), SRX_PATH("/"), SRX_PATH("/") }, PathString() },
+    TestData{ { SRX_PATH("/var"), SRX_PATH("/path/"), SRX_PATH("file.txt") },
+              PathString(SRX_PATH("/var/path/file.txt")) },
+    TestData{
+      { SRX_PATH("/usr/local"), SRX_PATH("bin"), SRX_PATH("executable.sh") },
+      PathString(SRX_PATH("/usr/local/bin/executable.sh")) },
+    TestData{ { SRX_PATH("/usr/local") }, PathString(SRX_PATH("/usr/local")) },
+    TestData{ { SRX_PATH("/usr/") }, PathString(SRX_PATH("/usr")) },
+    TestData{ { SRX_PATH("/var/"),
+                SRX_PATH("/log/"),
+                SRX_PATH("/apache2/access.log/") },
+              PathString(SRX_PATH("/var/log/apache2/access.log")) },
+    TestData{
+      { SRX_PATH("F:/Pictures/Picture Library"), SRX_PATH("Picture1.jpg") },
+      PathString(SRX_PATH("F:/Pictures/Picture Library/Picture1.jpg")) },
+    TestData{ { SRX_PATH("G:/Videos/MovieLibrary/Movie1.mp4") },
+              PathString(SRX_PATH("G:/Videos/MovieLibrary/Movie1.mp4")) },
+    TestData{ { SRX_PATH("G:"),
+                SRX_PATH("Folder"),
+                SRX_PATH(".."),
+                SRX_PATH("Folder") },
+              PathString(SRX_PATH("G:/Folder/../Folder")) }
   };
 
   for (const TestData& data : test_set)

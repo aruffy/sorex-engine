@@ -31,16 +31,18 @@
 #include <Sorex/FileSystem/SxFileSystem.h>
 
 #ifdef SOREX_PLATFORM_WIN32
-#define SRX_PATH(str) (L##str)
+#  define SRX_PATH(str) (L##str)
+#  define SRX_PATH_STRV(str) Sorex::FileSystem::PathStringView(L##str)
 #else
-#define SRX_PATH(str) (str)
+#  define SRX_PATH(str) (str)
+#  define SRX_PATH_STRV(str) Sorex::FileSystem::PathStringView(str)
 #endif
 
 using namespace Sorex::FileSystem;
 
 namespace Sorex::Utils
 {
-  template<typename Char = char>
+  template<typename Char = Path::value_type>
   SRX_INLINE constexpr Char GetPathDelimiter() SRX_NOEXCEPT
   {
     if constexpr (std::is_same_v<Char, char>)
