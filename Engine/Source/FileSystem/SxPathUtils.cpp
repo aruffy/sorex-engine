@@ -47,13 +47,7 @@ namespace Sorex::Utils
     if (size == 0)
       return result;
 
-    result = dirs[0];
-    if (!result.empty() && result.back() == kSlash)
-      result.pop_back();
-
-    if (size == 1)
-      return result;
-
+    result = Utils::TrimRight(dirs[0], kSlash);
     for (size_t i = 1; i < size; ++i)
     {
       PathStringView str = Utils::Trim(dirs[i], kSlash);
@@ -83,15 +77,15 @@ namespace Sorex::Utils
     return CombinePath(views);
   }
 
-  String EnsureClosingSlash(StringView path) SRX_NOEXCEPT
+  PathString MakePathWithClosingSlash(PathStringView path) SRX_NOEXCEPT
   {
     if (path.empty())
-      return String();
+      return PathString(SRX_PATH("/"));
 
     if (path.back() == kSlash)
-      return String(path);
+      return PathString(path);
 
-    String res;
+    PathString res;
     res.reserve(path.length() + 1);
     res.assign(path);
     res.push_back(kSlash);
@@ -99,44 +93,54 @@ namespace Sorex::Utils
     return res;
   }
 
-  StringView GetFileExtension(StringView path,
-                              bool       bIncludeDot /* = false */) SRX_NOEXCEPT
+  void EnsurePathClosingSlash(PathString& path) SRX_NOEXCEPT
   {
-    constexpr StringView::value_type kDot = '.';
+    if (path.empty() || path.back() != kSlash)
+      path.push_back(kSlash);
+  }
 
-    if (path.empty() || path.back() == kDot)
-      return StringView();
+  PathStringView GetFileExtension(PathStringView path,
+                                  bool bIncludeDot /* = false */) SRX_NOEXCEPT
+  {
+    constexpr Char kDot = SRX_PATH('.');
 
-    const size_t indx = path.rfind(kDot);
-    if (indx == path.npos)
-      return StringView();
+    if (path.empty() || path.back() == kDot || path.back() == kSlash)
+      return {};
+
+    size_t indx = path.rfind(kSlash);
+    if (indx != path.npos)
+      path = path.substr(indx + 1);
+
+    indx = path.rfind(kDot);
+    if (indx == path.npos || indx == 0)
+      return {};
 
     return bIncludeDot ? path.substr(indx) : path.substr(indx + 1);
   }
 
-  TPair<StringView, StringView> SplitPath(StringView path,
-                                          bool bClosingSlash /* = false */)
-    SRX_NOEXCEPT
+  TPair<PathStringView, PathStringView> SplitPath(
+    PathStringView path,
+    bool           bClosingSlash /* = false */) SRX_NOEXCEPT
   {
     const size_t length = path.length();
     if (length == 0)
-      return std::make_pair<StringView, StringView>({}, {});
+      return {};
 
-    if (length == 1 && path[0] == kSlash)
-      return std::make_pair((bClosingSlash ? StringView(path) : StringView()),
-                            StringView());
+    if (path.back() == kSlash)
+      return std::make_pair(
+        (bClosingSlash ? PathStringView(path) : path.substr(0, length - 1)),
+        PathStringView());
 
     const size_t indx = path.rfind(kSlash);
     if (indx == path.npos)
       return std::make_pair(path, StringView());
 
-    return std::make_pair(
-      path.substr(0, (bClosingSlash ? (indx + 1) : indx)),
-      ((indx == length - 1) ? StringView() : path.substr(indx + 1)));
+    return std::make_pair(path.substr(0, (bClosingSlash ? (indx + 1) : indx)),
+                          path.substr(indx + 1));
   }
 
-  void SplitPath(StringView             path,
-                 TPair<String, String>& out,
+  void SplitPath(PathStringView                 path,
+                 TPair<PathString, PathString>& out,
                  bool bClosingSlash /* = false */) SRX_NOEXCEPT
   {
     auto p = SplitPath(path, bClosingSlash);

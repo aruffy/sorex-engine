@@ -43,7 +43,7 @@ using namespace Sorex::FileSystem;
 namespace Sorex::Utils
 {
   template<typename Char = Path::value_type>
-  SRX_INLINE constexpr Char GetPathDelimiter() SRX_NOEXCEPT
+  SRX_API SRX_INLINE constexpr Char GetPathDelimiter() SRX_NOEXCEPT
   {
     if constexpr (std::is_same_v<Char, char>)
       return Char('/');
@@ -56,15 +56,17 @@ namespace Sorex::Utils
    *
    * @return combined path in generic format
    */
-  PathString CombinePath(const TVector<PathStringView>& dirs) SRX_NOEXCEPT;
-  PathString CombinePath(const TVector<PathString>& dirs) SRX_NOEXCEPT;
+  SRX_API PathString CombinePath(const TVector<PathStringView>& dirs)
+    SRX_NOEXCEPT;
+  SRX_API PathString CombinePath(const TVector<PathString>& dirs) SRX_NOEXCEPT;
 
   /**
    * @brief Ensure that path closed with slash.
    *
    * @return path with slash on the end
    */
-  String EnsureClosingSlash(StringView path) SRX_NOEXCEPT;
+  SRX_API PathString MakePathWithClosingSlash(PathStringView path) SRX_NOEXCEPT;
+  SRX_API void       EnsurePathClosingSlash(PathString& path) SRX_NOEXCEPT;
 
   /**
    * @brief Retrieve extension of file.
@@ -73,8 +75,8 @@ namespace Sorex::Utils
    * @param bIncludeDot - include dot of the extension in result;
    * @return extension of the file by path;
    */
-  StringView GetFileExtension(StringView path,
-                              bool       bIncludeDot = false) SRX_NOEXCEPT;
+  SRX_API PathStringView
+  GetFileExtension(PathStringView path, bool bIncludeDot = false) SRX_NOEXCEPT;
 
   /**
    * @brief Split path to two parts <dirname, filename>.
@@ -84,9 +86,9 @@ namespace Sorex::Utils
    * @param bClosingSlash - enable closing slash for `dirname`
    * @return pair <dirname, filename>.
    */
-  TPair<StringView, StringView> SplitPath(StringView path,
-                                          bool       bClosingSlash = false)
-    SRX_NOEXCEPT;
+  SRX_API TPair<PathStringView, PathStringView> SplitPath(
+    PathStringView path,
+    bool           bClosingSlash = false) SRX_NOEXCEPT;
 
   /**
    * @brief Split path to two parts <dirname, filename>.
@@ -95,9 +97,9 @@ namespace Sorex::Utils
    * @param bClosingSlash - enable closing slash for `dirname`
    * @param out - pair of string to store <dirname, filename>
    */
-  void SplitPath(StringView             path,
-                 TPair<String, String>& out,
-                 bool                   bClosingSlash = false) SRX_NOEXCEPT;
+  SRX_API void SplitPath(PathStringView                 path,
+                         TPair<PathString, PathString>& out,
+                         bool bClosingSlash = false) SRX_NOEXCEPT;
 
   /**
    * @brief Return dir (base) path.

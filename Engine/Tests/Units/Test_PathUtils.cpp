@@ -230,7 +230,14 @@ TEST(PathUtils, Combine)
                 SRX_PATH("Folder"),
                 SRX_PATH(".."),
                 SRX_PATH("Folder") },
-              PathString(SRX_PATH("G:/Folder/../Folder")) }
+              PathString(SRX_PATH("G:/Folder/../Folder")) },
+    TestData{ { SRX_PATH("G://"),
+                SRX_PATH("//Project//"),
+                SRX_PATH("/"),
+                SRX_PATH("Name//"),
+                SRX_PATH("/S///"),
+                SRX_PATH("File.txt") },
+              SRX_PATH("G:/Project/Name/S/File.txt") }
   };
 
   for (const TestData& data : test_set)

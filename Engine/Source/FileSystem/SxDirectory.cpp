@@ -98,7 +98,7 @@ namespace Sorex::FileSystem
 {
   Directory::Directory(StringView   path,
                        IFileSystem* parent /* = nullptr */) SRX_NOEXCEPT
-    : mBasepath(Utils::EnsureClosingSlash(path))
+    : mBasepath(Utils::MakePathWithClosingSlash(path))
     , mParent(parent)
   {
     SRX_CHECK(!mBasepath.empty());
