@@ -29,17 +29,19 @@
 
 #include "SxPathUtils.h"
 
+using namespace Sorex::FileSystem;
+
 namespace
 {
-  using namespace Sorex;
-  constexpr String::value_type kSlash = Utils::GetPathDelimiter();
+  typedef Path::value_type Char;
+  constexpr Char           kSlash = Sorex::Utils::GetPathDelimiter<Char>();
 }
 
 namespace Sorex::Utils
 {
-  String CombinePath(const TVector<StringView>& dirs) SRX_NOEXCEPT
+  PathString CombinePath(const TVector<PathStringView>& dirs) SRX_NOEXCEPT
   {
-    String       result;
+    PathString   result;
     const size_t size = dirs.size();
 
     if (size == 0)
@@ -54,7 +56,7 @@ namespace Sorex::Utils
 
     for (size_t i = 1; i < size; ++i)
     {
-      StringView str = Utils::Trim(dirs[i], kSlash);
+      PathStringView str = Utils::Trim(dirs[i], kSlash);
       if (str.empty())
       {
         SRX_NOENTRY("Warning: unexpected dir name");

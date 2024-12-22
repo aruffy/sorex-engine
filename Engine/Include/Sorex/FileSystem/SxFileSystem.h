@@ -41,6 +41,10 @@ namespace Sorex
     using Path     = std::filesystem::path;
     using PathStr  = BasicString<Path::value_type>;
     using PathView = BasicStringView<Path::value_type>;
+
+    using PathString     = Path::string_type;
+    using PathStringView = BasicStringView<PathString::value_type>;
+
     enum class EFileStatus
     {
       Unknown,  ///< Unknown file doesn't exists

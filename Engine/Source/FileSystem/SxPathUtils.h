@@ -30,11 +30,17 @@
 #include <Sorex/SxCoreMinimal.h>
 #include <Sorex/FileSystem/SxFileSystem.h>
 
+using namespace Sorex::FileSystem;
+
 namespace Sorex::Utils
 {
-  SRX_INLINE constexpr char GetPathDelimiter() SRX_NOEXCEPT
+  template<typename Char = char>
+  SRX_INLINE constexpr Char GetPathDelimiter() SRX_NOEXCEPT
   {
-    return '/';
+    if constexpr (std::is_same_v<Char, char>)
+      return Char('/');
+
+    return static_cast<Char>(L'/');
   }
 
   /**
@@ -42,8 +48,8 @@ namespace Sorex::Utils
    *
    * @return combined path in generic format
    */
-  String CombinePath(const TVector<StringView>& dirs) SRX_NOEXCEPT;
-  String CombinePath(const TVector<String>& dirs) SRX_NOEXCEPT;
+  PathString CombinePath(const TVector<PathStringView>& dirs) SRX_NOEXCEPT;
+  String     CombinePath(const TVector<String>& dirs) SRX_NOEXCEPT;
 
   /**
    * @brief Ensure that path closed with slash.
