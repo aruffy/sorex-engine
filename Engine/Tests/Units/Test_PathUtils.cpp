@@ -245,3 +245,45 @@ TEST(PathUtils, Combine)
     EXPECT_EQ(Utils::CombinePath(data.dirs), data.result);
   }
 }
+
+
+// Test cases
+TEST(PathUtils, GetFileExtension)
+{
+  EXPECT_EQ(Utils::GetFileExtension(SRX_PATH("")), SRX_PATH(""));
+  EXPECT_EQ(Utils::GetFileExtension(SRX_PATH("file")), SRX_PATH(""));
+  EXPECT_EQ(Utils::GetFileExtension(SRX_PATH("file"), true), SRX_PATH(""));
+  EXPECT_EQ(Utils::GetFileExtension(SRX_PATH("file.")), SRX_PATH(""));
+  EXPECT_EQ(Utils::GetFileExtension(SRX_PATH("file."), true), SRX_PATH(""));
+
+  EXPECT_EQ(Utils::GetFileExtension(SRX_PATH("file.txt")), SRX_PATH("txt"));
+  EXPECT_EQ(Utils::GetFileExtension(SRX_PATH("file.txt"), true),
+            SRX_PATH(".txt"));
+  EXPECT_EQ(Utils::GetFileExtension(SRX_PATH("/file.txt")), SRX_PATH("txt"));
+  EXPECT_EQ(Utils::GetFileExtension(SRX_PATH("file.txt/")), SRX_PATH(""));
+
+  EXPECT_EQ(Utils::GetFileExtension(SRX_PATH("file.dir/file.png")),
+            SRX_PATH("png"));
+  EXPECT_EQ(Utils::GetFileExtension(SRX_PATH("file.dir/file.png"), true),
+            SRX_PATH(".png"));
+
+  EXPECT_EQ(Utils::GetFileExtension(SRX_PATH("file.name.with.dots.txt")),
+            SRX_PATH("txt"));
+  EXPECT_EQ(Utils::GetFileExtension(SRX_PATH("file.name.with.dots.txt"), true),
+            (".txt"));
+
+  EXPECT_EQ(Utils::GetFileExtension(SRX_PATH("/path/to/file.txt")),
+            SRX_PATH("txt"));
+  EXPECT_EQ(Utils::GetFileExtension(SRX_PATH("/path/to/file.txt"), true),
+            SRX_PATH(".txt"));
+
+  EXPECT_EQ(Utils::GetFileExtension(SRX_PATH("/path/to/.")), SRX_PATH(""));
+  EXPECT_EQ(Utils::GetFileExtension(SRX_PATH("/path/to/.hidden_file")),
+            SRX_PATH(""));
+
+  EXPECT_EQ(Utils::GetFileExtension(SRX_PATH("/path/to/../..")), SRX_PATH(""));
+
+  EXPECT_EQ(Utils::GetFileExtension(SRX_PATH(".hiddenfile")), SRX_PATH(""));
+  EXPECT_EQ(Utils::GetFileExtension(SRX_PATH(".hiddenfile.txt")),
+            SRX_PATH("txt"));
+}
