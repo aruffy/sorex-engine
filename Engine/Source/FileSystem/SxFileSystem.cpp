@@ -29,7 +29,7 @@
 
 namespace Sorex::FileSystem
 {
-  SRX_API static SRX_INLINE hash_t GetHash(PathStringView path) SRX_NOEXCEPT
+  SRX_API hash_t GetHash(PathStringView path) SRX_NOEXCEPT
   {
     static const THash<PathStringView> kPathViewHasher;
     return kPathViewHasher(path);
@@ -56,6 +56,4 @@ namespace Sorex::FileSystem
 
     return OpenFile(fileIndex.value(), status);
   }
-};
-
 }  // namespace

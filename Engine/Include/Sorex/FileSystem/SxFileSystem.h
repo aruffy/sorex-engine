@@ -45,8 +45,8 @@ namespace Sorex::FileSystem
     Existent  ///< File exists and ready to work
   };
 
-  SRX_API static hash_t            GetHash(PathStringView path) SRX_NOEXCEPT;
-  SRX_API static SRX_INLINE hash_t GetHash(const Path& path) SRX_NOEXCEPT
+  SRX_API hash_t            GetHash(PathStringView path) SRX_NOEXCEPT;
+  SRX_API SRX_INLINE hash_t GetHash(const Path& path) SRX_NOEXCEPT
   {
     return GetHash(PathStringView(path.native()));
   }
