@@ -26,11 +26,9 @@
 /**************************************************************************/
 
 #include <Sorex/FileSystem/SxDirectory.h>
+#include <Sorex/FileSystem/SxPathUtils.h>
 #include <Sorex/FileSystem/SxFile.h>
-
 #include <Sorex/Utils/SxString.h>
-
-#include "SxPathUtils.h"
 
 namespace
 {
@@ -98,7 +96,7 @@ namespace Sorex::FileSystem
 {
   Directory::Directory(StringView   path,
                        IFileSystem* parent /* = nullptr */) SRX_NOEXCEPT
-    : mBasepath(Utils::EnsureClosingSlash(path))
+    : mBasepath(Utils::MakePathWithClosingSlash(path))
     , mParent(parent)
   {
     SRX_CHECK(!mBasepath.empty());

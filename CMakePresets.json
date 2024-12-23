@@ -85,5 +85,24 @@
       "configurePreset": "win_x64_unit_tests",
       "configuration": "Release"
     }
+  ],
+  "testPresets": [
+    {
+      "name": "unit_tests_run",
+      "displayName": "Run Unit Tests (Linux)",
+      "description": "Run the engine unit tests",
+      "configurePreset": "unit_tests",
+      "execution": {
+        "steps": [
+          {
+            "command": "ctest",
+            "arguments": [
+              "--output-on-failure",
+              "--test-dir", "${sourceDir}/build/unit_tests"
+            ]
+          }
+        ]
+      }
+    }
   ]
 }
