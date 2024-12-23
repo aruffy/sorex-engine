@@ -109,14 +109,12 @@ namespace Sorex::Utils
    * If bClosingSlash is True the closing slash will be included
    * `/path/to/dir/`.
    *
-   * @note: don't use with string literal
-   *
    * @param path - path for decomposing
    * @param bClosingSlash - enable closing slash
    * @return directory name or empty string if path invalid.
    */
-  StringView GetBaseName(StringView path,
-                         bool       bClosingSlash = false) SRX_NOEXCEPT;
+  SRX_API PathStringView GetBaseName(PathStringView path,
+                                     bool bClosingSlash = false) SRX_NOEXCEPT;
 
   /**
    * @brief Return dir (base) path.
@@ -130,9 +128,9 @@ namespace Sorex::Utils
    * @param bClosingSlash - enable closing slash
    * @param base - string that will be store the result
    */
-  void GetBaseName(StringView path,
-                   String&    base,
-                   bool       bClosingSlash = false) SRX_NOEXCEPT;
+  SRX_API SRX_INLINE void GetBaseName(PathStringView path,
+                                      PathString&    base,
+                                      bool bClosingSlash = false) SRX_NOEXCEPT;
 
   /**
    * @brief Return root dir (base) of a path.
@@ -146,8 +144,8 @@ namespace Sorex::Utils
    * @param bClosingSlash - enable closing slash
    * @return name of root directory or empty string if path invalid.
    */
-  StringView GetRootName(StringView path,
-                         bool       bClosingSlash = false) SRX_NOEXCEPT;
+  SRX_API StringView GetRootName(StringView path,
+                                 bool       bClosingSlash = false) SRX_NOEXCEPT;
 
   /**
    * @brief Return root dir (base) of a path.
@@ -162,9 +160,9 @@ namespace Sorex::Utils
    * @param root - string to store name of root directory or empty string if
    * path invalid.
    */
-  SRX_INLINE void GetRootName(StringView path,
-                              String&    root,
-                              bool       bClosingSlash = false) SRX_NOEXCEPT;
+  SRX_API SRX_INLINE void GetRootName(PathStringView path,
+                                      PathString&    root,
+                                      bool bClosingSlash = false) SRX_NOEXCEPT;
 
 }
 
@@ -176,8 +174,8 @@ SRX_INLINE void Sorex::Utils::GetBaseName(StringView path,
   basename = Sorex::Utils::GetBaseName(path, bClosingSlash);
 }
 
-SRX_INLINE void Sorex::Utils::GetRootName(StringView path,
-                                          String&    root,
+SRX_INLINE void Sorex::Utils::GetRootName(PathStringView path,
+                                          PathString&    root,
                                           bool bClosingSlash /* = false */)
   SRX_NOEXCEPT
 {

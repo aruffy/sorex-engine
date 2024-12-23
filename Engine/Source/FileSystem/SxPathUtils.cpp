@@ -27,14 +27,16 @@
 
 #include <Sorex/Utils/SxString.h>
 
-#include "SxPathUtils.h"
+#include <Sorex/FileSystem/SxPathUtils.h>
 
 using namespace Sorex::FileSystem;
 
 namespace
 {
   typedef Path::value_type Char;
+
   constexpr Char           kSlash = Sorex::Utils::GetPathDelimiter<Char>();
+  constexpr PathStringView kEmptyStringView;
 }
 
 namespace Sorex::Utils
@@ -148,39 +150,39 @@ namespace Sorex::Utils
     out.second.assign(p.second);
   }
 
-  StringView GetBaseName(StringView path,
-                         bool       bClosingSlash /* = false */) SRX_NOEXCEPT
+  PathStringView GetBaseName(PathStringView path,
+                             bool bClosingSlash /* = false */) SRX_NOEXCEPT
   {
-    constexpr StringView kEmptyStringView;
-
     const size_t length = path.length();
     if (length == 0)
       return kEmptyStringView;
 
     if (path.back() == kSlash)
-      return StringView(path.data(), (bClosingSlash ? length : (length - 1)));
+      return PathStringView(path.data(),
+                            (bClosingSlash ? length : (length - 1)));
 
     const size_t pos = path.find_last_of(kSlash);
-    if (pos != StringView::npos)
+    if (pos != PathStringView::npos)
       return path.substr(0, (bClosingSlash ? (pos + 1) : pos));
 
     return kEmptyStringView;
   }
 
-  StringView GetRootName(StringView path,
-                         bool       bClosingSlash /* = false */) SRX_NOEXCEPT
+  PathStringView GetRootName(PathStringView path,
+                             bool bClosingSlash /* = false */) SRX_NOEXCEPT
   {
     const size_t length = path.length();
     if (length == 0)
-      return StringView();
+      return kEmptyStringView;
 
     if (length == 1 && path[0] == kSlash)
-      return bClosingSlash ? path : StringView();
+      return bClosingSlash ? path : kEmptyStringView;
 
     const size_t indx = path.find(kSlash, 1);
     if (indx == path.npos)
-      return (path[0] == kSlash && bClosingSlash) ? StringView(path.data(), 1)
-                                                  : StringView();
+      return (path[0] == kSlash && bClosingSlash)
+               ? PathStringView(path.data(), 1)
+               : PathStringView();
 
     return path.substr(0, (bClosingSlash ? (indx + 1) : indx));
   }
