@@ -36,8 +36,9 @@ namespace Sorex::FileSystem
   class Directory: public IFileSystem
   {
 public:
-    explicit Directory(StringView   path,
-                       IFileSystem* parent = nullptr) SRX_NOEXCEPT;
+    explicit Directory(PathStringView path,
+                       IFileSystem*   parent = nullptr) SRX_NOEXCEPT;
+
     virtual ~Directory() override {}
 
     virtual Path GetSystemPath() const SRX_NOEXCEPT override;
@@ -46,30 +47,9 @@ public:
     IFileSystem* GetParent() const { return mParent; }
 
 protected:
-    struct FileIndex
-    {
-      size_t id   = 0;
-      hash_t hash = 0;
-
-      String   name;
-      PathView directory;
-    };
-
     struct Catalog
     {
-      Catalog() = default;
-      SRX_INLINE Catalog(const PathStr& ps,
-                         String&&       str,
-                         size_t         num) SRX_NOEXCEPT
-        : name(std::move(str))
-        , path(ps)
-      {
-        files.reserve(num);
-      }
-
-      String name;              ///< Catalog name: @TODO: Should be replaced by
-                                ///< WString/UTF8String?
-      PathStr            path;  ///< Related path in a platform preferred format
+      PathString         name;
       TVector<FileIndex> files;
     };
 
@@ -89,8 +69,8 @@ protected:
                        Status&                             status) SRX_NOEXCEPT;
 
 private:
-    Path mBasepath;  ///< Contains related system path in a platform preferred
-                     ///< format
+    Path mBasepath;  ///< Parent related system path in a in a platform
+                     ///< preffered format
     IFileSystem* mParent;
   };
 
@@ -99,6 +79,7 @@ private:
 public:
     explicit StaticDirectory(StringView path, IFileSystem* parent = nullptr);
 
+    virtual Status Mount(const Path& path) SRX_NOEXCEPT override;
     virtual Status IndexFiles() SRX_NOEXCEPT override;
 
     virtual void        GetFiles(StringView       path,
@@ -112,6 +93,6 @@ private:
     String MakeSystemPath(StringView path) const;
 
 private:
-    THashMap<hash_t, Catalog> mDirs;
+    THashMap<hash_t, Catalog> mCatalogs;
   };
 }

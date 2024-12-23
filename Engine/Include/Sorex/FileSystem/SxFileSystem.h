@@ -99,9 +99,7 @@ public:
                Path,
                TRef<const Path>,
                PathString,
-               TRef<const PathString>,
-               String,
-               TRef<const String>>
+               TRef<const PathString>>
         filepath;
     };
 

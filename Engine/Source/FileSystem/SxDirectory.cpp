@@ -35,7 +35,7 @@ namespace
   static constexpr int kMaxDirDepth = 32;
 
   using namespace Sorex;
-  using EntryList = THashMap<FileSystem::PathStr, TVector<String>>;
+  using EntryList = THashMap<FileSystem::PathString, TVector<PathString>>;
 
   int32 CollectFiles(const FileSystem::Path& path,
                      const size_t            offset,
@@ -79,7 +79,7 @@ namespace
       }
       else if (it->is_regular_file())
       {
-        files.push_back(it->path().filename().string());
+        files.push_back(it->path().filename().native());
         fnum++;
       }
       else
@@ -94,8 +94,8 @@ namespace
 
 namespace Sorex::FileSystem
 {
-  Directory::Directory(StringView   path,
-                       IFileSystem* parent /* = nullptr */) SRX_NOEXCEPT
+  Directory::Directory(PathStringView path,
+                       IFileSystem*   parent /* = nullptr */) SRX_NOEXCEPT
     : mBasepath(Utils::MakePathWithClosingSlash(path))
     , mParent(parent)
   {
@@ -121,19 +121,69 @@ namespace Sorex::FileSystem
                               "Invalid system path of the directory");
       return 0;
     }
-
-    return ::CollectFiles(syspath,
-                          syspath.native().length()
-                            - mBasepath.native().length(),
-                          entries,
-                          0,
-                          status);
   }
 
   StaticDirectory::StaticDirectory(StringView   path,
                                    IFileSystem* parent /* = nullptr */)
     : Directory(path, parent)
   {}
+
+  Status StaticDirectory::Mount(const Path& path) SRX_NOEXCEPT
+  {
+    Status    status;
+    EntryList entries;
+    // @BUG: If path isn't related to base path it will give invalid offset
+    const auto fileNumber =
+      ::CollectFiles(path,
+                     path.native().length() - GetBasePath().native().length(),
+                     entries,
+                     0,
+                     status);
+
+    if (!status.Ok() || fileNumber == 0)
+      return status;
+
+    SRX_DEBUG("Static dir '{}' indexed {} files", path.native(), fileNumber);
+
+    mCatalogs.reserve(mCatalogs.size() + entries.size());
+    for (auto& [dir, files] : entries)
+    {
+      if (dir.empty() || files.empty())
+        continue;
+
+      PathString dirname =
+        Path(std::move(dir)).generic_string<Path::value_type>();
+
+      if (dirname.back() == Utils::GetPathDelimiter())
+        dirname.pop_back();
+
+      const hash_t dirHash = GetHash(PathStringView(dirname));
+      auto res = mCatalogs.emplace(dirHash, Catalog{ std::move(dirname), {} });
+
+      SRX_CHECK(res.second);
+
+      TVector<FileIndex>& indecies = res.first->second.files;
+      indecies.resize(files.size());
+      for (size_t i = 0; i < files.size(); ++i)
+      {
+        PathString& fileName  = files[i];
+        FileIndex&  fileIndex = indecies[i];
+
+        const hash_t fileHash = GetHash(PathStringView(fileName));
+        const hash_t pathHash = fileHash ^ dirHash;
+
+        // Store path hash for search file
+        fileIndex.id = pathHash;
+        // Store file hash for comparation file names
+        fileIndex.descriptor = fileHash;
+        fileIndex.filepath   = std::move(fileName);
+      }
+
+      indecies.shrink_to_fit();
+    }
+
+    return status;
+  }
 
   Status StaticDirectory::IndexFiles() SRX_NOEXCEPT
   {
