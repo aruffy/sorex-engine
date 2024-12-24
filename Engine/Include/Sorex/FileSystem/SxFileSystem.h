@@ -112,7 +112,7 @@ public:
      * @param path The path to mount.
      * @return SRX_OK if the path was successfully mounted.
      */
-    virtual Status Mount(const Path& path) SRX_NOEXCEPT;
+    virtual Status Mount(const Path& path) SRX_NOEXCEPT = 0;
 
     /**
      * @brief Indexes the files in the file system.

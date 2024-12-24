@@ -53,21 +53,6 @@ protected:
       TVector<FileIndex> files;
     };
 
-protected:
-    /**
-     * @brief Recursively collect file from current directory. Max depth is
-     * equal of kMaxDirDepth;
-     *
-     *  Check if error code is not the No_Error, that at least one error
-     * occured.
-     *
-     * @param entries - store collected <dir, files> pairs;
-     * @param error - error description;
-     * @return total number of collected files.
-     */
-    int32 CollectFiles(THashMap<PathStr, TVector<String>>& entries,
-                       Status&                             status) SRX_NOEXCEPT;
-
 private:
     Path mBasepath;  ///< Parent related system path in a in a platform
                      ///< preffered format
@@ -82,11 +67,14 @@ public:
     virtual Status Mount(const Path& path) SRX_NOEXCEPT override;
     virtual Status IndexFiles() SRX_NOEXCEPT override;
 
-    virtual void        GetFiles(StringView       path,
-                                 TVector<String>& files) SRX_NOEXCEPT override;
-    virtual EFileStatus GetFileStatus(StringView path) SRX_NOEXCEPT override;
+    virtual void GetFiles(PathStringView      path,
+                          TVector<FileIndex>& files) SRX_NOEXCEPT override;
 
-    virtual TUniquePointer<Stream> OpenFile(StringView path, Status* status)
+    virtual TPair<EFileStatus, TOptional<FileIndex>> GetFile(
+      PathStringView path) const SRX_NOEXCEPT override;
+
+    virtual TUniquePointer<Stream> OpenFile(const FileIndex& fileIndex,
+                                            Status*          status)
       SRX_NOEXCEPT override;
 
 private:

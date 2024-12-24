@@ -56,8 +56,8 @@ namespace
 
     SRX_ASSERT(offset < path.native().size());
 
-    const FileSystem::PathStr subdir = path.native().substr(offset);
-    TVector<String>&          files  = entries[std::move(subdir)];
+    const FileSystem::PathString subdir = path.native().substr(offset);
+    TVector<String>&             files  = entries[std::move(subdir)];
 
     using Iterator = std::filesystem::directory_iterator;
 
@@ -111,18 +111,6 @@ namespace Sorex::FileSystem
     return mParent->GetSystemPath() / mBasepath.relative_path();
   }
 
-  int32 Directory::CollectFiles(THashMap<PathStr, TVector<String>>& entries,
-                                Status& status) SRX_NOEXCEPT
-  {
-    Path syspath = GetSystemPath();
-    if (syspath.empty())
-    {
-      status = SRX_STATUS_MSG(EStatusCode::Invalid_State,
-                              "Invalid system path of the directory");
-      return 0;
-    }
-  }
-
   StaticDirectory::StaticDirectory(StringView   path,
                                    IFileSystem* parent /* = nullptr */)
     : Directory(path, parent)
@@ -130,20 +118,31 @@ namespace Sorex::FileSystem
 
   Status StaticDirectory::Mount(const Path& path) SRX_NOEXCEPT
   {
+    Path   dirSysPath;
+    size_t offset = 0;
+    if (auto parent = GetParent())
+    {
+      dirSysPath = parent->GetSystemPath();
+      offset     = dirSysPath.native().length();
+      dirSysPath = dirSysPath / path.relative_path();
+    }
+    else
+    {
+      dirSysPath = path;
+    }
+
+    SRX_DEBUG("[{}] Mount paht '{}'", dirSysPath);
+
     Status    status;
     EntryList entries;
     // @BUG: If path isn't related to base path it will give invalid offset
     const auto fileNumber =
-      ::CollectFiles(path,
-                     path.native().length() - GetBasePath().native().length(),
-                     entries,
-                     0,
-                     status);
+      ::CollectFiles(dirSysPath, offset, entries, 0, status);
 
     if (!status.Ok() || fileNumber == 0)
       return status;
 
-    SRX_DEBUG("Static dir '{}' indexed {} files", path.native(), fileNumber);
+    SRX_DEBUG("Static dir '{}' indexed {} files", path, fileNumber);
 
     mCatalogs.reserve(mCatalogs.size() + entries.size());
     for (auto& [dir, files] : entries)
@@ -187,85 +186,42 @@ namespace Sorex::FileSystem
 
   Status StaticDirectory::IndexFiles() SRX_NOEXCEPT
   {
-    if (!mDirs.empty())
-      return SRX_STATUS_MSG(EStatusCode::Invalid_State,
-                            "static dir '{}' has already been indexed",
-                            GetBasePath().generic_string());
-
-    Status    status;
-    EntryList dirs;
-    {
-      const int32 fnum = CollectFiles(dirs, status);
-      if (!status.Ok() || fnum)
-        return status;
-
-      SRX_DEBUG("Static dir '{}' indexed {} files",
-                GetBasePath().generic_string(),
-                fnum);
-    }
-
-    size_t findex = 0;
-    mDirs.reserve(dirs.size());
-    for (auto& [dir, files] : dirs)
-    {
-      if (dir.empty() || files.empty())
-        continue;
-
-      String dirname = Path(dir).generic_string();
-      if (dirname.back() == Utils::GetPathDelimiter())
-        dirname.pop_back();
-
-      const hash_t dir_hash = Utils::GetHash(dirname);
-      auto         res =
-        mDirs.emplace(dir_hash,
-                      Catalog{ dir, std::move(dirname), files.size() });
-
-      SRX_CHECK(res.second);
-      TVector<FileIndex>& indecies = res.first->second.files;
-      for (String& filename : files)
-      {
-        const hash_t filehash = Utils::GetHash(filename) ^ dir_hash;
-        indecies.push_back(
-          { findex++, filehash, std::move(filename), res.first->second.path });
-      }
-
-      indecies.shrink_to_fit();
-    }
-
-    return status;
+    return Mount(GetSystemPath());
   }
 
-  void StaticDirectory::GetFiles(StringView       path,
-                                 TVector<String>& files) SRX_NOEXCEPT
+  void StaticDirectory::GetFiles(PathStringView      path,
+                                 TVector<FileIndex>& files) SRX_NOEXCEPT
   {
-    if (path.empty())
-      return;
+    /*  if (path.empty())
+       return;
 
-    const auto [dirname, filename] = Utils::SplitPath(path);
-    auto it                        = mDirs.find(GetHash(dirname));
+     const auto [dirname, filename] = Utils::SplitPath(path);
+     auto it                        = mDirs.find(GetHash(dirname));
 
-    if (it == mDirs.end())
-      return;
+     if (it == mDirs.end())
+       return;
 
-    for (const FileIndex& file : it->second.files)
-    {
-      if (filename.empty() == false)
-      {
-        StringView ext = Utils::GetFileExtension(file.name, true);
-        StringView fname(file.name.data(), file.name.length() - ext.length());
+     for (const FileIndex& file : it->second.files)
+     {
+       if (filename.empty() == false)
+       {
+         StringView ext = Utils::GetFileExtension(file.name, true);
+         StringView fname(file.name.data(), file.name.length() - ext.length());
 
-        if (filename != fname)  // @TODO: Compare hashes
-          continue;
-      }
+         if (filename != fname)  // @TODO: Compare hashes
+           continue;
+       }
 
-      files.push_back(Utils::CombinePath(
-        std::initializer_list<StringView>{ it->second.name, file.name }));
-    }
+       files.push_back(Utils::CombinePath(
+         std::initializer_list<StringView>{ it->second.name, file.name }));
+     } */
   }
 
-  EFileStatus StaticDirectory::GetFileStatus(StringView path) SRX_NOEXCEPT
+  TPair<EFileStatus, TOptional<IFileSystem::FileIndex>>
+  StaticDirectory::GetFile(PathStringView path) const SRX_NOEXCEPT
   {
-    const auto [dirname, filename] = Utils::SplitPath(path);
+    return std::make_pair(EFileStatus::Unknown, std::nullopt);
+    /* const auto [dirname, filename] = Utils::SplitPath(path);
     if (dirname.empty() || filename.empty())
       return EFileStatus::Unknown;
 
@@ -282,16 +238,17 @@ namespace Sorex::FileSystem
                    [key](const FileIndex& index) { return index.hash == key; });
 
     return fileIt != it->second.files.end() ? EFileStatus::Existent
-                                            : EFileStatus::Unknown;
+                                            : EFileStatus::Unknown; */
   }
 
-  TUniquePointer<Stream> StaticDirectory::OpenFile(StringView path,
+  TUniquePointer<Stream> StaticDirectory::OpenFile(const FileIndex& fileIndex,
                                                    Status* status) SRX_NOEXCEPT
   {
-    return File::Open(MakeSystemPath(path),
+    /* return File::Open(MakeSystemPath(path),
                       EAccessMode::Read,
                       File::EOpenMode::Binary,
-                      status);
+                      status); */
+    return nullptr;
   }
 
   String StaticDirectory::MakeSystemPath(StringView path) const
@@ -301,7 +258,7 @@ namespace Sorex::FileSystem
 
     if (IFileSystem* parent = GetParent())
     {
-      if (path[0] == Utils::GetPathDelimiter())
+      if (path[0] == std::filesystem::path::preferred_separator)
         path = path.substr(1);
 
       return (parent->GetSystemPath() / path).generic_string();
