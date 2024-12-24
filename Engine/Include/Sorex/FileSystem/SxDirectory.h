@@ -62,7 +62,9 @@ private:
   class StaticDirectory final: public Directory
   {
 public:
-    explicit StaticDirectory(StringView path, IFileSystem* parent = nullptr);
+    // @TODO: Path
+    explicit StaticDirectory(PathStringView path,
+                             IFileSystem*   parent = nullptr);
 
     virtual Status Mount(const Path& path) SRX_NOEXCEPT override;
     virtual Status IndexFiles() SRX_NOEXCEPT override;

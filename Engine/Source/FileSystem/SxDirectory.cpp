@@ -57,7 +57,7 @@ namespace
     SRX_ASSERT(offset < path.native().size());
 
     const FileSystem::PathString subdir = path.native().substr(offset);
-    TVector<String>&             files  = entries[std::move(subdir)];
+    TVector<PathString>&         files  = entries[std::move(subdir)];
 
     using Iterator = std::filesystem::directory_iterator;
 
@@ -111,8 +111,8 @@ namespace Sorex::FileSystem
     return mParent->GetSystemPath() / mBasepath.relative_path();
   }
 
-  StaticDirectory::StaticDirectory(StringView   path,
-                                   IFileSystem* parent /* = nullptr */)
+  StaticDirectory::StaticDirectory(PathStringView path,
+                                   IFileSystem*   parent /* = nullptr */)
     : Directory(path, parent)
   {}
 
@@ -131,18 +131,19 @@ namespace Sorex::FileSystem
       dirSysPath = path;
     }
 
-    SRX_DEBUG("[{}] Mount paht '{}'", dirSysPath);
+    SRX_DEBUG("[StaticDirectory] Mount path '{}'", dirSysPath.native());
 
-    Status    status;
-    EntryList entries;
-    // @BUG: If path isn't related to base path it will give invalid offset
+    Status     status;
+    EntryList  entries;
     const auto fileNumber =
       ::CollectFiles(dirSysPath, offset, entries, 0, status);
 
     if (!status.Ok() || fileNumber == 0)
       return status;
 
-    SRX_DEBUG("Static dir '{}' indexed {} files", path, fileNumber);
+    SRX_DEBUG("[StaticDirectory] Dir '{}' indexed {} files",
+              path.native(),
+              fileNumber);
 
     mCatalogs.reserve(mCatalogs.size() + entries.size());
     for (auto& [dir, files] : entries)
@@ -169,10 +170,9 @@ namespace Sorex::FileSystem
         FileIndex&  fileIndex = indecies[i];
 
         const hash_t fileHash = GetHash(PathStringView(fileName));
-        const hash_t pathHash = fileHash ^ dirHash;
 
-        // Store path hash for search file
-        fileIndex.id = pathHash;
+        // Store dir hash to fast search dir
+        fileIndex.id = dirHash;
         // Store file hash for comparation file names
         fileIndex.descriptor = fileHash;
         fileIndex.filepath   = std::move(fileName);
