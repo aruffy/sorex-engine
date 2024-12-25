@@ -27,10 +27,12 @@
       "architecture": "x64",
       "binaryDir": "${sourceDir}/build/${presetName}",
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_BUILD_TYPE": "Debug",
         "CMAKE_C_COMPILER": "cl.exe",
         "CMAKE_CXX_COMPILER": "cl.exe",
         "SOREX_STATIC_LIBRARY": "ON",
+        "SRXENG_DISABLE_CHECK": "ON",
+        "SRXENG_ADDRESS_SANITIZER": "ON",
         "SOREX_BUILD_SANDBOX": "OFF",
         "SOREX_BUILD_TESTS": "ON"
       }
@@ -70,8 +72,10 @@
       "generator": "Unix Makefiles",
       "binaryDir": "${sourceDir}/build/${presetName}",
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_BUILD_TYPE": "Debug",
         "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "SRXENG_ADDRESS_SANITIZER": "ON",
+        "SRXENG_DISABLE_CHECK": "ON",
         "SOREX_BUILD_SANDBOX": "OFF",
         "SOREX_BUILD_TESTS": "ON"
       }

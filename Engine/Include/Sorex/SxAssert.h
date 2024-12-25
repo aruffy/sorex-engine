@@ -104,7 +104,7 @@ namespace Sorex::Platform
  * SRXENG_DISABLE_CHECK macro define the verify macro should only invoke
  * expression.
  */
-#ifdef SOREX_DEBUG_MEDIUM
+#if defined(SOREX_DEBUG_MEDIUM) && !defined(SOREX_DISABLE_CHECK)
 #  define SRX_VERIFY(expr)                                           \
     if (!(expr))                                                     \
       SRX_UNLIKELY                                                   \
@@ -143,7 +143,7 @@ namespace Sorex::Platform
  * SRXENG_DISABLE_CHECK macro is defined the checking macro should do
  * nothing.
  */
-#ifdef SOREX_DEBUG_MEDIUM
+#if defined(SOREX_DEBUG_MEDIUM) && !defined(SOREX_DISABLE_CHECK)
 #  define SRX_CHECK(expr) SRX_VERIFY(expr)
 #  define SRX_CHECK_MSG(expr, msg) SRX_VERIFY_MSG(expr, msg)
 
