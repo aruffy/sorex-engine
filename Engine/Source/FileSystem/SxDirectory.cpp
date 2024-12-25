@@ -235,8 +235,6 @@ namespace Sorex::FileSystem
   TPair<EFileStatus, TOptional<IFileSystem::FileIndex>>
   StaticDirectory::GetFile(PathStringView path) const SRX_NOEXCEPT
   {
-    return std::make_pair(EFileStatus::Unknown, std::nullopt);
-
     const auto [dirname, filename] = Utils::SplitPath(path);
     if (dirname.empty() || filename.empty())
       return std::make_pair(EFileStatus::Unknown, std::nullopt);

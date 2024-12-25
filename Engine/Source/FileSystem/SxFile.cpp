@@ -209,7 +209,7 @@ namespace Sorex
       else
         mTotalLength = static_cast<ssize_t>(len);
 
-      SRX_VERIFY(fseek(mFile, pos, SEEK_SET));
+      SRX_VERIFY(fseek(mFile, pos, SEEK_SET) == 0);
     }
 
     return mTotalLength - pos;
@@ -289,7 +289,6 @@ namespace Sorex
 
     if (!Check(EAccessMode::Write))
     {
-      SRX_NOENTRY("File invalid or operation not allowed");
       mStatus = SRX_STATUS_MSG(EStatusCode::Invalid_State,
                                "Write() operation not allowed");
       return SRX_WRITE_ERROR;

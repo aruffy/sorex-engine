@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 
 #include <Sorex/FileSystem/SxDirectory.h>
+#include <Sorex/FileSystem/SxPathUtils.h>
 
 using namespace Sorex;
 
@@ -15,10 +16,9 @@ TEST(StaticDirectory, Main)
   EXPECT_EQ(dir.IndexFiles(), SRX_OK);
 
   TVector<FileSystem::IFileSystem::FileIndex> files;
-  dir.GetFiles(dirPath, files);
+  dir.GetFiles(Utils::MakePathWithClosingSlash(dirPath), files);
 
   ASSERT_NE(files.size(), 0) << "Dir '" << dirPath << "' hasn't files";
-
   Status status;
   auto   file = dir.OpenFile(files[0], &status);
   EXPECT_NE(file, nullptr);
