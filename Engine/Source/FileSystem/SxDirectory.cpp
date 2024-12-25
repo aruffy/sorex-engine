@@ -172,9 +172,8 @@ namespace Sorex::FileSystem
         const hash_t fileHash = GetHash(PathStringView(fileName));
 
         // Store dir hash to fast search dir
-        fileIndex.id = dirHash;
-        // Store file hash for comparation file names
-        fileIndex.descriptor = fileHash;
+        fileIndex.id         = dirHash;
+        fileIndex.descriptor = fileHash ^ dirHash;
         fileIndex.filepath   = std::move(fileName);
       }
 
@@ -192,78 +191,111 @@ namespace Sorex::FileSystem
   void StaticDirectory::GetFiles(PathStringView      path,
                                  TVector<FileIndex>& files) SRX_NOEXCEPT
   {
-    /*  if (path.empty())
-       return;
+    if (path.empty())
+      return;
 
-     const auto [dirname, filename] = Utils::SplitPath(path);
-     auto it                        = mDirs.find(GetHash(dirname));
+    const auto [dirname, filename] = Utils::SplitPath(path);
+    auto it                        = mCatalogs.find(GetHash(dirname));
 
-     if (it == mDirs.end())
-       return;
+    if (it == mCatalogs.end())
+      return;
 
-     for (const FileIndex& file : it->second.files)
-     {
-       if (filename.empty() == false)
-       {
-         StringView ext = Utils::GetFileExtension(file.name, true);
-         StringView fname(file.name.data(), file.name.length() - ext.length());
+    if (Utils::GetFileExtension(filename).empty() == false)
+    {
+      const auto [_, fileIndex] = GetFile(path);
+      if (fileIndex.has_value())
+        files.push_back(
+          { fileIndex->id, fileIndex->descriptor, std::monostate() });
 
-         if (filename != fname)  // @TODO: Compare hashes
-           continue;
-       }
+      return;
+    }
 
-       files.push_back(Utils::CombinePath(
-         std::initializer_list<StringView>{ it->second.name, file.name }));
-     } */
+    const bool bCollectAll = filename.empty();
+    for (const FileIndex& fileIndex : it->second.files)
+    {
+      bool bPush = true;
+      if (bCollectAll == false)
+      {
+        if (const PathString* filePath =
+              std::get_if<PathString>(&fileIndex.filepath))
+        {
+          StringView ext = Utils::GetFileExtension(*filePath, true);
+          StringView fname(filePath->data(), filePath->length() - ext.length());
+
+          bPush = (filename == fname);
+        }
+      }
+
+      if (bPush)
+        files.push_back(
+          FileIndex{ fileIndex.id, fileIndex.descriptor, std::monostate() });
+    }
   }
 
   TPair<EFileStatus, TOptional<IFileSystem::FileIndex>>
   StaticDirectory::GetFile(PathStringView path) const SRX_NOEXCEPT
   {
     return std::make_pair(EFileStatus::Unknown, std::nullopt);
-    /* const auto [dirname, filename] = Utils::SplitPath(path);
+
+    const auto [dirname, filename] = Utils::SplitPath(path);
     if (dirname.empty() || filename.empty())
-      return EFileStatus::Unknown;
+      return std::make_pair(EFileStatus::Unknown, std::nullopt);
 
-    const hash_t dirHash = Utils::GetHash(dirname);
-    auto         it      = mDirs.find(dirHash);
+    const hash_t dirHash = GetHash(dirname);
+    auto         it      = mCatalogs.find(dirHash);
 
-    if (it == mDirs.end())
-      return EFileStatus::Unknown;
+    if (it == mCatalogs.end())
+      return std::make_pair(EFileStatus::Unknown, std::nullopt);
 
-    const hash_t key = Utils::GetHash(filename) ^ dirHash;
-    auto         fileIt =
+    const hash_t key = GetHash(filename) ^ dirHash;
+
+    auto fileIt =
       std::find_if(it->second.files.begin(),
                    it->second.files.end(),
-                   [key](const FileIndex& index) { return index.hash == key; });
+                   [key](const FileIndex& index) {
+                     return std::get<hash_t>(index.descriptor) == key;
+                   });
 
-    return fileIt != it->second.files.end() ? EFileStatus::Existent
-                                            : EFileStatus::Unknown; */
+    return fileIt != it->second.files.end()
+             ? std::make_pair<EFileStatus, TOptional<IFileSystem::FileIndex>>(
+                 EFileStatus::Existent,
+                 TOptional<FileIndex>(
+                   { fileIt->id, fileIt->descriptor, std::monostate() }))
+             : std::make_pair(EFileStatus::Unknown, std::nullopt);
   }
 
   TUniquePointer<Stream> StaticDirectory::OpenFile(const FileIndex& fileIndex,
                                                    Status* status) SRX_NOEXCEPT
   {
-    /* return File::Open(MakeSystemPath(path),
-                      EAccessMode::Read,
-                      File::EOpenMode::Binary,
-                      status); */
-    return nullptr;
-  }
+    SRX_CHECK(std::holds_alternative<hash_t>(fileIndex.descriptor));
 
-  String StaticDirectory::MakeSystemPath(StringView path) const
-  {
-    if (path.empty())
-      return String();
-
-    if (IFileSystem* parent = GetParent())
+    auto dirIt = mCatalogs.find(fileIndex.id);
+    if (dirIt != mCatalogs.end())
     {
-      if (path[0] == std::filesystem::path::preferred_separator)
-        path = path.substr(1);
+      auto fileIt =
+        std::find_if(dirIt->second.files.cbegin(),
+                     dirIt->second.files.cend(),
+                     [&fileIndex](const FileIndex& fidx) {
+                       return fileIndex.descriptor == fidx.descriptor;
+                     });
 
-      return (parent->GetSystemPath() / path).generic_string();
+      if (fileIt != dirIt->second.files.cend())
+      {
+        const Path syspath =
+          GetSystemPath() / std::get<PathString>(fileIt->filepath);
+
+        return File::Open(syspath.generic_string(),
+                          EAccessMode::Read,
+                          File::EOpenMode::Binary,
+                          status);
+      }
     }
 
-    return String(path);
+    if (status)
+      *status = SRX_STATUS_MSG(EStatusCode::Not_Found,
+                               "file not found: {}",
+                               std::get<hash_t>(fileIndex.descriptor));
+
+    return nullptr;
   }
-}
+}  // namespace

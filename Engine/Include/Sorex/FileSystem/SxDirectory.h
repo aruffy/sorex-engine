@@ -62,7 +62,6 @@ private:
   class StaticDirectory final: public Directory
   {
 public:
-    // @TODO: Path
     explicit StaticDirectory(PathStringView path,
                              IFileSystem*   parent = nullptr);
 
@@ -78,9 +77,6 @@ public:
     virtual TUniquePointer<Stream> OpenFile(const FileIndex& fileIndex,
                                             Status*          status)
       SRX_NOEXCEPT override;
-
-private:
-    String MakeSystemPath(StringView path) const;
 
 private:
     THashMap<hash_t, Catalog> mCatalogs;

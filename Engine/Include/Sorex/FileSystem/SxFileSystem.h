@@ -129,20 +129,20 @@ public:
      * @brief Retrieve list of all files from filesystem by the path.
      *
      *  If path is a directory it should provide all files in the directory;
-     *  @note: if path is a directory it shouldn't search it in subdirs;
-     *  If path is a path to the file it should provide all files with the
-     * same name:
+     *  @note: if path is a directory it shouldn't search it in subdirs - no
+     * recursion; If path is a path to the file it should provide all files with
+     * the same name:
      *      `/path/to/file` can return `/path/to/file.xml`,
      * `/path/to/file.png`,
      *
-     * As it relative path for file system user should pass string in generic
-     * format.
-     *
-     * @param path - path to search;
+     * @param path - path to search in generic format;
      * @param out files - list to store files;
      */
     virtual void GetFiles(PathStringView      path,
                           TVector<FileIndex>& files) SRX_NOEXCEPT = 0;
+
+
+    // @TODO: FindFiles (recursion)
 
     /**
      * @brief Retrieve file status and its index if the file is found.
