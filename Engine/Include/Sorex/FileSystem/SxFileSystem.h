@@ -191,6 +191,7 @@ public:
      * failed.
      */
     virtual TUniquePointer<Stream> OpenFile(const FileIndex& fileIndex,
+                                            EAccessMode      mode,
                                             Status* status) SRX_NOEXCEPT = 0;
 
     /**
@@ -208,6 +209,7 @@ public:
      * does not exist.
      */
     virtual TUniquePointer<Stream> OpenFile(const Path& filepath,
+                                            EAccessMode mode,
                                             Status*     status) SRX_NOEXCEPT;
   };
 }  // namespace

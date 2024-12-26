@@ -25,31 +25,35 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#pragma once
-
-#include <Sorex/SxCoreMinimal.h>
-
-#include "SxFileSystem.h"
+#include <Sorex/FileSystem/SxDirectory.h>
 
 namespace Sorex::FileSystem
 {
-  class Directory: public IFileSystem
+  // @NOTE: This isn't effecient class to work with the file system.
+  // @TODO: Optimize it according to the needs.
+  // @TODO: Don't store names of directories and files.
+  class StaticDirectory final: public Directory
   {
 public:
-    explicit Directory(Path path) SRX_NOEXCEPT;
-    virtual ~Directory() override {}
+    explicit StaticDirectory(Path path) SRX_NOEXCEPT;
 
-    virtual Path   GetSystemPath() const SRX_NOEXCEPT override;
-    virtual Status Mount(const Path& path) SRX_NOEXCEPT override;
+    virtual Status IndexFiles() SRX_NOEXCEPT override;
+    virtual void   GetFiles(const Path&         path,
+                            TVector<FileIndex>& files) SRX_NOEXCEPT override;
 
-protected:
-    struct Catalog
-    {
-      Path               path;
-      TVector<FileIndex> files;
-    };
+    virtual TPair<EFileStatus, TOptional<FileIndex>> GetFile(
+      PathStringView path) const SRX_NOEXCEPT override;
 
-    Path          mSystemPath;
-    TVector<Path> mMountedPaths;
+    virtual TUniquePointer<Stream> OpenFile(const FileIndex& fileIndex,
+                                            Status*          status)
+      SRX_NOEXCEPT override;
+
+private:
+    int32 CollectFiles(const Path& path,
+                       int32       depth,
+                       Status&     status) SRX_NOEXCEPT;
+
+private:
+    THashMap<hash_t, Catalog> mCatalogs;
   };
-}
+}  // namespace
