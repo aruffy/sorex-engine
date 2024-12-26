@@ -43,13 +43,12 @@ public:
     virtual Status Mount(const Path& path) SRX_NOEXCEPT override;
 
 protected:
-    struct Catalog
-    {
-      Path               path;
-      TVector<FileIndex> files;
-    };
+    SRX_INLINE const Path& GetPath() const SRX_NOEXCEPT { return mSystemPath; }
 
-    Path          mSystemPath;
+protected:
     TVector<Path> mMountedPaths;
+
+private:
+    Path mSystemPath;
   };
 }

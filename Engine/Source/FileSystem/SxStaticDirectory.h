@@ -41,12 +41,13 @@ public:
     virtual void   GetFiles(const Path&         path,
                             TVector<FileIndex>& files) SRX_NOEXCEPT override;
 
-    virtual TPair<EFileStatus, TOptional<FileIndex>> GetFile(
-      PathStringView path) const SRX_NOEXCEPT override;
+    virtual TPair<EFileStatus, TOptional<FileIndex>> GetFileIndex(
+      const Path& path) const SRX_NOEXCEPT override;
 
-    virtual TUniquePointer<Stream> OpenFile(const FileIndex& fileIndex,
-                                            Status*          status)
-      SRX_NOEXCEPT override;
+    virtual TUniquePointer<Stream> OpenFile(
+      const FileIndex& fileIndex,
+      EAccessMode      mode   = EAccessMode::Read,
+      Status*          status = nullptr) SRX_NOEXCEPT override;
 
 private:
     int32 CollectFiles(const Path& path,
@@ -54,6 +55,12 @@ private:
                        Status&     status) SRX_NOEXCEPT;
 
 private:
+    struct Catalog
+    {
+      Path               path;
+      TVector<FileIndex> files;  // TODO: Use THashSet<FileIndex>
+    };
+
     THashMap<hash_t, Catalog> mCatalogs;
   };
 }  // namespace

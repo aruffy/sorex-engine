@@ -26,8 +26,6 @@
 /**************************************************************************/
 
 #include <Sorex/FileSystem/SxDirectory.h>
-#include <Sorex/FileSystem/SxPathUtils.h>
-#include <Sorex/FileSystem/SxFile.h>
 #include <Sorex/Utils/SxString.h>
 
 namespace Sorex::FileSystem

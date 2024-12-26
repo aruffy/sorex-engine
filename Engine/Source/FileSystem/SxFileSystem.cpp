@@ -35,25 +35,26 @@ namespace Sorex::FileSystem
     return kPathViewHasher(path);
   }
 
-  EFileStatus IFileSystem::GetFileStatus(PathStringView filename) const
+  EFileStatus IFileSystem::GetFileStatus(const Path& filename) const
     SRX_NOEXCEPT
   {
-    return GetFile(filename).first;
+    return GetFileIndex(filename).first;
   }
 
-  TUniquePointer<Stream> IFileSystem::OpenFile(PathStringView filepath,
-                                               Status* status) SRX_NOEXCEPT
+  TUniquePointer<Stream> IFileSystem::OpenFile(const Path& filepath,
+                                               EAccessMode mode,
+                                               Status*     status) SRX_NOEXCEPT
   {
-    const auto [fileStatus, fileIndex] = GetFile(filepath);
+    const auto [fileStatus, fileIndex] = GetFileIndex(filepath);
     if (fileStatus != EFileStatus::Existent || !fileIndex.has_value())
     {
       if (status)
         *status = SRX_STATUS_MSG(EStatusCode::Not_Found,
                                  "file '{}' not found",
-                                 filepath);
+                                 filepath.native());
       return nullptr;
     }
 
-    return OpenFile(fileIndex.value(), status);
+    return OpenFile(fileIndex.value(), mode, status);
   }
 }  // namespace
