@@ -42,6 +42,7 @@ namespace Sorex::FileSystem
                                       int32       depth,
                                       Status&     status) SRX_NOEXCEPT
   {
+    SRX_CHECK(path.native().back() != Path::preferred_separator);
     SRX_TRACE("[Directory] Collect '{}' depth={}",
               path.generic_string(),
               depth);
@@ -66,14 +67,10 @@ namespace Sorex::FileSystem
       return 0;
     }
 
-    // FIXME: Delete
-    SRX_CHECK(path.native().back() == Path::preferred_separator);
-
     const hash_t dirHash = GetHash(path);
     Catalog&     catalog = mCatalogs[dirHash];
     if (catalog.path.empty())
       catalog.path = path;
-
 
     int32 fileNum = 0;
     for (; it != Iterator(); ++it)
@@ -127,7 +124,7 @@ namespace Sorex::FileSystem
     if (path.empty())
       return;
 
-    const auto [dirname, filename] = Utils::SplitPath(path.native(), true);
+    const auto [dirname, filename] = Utils::SplitPath(path.native());
     auto it                        = mCatalogs.find(GetHash(dirname));
 
     if (it == mCatalogs.end())
@@ -213,7 +210,8 @@ namespace Sorex::FileSystem
 
       if (fileIt != dirIt->second.files.cend())
       {
-        if (std::holds_alternative<PathString>(fileIt->filepath) == false)
+        SRX_CHECK(std::holds_alternative<PathString>(fileIt->filepath));
+        if (std::holds_alternative<PathString>(fileIt->filepath))
         {
           const Path syspath =
             dirIt->second.path / std::get<PathString>(fileIt->filepath);
