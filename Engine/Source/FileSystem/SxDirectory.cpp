@@ -94,26 +94,43 @@ namespace
 
 namespace Sorex::FileSystem
 {
-  Directory::Directory(PathStringView path,
-                       IFileSystem*   parent /* = nullptr */) SRX_NOEXCEPT
-    : mBasepath(Utils::MakePathWithClosingSlash(path))
-    , mParent(parent)
+  Directory::Directory(Path path) SRX_NOEXCEPT
+    : mSystemPath(std::move(path.make_preferred()))
   {
-    SRX_CHECK(!mBasepath.empty());
-    mBasepath.make_preferred();
+    SRX_CHECK(std::filesystem::is_directory(mSystemPath));
   }
 
   Path Directory::GetSystemPath() const SRX_NOEXCEPT
   {
-    if (mParent == nullptr)
-      return mBasepath;
-
-    return mParent->GetSystemPath() / mBasepath.relative_path();
+    return mSystemPath;
   }
 
-  StaticDirectory::StaticDirectory(PathStringView path,
-                                   IFileSystem*   parent /* = nullptr */)
-    : Directory(path, parent)
+  Status Directory::Mount(const Path& path) SRX_NOEXCEPT
+  {
+    SRX_CHECK(path != mSystemPath);
+
+    Path pathToMount;
+    if (path.is_absolute())
+      pathToMount = path;
+    else
+      pathToMount = mSystemPath / path;
+
+    if (std::filesystem::is_directory(pathToMount) == false)
+      return SRX_STATUS_MSG(EStatusCode::Not_Found,
+                            "invalid path '{}' to directory",
+                            path.native());
+
+    SRX_DEBUG("[Directory] Mount path '{}'", pathToMount.native());
+    SRX_CHECK(
+      std::find(mMountedPaths.cbegin(), mMountedPaths.cend(), pathToMount)
+      == mMountedPaths.cend());
+
+    mMountedPaths.push_back(std::move(pathToMount));
+    return SRX_OK;
+  }
+
+  StaticDirectory::StaticDirectory(Path path) SRX_NOEXCEPT
+    : Directory(std::move(path))
   {}
 
   Status StaticDirectory::Mount(const Path& path) SRX_NOEXCEPT
@@ -131,7 +148,6 @@ namespace Sorex::FileSystem
       dirSysPath = path;
     }
 
-    SRX_DEBUG("[StaticDirectory] Mount path '{}'", dirSysPath.native());
 
     Status     status;
     EntryList  entries;

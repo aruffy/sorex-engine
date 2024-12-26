@@ -36,34 +36,29 @@ namespace Sorex::FileSystem
   class Directory: public IFileSystem
   {
 public:
-    explicit Directory(PathStringView path,
-                       IFileSystem*   parent = nullptr) SRX_NOEXCEPT;
-
+    explicit Directory(Path path) SRX_NOEXCEPT;
     virtual ~Directory() override {}
 
-    virtual Path GetSystemPath() const SRX_NOEXCEPT override;
-
-    const Path&  GetBasePath() const { return mBasepath; }
-    IFileSystem* GetParent() const { return mParent; }
+    virtual Path   GetSystemPath() const SRX_NOEXCEPT override;
+    virtual Status Mount(const Path& path) SRX_NOEXCEPT override;
 
 protected:
     struct Catalog
     {
-      PathString         name;
+      Path               path;
       TVector<FileIndex> files;
     };
 
+    TVector<Path> mMountedPaths;
+
 private:
-    Path mBasepath;  ///< Parent related system path in a in a platform
-                     ///< preffered format
-    IFileSystem* mParent;
+    Path mSystemPath;
   };
 
   class StaticDirectory final: public Directory
   {
 public:
-    explicit StaticDirectory(PathStringView path,
-                             IFileSystem*   parent = nullptr);
+    explicit StaticDirectory(Path path) SRX_NOEXCEPT;
 
     virtual Status Mount(const Path& path) SRX_NOEXCEPT override;
     virtual Status IndexFiles() SRX_NOEXCEPT override;

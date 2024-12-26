@@ -135,23 +135,20 @@ public:
      *      `/path/to/file` can return `/path/to/file.xml`,
      * `/path/to/file.png`,
      *
-     * @param path - path to search in generic format;
-     * @param out files - list to store files;
+     * @param path - path to search;
+     * @param out files - list to store file indecies;
      */
-    virtual void GetFiles(PathStringView      path,
+    virtual void GetFiles(const Path&         path,
                           TVector<FileIndex>& files) SRX_NOEXCEPT = 0;
 
-
-    // @TODO: FindFiles (recursion)
-
     /**
-     * @brief Retrieve file status and its index if the file is found.
+     * @brief Retrieve file status and its index if the file isn't exist.
      *
      * @param filename - path to search for the file.
      * @return pair of file status and file index if the file is found.
      */
-    virtual TPair<EFileStatus, TOptional<FileIndex>> GetFile(
-      PathStringView filename) const SRX_NOEXCEPT = 0;
+    virtual TPair<EFileStatus, TOptional<FileIndex>> GetFileIndex(
+      const Path& filepath) const SRX_NOEXCEPT = 0;
 
     /**
      * @brief Retrive status of a file.
@@ -159,8 +156,7 @@ public:
      * @param filename - path of the file.
      * @return status of the file.
      */
-    virtual EFileStatus GetFileStatus(PathStringView filename) const
-      SRX_NOEXCEPT;
+    virtual EFileStatus GetFileStatus(const Path& filename) const SRX_NOEXCEPT;
 
     /**
      * @brief Check if file exists.
@@ -168,7 +164,7 @@ public:
      * @param path - path to the file
      * @return True if file exists in the file system.
      */
-    SRX_INLINE bool IsFileExists(PathStringView path) const SRX_NOEXCEPT
+    SRX_INLINE bool IsFileExists(const Path& path) const SRX_NOEXCEPT
     {
       return GetFileStatus(path) == FileSystem::EFileStatus::Existent;
     }
@@ -211,8 +207,8 @@ public:
      * @return A unique pointer to the opened stream, or nullptr if the file
      * does not exist.
      */
-    virtual TUniquePointer<Stream> OpenFile(PathStringView filepath,
-                                            Status*        status) SRX_NOEXCEPT;
+    virtual TUniquePointer<Stream> OpenFile(const Path& filepath,
+                                            Status*     status) SRX_NOEXCEPT;
   };
 }  // namespace
 
