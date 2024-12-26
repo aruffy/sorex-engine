@@ -35,9 +35,17 @@
 namespace Sorex
 {
   using namespace Sorex::FileSystem;
+
   /**
-   * @class App::FileSystem - represent the file system of the application.
-   *      Use genereic format of the path with the '/' slash separator.
+   * @class RootFileSystem
+   * @brief Represents the root file system of the director (application).
+   *
+   * This class simplifies interactions with the file system,
+   * collecting resources for the application and providing easy access
+   * to them using a generic path format with '/' as the separator.
+   *
+   * Example: filesystem->Mount("/MyData/Folder");
+   * filesystem->GetFileIndex("/MyData/Folder/To/File.txt");
    */
   class RootFileSystem final
     : public Director::Component
@@ -47,32 +55,22 @@ namespace Sorex
 
 public:
     // IFileSystem Interface
-    virtual Status      IndexFiles() SRX_NOEXCEPT override;
-    virtual void        GetFiles(StringView       path,
+    Status         Mount(const Path& path) SRX_NOEXCEPT override;
+    virtual Status IndexFiles() SRX_NOEXCEPT override;
+
+    virtual void        GetFiles(const Path&      path,
                                  TVector<String>& files) SRX_NOEXCEPT override;
     virtual EFileStatus GetFileStatus(StringView name) SRX_NOEXCEPT override;
+    virtual Path        GetSystemPath() const SRX_NOEXCEPT override;
 
-    virtual Path GetSystemPath() const SRX_NOEXCEPT override;
-
-    virtual TUniquePointer<Stream> OpenFile(StringView path, Status* status)
+    virtual TUniquePointer<Stream> OpenFile(const FileIndex& fileIndex,
+                                            EAccessMode      mode,
+                                            Status*          status)
       SRX_NOEXCEPT override;
 
     // Director::Component Interface
     virtual Status Initialize() override;
     virtual void   Shutdown() override;
-
-    /**
-     * @brief Add the current path to the app file system.
-     *
-     * @note The path must be subdir of the application folder with leading
-     * slash. Example: "/Textures/Props"
-     *
-     * @param path - path to directory to mount.
-     * @param[out] error - description of error;
-     * @return true if directory was mounted.
-     */
-    Status Mount(StringView path) SRX_NOEXCEPT;
-    // const String& GetAppDataPath() SRX_NOEXCEPT;
 
 private:
     IFileSystem*       GetFileSystem(StringView path) SRX_NOEXCEPT;
