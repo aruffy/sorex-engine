@@ -15,7 +15,7 @@ TEST(StaticDirectory, Main)
 
   EXPECT_EQ(dir.IndexFiles(), SRX_OK);
 
-  TVector<FileSystem::IFileSystem::FileIndex> files;
+  TVector<FileSystem::FileIndex> files;
   dir.GetFiles(Utils::MakePathWithClosingSlash(dirPath), files);
 
   ASSERT_NE(files.size(), 0) << "Dir '" << dirPath << "' hasn't files";

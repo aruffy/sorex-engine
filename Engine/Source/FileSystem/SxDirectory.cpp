@@ -232,8 +232,8 @@ namespace Sorex::FileSystem
     }
   }
 
-  TPair<EFileStatus, TOptional<IFileSystem::FileIndex>>
-  StaticDirectory::GetFile(PathStringView path) const SRX_NOEXCEPT
+  TPair<EFileStatus, TOptional<FileIndex>> StaticDirectory::GetFile(
+    PathStringView path) const SRX_NOEXCEPT
   {
     const auto [dirname, filename] = Utils::SplitPath(path);
     if (dirname.empty() || filename.empty())
@@ -255,7 +255,7 @@ namespace Sorex::FileSystem
                    });
 
     return fileIt != it->second.files.end()
-             ? std::make_pair<EFileStatus, TOptional<IFileSystem::FileIndex>>(
+             ? std::make_pair<EFileStatus, TOptional<FileIndex>>(
                  EFileStatus::Existent,
                  TOptional<FileIndex>(
                    { fileIt->id, fileIt->descriptor, std::monostate() }))

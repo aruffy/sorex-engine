@@ -67,42 +67,42 @@ namespace Sorex::FileSystem
    */
   SRX_API Path GetAppPath() SRX_NOEXCEPT;
 
+  /**
+   * @struct FileIndex
+   * @brief Represents an index for a file in the file system to optimize
+   * access.
+   *
+   * The main purpose of the FileIndex is to allow the file system
+   * implementaion to work with files more efficiently. It provides a way to
+   * access files faster than using a path string, storing
+   * implementation-specific data relevant to the file system.
+   *
+   * @var FileIndex::id
+   * Unique identifier for the file.
+   *
+   * @var FileIndex::descriptor
+   * A variant type that can hold an integer or hash_t representing
+   * the file's descriptor.
+   *
+   * @var FileIndex::filepath
+   * A variant type that can hold various representations of the file's
+   * path, including monostate.
+   */
+  struct FileIndex
+  {
+    size_t                id;
+    TVariant<int, hash_t> descriptor;
+    TVariant<std::monostate,
+             Path,
+             TRef<const Path>,
+             PathString,
+             TRef<const PathString>>
+      filepath;
+  };
+
   class IFileSystem
   {
 public:
-    /**
-     * @struct FileIndex
-     * @brief Represents an index for a file in the file system to optimize
-     * access.
-     *
-     * The main purpose of the FileIndex is to allow the file system
-     * implementaion to work with files more efficiently. It provides a way to
-     * access files faster than using a path string, storing
-     * implementation-specific data relevant to the file system.
-     *
-     * @var FileIndex::id
-     * Unique identifier for the file.
-     *
-     * @var FileIndex::descriptor
-     * A variant type that can hold an integer or hash_t representing
-     * the file's descriptor.
-     *
-     * @var FileIndex::filepath
-     * A variant type that can hold various representations of the file's
-     * path, including monostate.
-     */
-    struct FileIndex
-    {
-      size_t                id;
-      TVariant<int, hash_t> descriptor;
-      TVariant<std::monostate,
-               Path,
-               TRef<const Path>,
-               PathString,
-               TRef<const PathString>>
-        filepath;
-    };
-
     virtual ~IFileSystem() = default;
 
     /**
