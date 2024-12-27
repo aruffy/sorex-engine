@@ -37,6 +37,8 @@ namespace Sorex::FileSystem
 public:
     explicit StaticDirectory(Path path) SRX_NOEXCEPT;
 
+    virtual Status Mount(const Path&    path,
+                         PathStringView alias = {}) SRX_NOEXCEPT override;
     virtual Status IndexFiles() SRX_NOEXCEPT override;
     virtual void   GetFiles(const Path&         path,
                             TVector<FileIndex>& files) SRX_NOEXCEPT override;

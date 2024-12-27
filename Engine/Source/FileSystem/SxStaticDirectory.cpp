@@ -29,13 +29,14 @@
 
 #include <Sorex/FileSystem/SxPathUtils.h>
 #include <Sorex/FileSystem/SxFile.h>
+#include <Sorex/Utils/SxString.h>
 
 namespace Sorex::FileSystem
 {
   StaticDirectory::StaticDirectory(Path path) SRX_NOEXCEPT
     : Directory(std::move(path))
   {
-    mMountedPaths.push_back(GetPath());
+    mMountedPaths.emplace_back(GetPath(), PathString());
   }
 
   int32 StaticDirectory::CollectFiles(const Path& path,
@@ -84,7 +85,7 @@ namespace Sorex::FileSystem
         PathString   filename = it->path().filename().native();
         const hash_t fileHash = GetHash(PathStringView(filename)) ^ dirHash;
 
-        catalog.files.emplace_back(dirHash, fileHash, std::move(filename));
+        catalog.files.push_back({ dirHash, fileHash, std::move(filename) });
         fileNum++;
       }
       else
@@ -96,24 +97,38 @@ namespace Sorex::FileSystem
     return fileNum;
   }
 
+  Status StaticDirectory::Mount(const Path&    path,
+                                PathStringView alias) SRX_NOEXCEPT
+  {
+    // @TODO: Implement aliasing
+    if (!alias.empty())
+      return SRX_STATUS(EStatusCode::Not_Implemented);
+
+    return Directory::Mount(path, alias);
+  }
+
   Status StaticDirectory::IndexFiles() SRX_NOEXCEPT
   {
     mCatalogs.clear();
     Status status;
 
-    int32 fileNum = 0;
-    for (const Path& path : mMountedPaths)
+    [[maybe_unused]] int32 fileNum = 0;
+    for (const auto& path : mMountedPaths)
     {
       Status tmpStatus;
-      fileNum += CollectFiles(path, 0, tmpStatus);
+      fileNum += CollectFiles(path.first, 0, tmpStatus);
       if (!tmpStatus.Ok())
       {
         SRX_WARN("[Directory] Dir '{}' files indexing error: {}",
-                 path.native(),
+                 path.first.native(),
                  tmpStatus.ToString());
         status = std::move(tmpStatus);
       }
     }
+
+    SRX_DEBUG("[Directory] Path '{}' indexed {} files.",
+              GetPath().native(),
+              fileNum);
 
     return status;
   }

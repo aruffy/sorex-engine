@@ -40,13 +40,14 @@ public:
     virtual ~Directory() override {}
 
     virtual Path   GetSystemPath() const SRX_NOEXCEPT override;
-    virtual Status Mount(const Path& path) SRX_NOEXCEPT override;
+    virtual Status Mount(const Path&    path,
+                         PathStringView alias = {}) SRX_NOEXCEPT override;
 
 protected:
     SRX_INLINE const Path& GetPath() const SRX_NOEXCEPT { return mSystemPath; }
 
 protected:
-    TVector<Path> mMountedPaths;
+    TVector<TPair<Path, PathString>> mMountedPaths;
 
 private:
     Path mSystemPath;

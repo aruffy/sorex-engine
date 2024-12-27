@@ -110,9 +110,16 @@ public:
      * contents visible for file system.
      *
      * @param path The path to mount.
+     * @param alias - name to use for filesystem; if empty use the original
+     * path.
+     *
+     * Example: filesystem->Mount("/path/to/something", SRX_PATH("data"));
+     *  filesystem->GetFileIndex(SRX_PATH("data/file.txt"));
+     *
      * @return SRX_OK if the path was successfully mounted.
      */
-    virtual Status Mount(const Path& path) SRX_NOEXCEPT = 0;
+    virtual Status Mount(const Path&    path,
+                         PathStringView alias) SRX_NOEXCEPT = 0;
 
     /**
      * @brief Indexes the files in the file system.

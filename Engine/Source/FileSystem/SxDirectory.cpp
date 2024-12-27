@@ -41,7 +41,7 @@ namespace Sorex::FileSystem
     return mSystemPath;
   }
 
-  Status Directory::Mount(const Path& path) SRX_NOEXCEPT
+  Status Directory::Mount(const Path& path, PathStringView alias) SRX_NOEXCEPT
   {
     SRX_CHECK(path != mSystemPath);
 
@@ -54,7 +54,7 @@ namespace Sorex::FileSystem
     SRX_CHECK(std::find(mMountedPaths.cbegin(), mMountedPaths.cend(), path)
               == mMountedPaths.cend());
 
-    mMountedPaths.push_back(std::move(path));
+    mMountedPaths.emplace_back(std::move(path), alias);
     return SRX_OK;
   }
 }  // namespace
