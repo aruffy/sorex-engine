@@ -25,14 +25,16 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#include <Sorex/FileSystem/SxRootFileSystem.h>
+#include <Sorex/FileSystem/SxDirectorFileSystem.h>
 #include <Sorex/FileSystem/SxDirectory.h>
 #include <Sorex/FileSystem/SxPathUtils.h>
 #include <Sorex/Utils/SxString.h>
 
+#include <FileSystem/SxStaticDirectory.h>
+
 namespace Sorex
 {
-  Status RootFileSystem::Initialize()
+  Status DirectorFileSystem::Initialize()
   {
     SRX_CLSFUN_TRACE();
     SRX_CHECK(!mInited);
@@ -43,47 +45,47 @@ namespace Sorex
     return status;
   }
 
-  void RootFileSystem::Shutdown()
+  void DirectorFileSystem::Shutdown()
   {
     SRX_CLSFUN_TRACE();
   }
 
-  Status RootFileSystem::Mount(StringView path) SRX_NOEXCEPT
+  Status DirectorFileSystem::Mount(const Path&    path,
+                                   PathStringView alias) SRX_NOEXCEPT
   {
-    StringView fsname = GetFileSystemName(path);
-    if (fsname.empty())
-      return SRX_STATUS_MSG(EStatusCode::Invalid_Argument,
-                            "Invalid path to mount: '{}'",
-                            path);
+    SRX_ASSERT(alias.find(Path::preferred_separator) == alias.npos);
 
-    // @TODO: check if dir exist
+    PathStringView fsname =
+      alias.empty() ? GetFileSystemName(path.native()) : alias;
 
-    MutexLock _lock(mMutex);
-
-    const hash_t key = Utils::GetHash(fsname);
+    MutexLock    _lock(mMutex);
+    const hash_t key = FileSystem::GetHash(fsname);
     if (auto it = mFilesystems.find(key); it != mFilesystems.end())
       return SRX_STATUS_MSG(EStatusCode::Not_Unique,
-                            "file system '{}' is already mounted",
+                            "file system '{}' has already been mounted",
                             fsname);
 
-    // @TODO: add dynamic dirs
+    // @TODO: add other file systems
 
-    auto dir = MakeUnique<StaticDirectory>(path, this);
+    if (!std::filesystem::is_directory(path))
+      return SRX_STATUS_MSG(EStatusCode::Invalid_Argument,
+                            "invalid path to mount: '{}'",
+                            path.native());
+
+    Path dirPath = path.is_absolute() ? path : (GetSystemPath() / path);
+    auto dirPtr  = MakeUnique<StaticDirectory>(std::move(dirPath));
+
     if (mInited)
     {
-      if (Status status = dir->IndexFiles(); !status.Ok())
+      if (Status status = dirPtr->IndexFiles(); !status.Ok())
         return status;
     }
 
-    mFilesystems[key] = std::move(dir);
-
-    // for (auto listener : _listeners)
-    // listener->OnFileSystemMounted(fs);
-
+    mFilesystems[key] = std::move(dirPtr);
     return SRX_OK;
   }
 
-  Status RootFileSystem::IndexFiles() SRX_NOEXCEPT
+  Status DirectorFileSystem::IndexFiles() SRX_NOEXCEPT
   {
     Status    status;
     MutexLock _lock(mMutex);
@@ -92,6 +94,7 @@ namespace Sorex
     for (auto& [_, fs] : mFilesystems)
     {
       status = fs->IndexFiles();
+
       if (!status.Ok())
         return status;
     }
@@ -99,8 +102,8 @@ namespace Sorex
     return status;
   }
 
-  void RootFileSystem::GetFiles(StringView       path,
-                                TVector<String>& files) SRX_NOEXCEPT
+  void DirectorFileSystem::GetFiles(const Path&         path,
+                                    TVector<FileIndex>& files) SRX_NOEXCEPT
   {
     MutexLock _lock(mMutex);
 
@@ -108,7 +111,7 @@ namespace Sorex
       fs->GetFiles(path, files);
   }
 
-  EFileStatus RootFileSystem::GetFileStatus(StringView path) SRX_NOEXCEPT
+  EFileStatus DirectorFileSystem::GetFileStatus(StringView path) SRX_NOEXCEPT
   {
     MutexLock _lock(mMutex);
 
@@ -118,7 +121,7 @@ namespace Sorex
     return EFileStatus::Unknown;
   }
 
-  IFileSystem* RootFileSystem::GetFileSystem(StringView path) SRX_NOEXCEPT
+  IFileSystem* DirectorFileSystem::GetFileSystem(StringView path) SRX_NOEXCEPT
   {
     StringView fsname = GetFileSystemName(path);
     if (fsname.empty())
@@ -128,7 +131,7 @@ namespace Sorex
     return it != mFilesystems.end() ? it->second.get() : nullptr;
   }
 
-  const IFileSystem* RootFileSystem::GetFileSystem(StringView path) const
+  const IFileSystem* DirectorFileSystem::GetFileSystem(StringView path) const
     SRX_NOEXCEPT
   {
     StringView fsname = GetFileSystemName(path);
@@ -139,20 +142,21 @@ namespace Sorex
     return it != mFilesystems.end() ? it->second.get() : nullptr;
   }
 
-  StringView RootFileSystem::GetFileSystemName(StringView path) SRX_NOEXCEPT
+  StringView DirectorFileSystem::GetFileSystemName(StringView path) SRX_NOEXCEPT
   {
-    StringView root = Utils::GetRootName(path);
+    auto root = Utils::GetRootName(path);
     return root.empty() ? path : root;
   }
 
-  Path RootFileSystem::GetSystemPath() const SRX_NOEXCEPT
+  Path DirectorFileSystem::GetSystemPath() const SRX_NOEXCEPT
   {
     static const Path appPath = FileSystem::GetAppPath();
     return appPath;
   }
 
-  TUniquePointer<Stream> RootFileSystem::OpenFile(StringView path,
-                                                  Status* status) SRX_NOEXCEPT
+  TUniquePointer<Stream> DirectorFileSystem::OpenFile(StringView path,
+                                                      Status*    status)
+    SRX_NOEXCEPT
   {
     {
       MutexLock lock(mMutex);
@@ -168,7 +172,7 @@ namespace Sorex
   }
 
   /*
-    const String& RootFileSystem::GetAppDataPath() SRX_NOEXCEPT
+    const String& DirectorFileSystem::GetAppDataPath() SRX_NOEXCEPT
     {
       return Utils::kEmptyString;
 

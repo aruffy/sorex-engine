@@ -37,7 +37,7 @@ namespace Sorex
   using namespace Sorex::FileSystem;
 
   /**
-   * @class RootFileSystem
+   * @class DirectorFileSystem
    * @brief Represents the root file system of the director (application).
    *
    * This class simplifies interactions with the file system,
@@ -47,19 +47,19 @@ namespace Sorex
    * Example: filesystem->Mount("/MyData/Folder");
    * filesystem->GetFileIndex("/MyData/Folder/To/File.txt");
    */
-  class RootFileSystem final
+  class DirectorFileSystem final
     : public Director::Component
     , public IFileSystem
   {
-    SRX_RTTI(RootFileSystem, Director::Component);
+    SRX_RTTI(DirectorFileSystem, Director::Component);
 
 public:
     // IFileSystem Interface
-    Status         Mount(const Path& path) SRX_NOEXCEPT override;
+    Status Mount(const Path& path, PathStringView alias) SRX_NOEXCEPT override;
     virtual Status IndexFiles() SRX_NOEXCEPT override;
 
-    virtual void        GetFiles(const Path&      path,
-                                 TVector<String>& files) SRX_NOEXCEPT override;
+    virtual void        GetFiles(const Path&         path,
+                                 TVector<FileIndex>& files) SRX_NOEXCEPT override;
     virtual EFileStatus GetFileStatus(StringView name) SRX_NOEXCEPT override;
     virtual Path        GetSystemPath() const SRX_NOEXCEPT override;
 
