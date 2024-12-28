@@ -59,7 +59,7 @@ namespace Sorex
       alias.empty() ? GetFileSystemName(path.native()) : alias;
 
     MutexLock    _lock(mMutex);
-    const hash_t key = FileSystem::GetHash(fsname);
+    const hash_t key = GetHash(fsname);
     if (auto it = mFilesystems.find(key); it != mFilesystems.end())
       return SRX_STATUS_MSG(EStatusCode::Not_Unique,
                             "file system '{}' has already been mounted",
@@ -107,42 +107,70 @@ namespace Sorex
   {
     MutexLock _lock(mMutex);
 
-    if (IFileSystem* fs = GetFileSystem(path))
+    files.clear();
+
+    if (IFileSystem* fs = GetFileSystem(path.native()))
+    {
       fs->GetFiles(path, files);
+      for (FileIndex& fileIndex : files)
+      {
+        // @FIXME: how to find file system by a file index
+        SRX_ASSERT(std::holds_alternative<std::monostate>(fileIndex.filepath));
+        fileIndex.filepath = PathString(Utils::GetRootName(path.native()));
+      }
+    }
   }
 
-  EFileStatus DirectorFileSystem::GetFileStatus(StringView path) SRX_NOEXCEPT
+  TPair<EFileStatus, TOptional<FileIndex>> DirectorFileSystem::GetFileIndex(
+    const Path& filepath) const SRX_NOEXCEPT
   {
     MutexLock _lock(mMutex);
 
-    if (IFileSystem* fs = GetFileSystem(path))
-      return fs->GetFileStatus(path);
+    if (const IFileSystem* fs = GetFileSystem(filepath.native()))
+    {
+      auto res = fs->GetFileIndex(filepath);
+      if (res.second.has_value())
+      {
+        // @FIXME: how to find file system by a file index
+        SRX_ASSERT(
+          std::holds_alternative<std::monostate>(res.second->filepath));
+        res.second->filepath =
+          PathString(Utils::GetRootName(filepath.native()));
+      }
+
+      return res;
+    }
+
+    return std::make_pair(EFileStatus::Unknown, std::nullopt);
+  }
+
+  EFileStatus DirectorFileSystem::GetFileStatus(const Path& filename) const
+    SRX_NOEXCEPT
+  {
+    MutexLock _lock(mMutex);
+
+    if (const IFileSystem* fs = GetFileSystem(filename.native()))
+      return fs->GetFileStatus(filename);
 
     return EFileStatus::Unknown;
   }
 
-  IFileSystem* DirectorFileSystem::GetFileSystem(StringView path) SRX_NOEXCEPT
-  {
-    StringView fsname = GetFileSystemName(path);
-    if (fsname.empty())
-      return nullptr;
-
-    auto it = mFilesystems.find(Utils::GetHash(fsname));
-    return it != mFilesystems.end() ? it->second.get() : nullptr;
-  }
-
-  const IFileSystem* DirectorFileSystem::GetFileSystem(StringView path) const
+  IFileSystem* DirectorFileSystem::GetFileSystem(PathStringView path)
     SRX_NOEXCEPT
   {
-    StringView fsname = GetFileSystemName(path);
-    if (fsname.empty())
-      return nullptr;
-
-    auto it = mFilesystems.find(Utils::GetHash(fsname));
+    auto it = mFilesystems.find(GetHash(GetFileSystemName(path)));
     return it != mFilesystems.end() ? it->second.get() : nullptr;
   }
 
-  StringView DirectorFileSystem::GetFileSystemName(StringView path) SRX_NOEXCEPT
+  const IFileSystem* DirectorFileSystem::GetFileSystem(
+    PathStringView path) const SRX_NOEXCEPT
+  {
+    auto it = mFilesystems.find(GetHash(GetFileSystemName(path)));
+    return it != mFilesystems.cend() ? it->second.get() : nullptr;
+  }
+
+  PathStringView DirectorFileSystem::GetFileSystemName(PathStringView path)
+    SRX_NOEXCEPT
   {
     auto root = Utils::GetRootName(path);
     return root.empty() ? path : root;
@@ -154,20 +182,27 @@ namespace Sorex
     return appPath;
   }
 
-  TUniquePointer<Stream> DirectorFileSystem::OpenFile(StringView path,
-                                                      Status*    status)
-    SRX_NOEXCEPT
+  TUniquePointer<Stream> DirectorFileSystem::OpenFile(
+    const FileIndex& fileIndex,
+    EAccessMode      mode,
+    Status*          status) SRX_NOEXCEPT
   {
+    if (const PathString* fsName = std::get_if<PathString>(&fileIndex.filepath))
     {
-      MutexLock lock(mMutex);
-      if (IFileSystem* fs = GetFileSystem(path))
-        return fs->OpenFile(path, status);
+      SRX_DEBUG("[DirectorFileSystem] OpenFile fs:'{}' id:{}",
+                Path(*fsName).generic_string(),
+                fileIndex.id);
+
+      MutexLock _lock(mMutex);
+
+      if (IFileSystem* fs = GetFileSystem(*fsName))
+        return fs->OpenFile(fileIndex, mode, status);
     }
 
     if (status)
-      *status = SRX_STATUS_MSG(EStatusCode::Not_Found,
-                               "file system isn't found for path: '{}'",
-                               path);
+      *status =
+        SRX_STATUS_MSG(EStatusCode::Not_Found, "file system isn't found");
+
     return nullptr;
   }
 

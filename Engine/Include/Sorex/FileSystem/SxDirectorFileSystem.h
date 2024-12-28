@@ -58,10 +58,15 @@ public:
     Status Mount(const Path& path, PathStringView alias) SRX_NOEXCEPT override;
     virtual Status IndexFiles() SRX_NOEXCEPT override;
 
-    virtual void        GetFiles(const Path&         path,
-                                 TVector<FileIndex>& files) SRX_NOEXCEPT override;
-    virtual EFileStatus GetFileStatus(StringView name) SRX_NOEXCEPT override;
-    virtual Path        GetSystemPath() const SRX_NOEXCEPT override;
+    virtual void GetFiles(const Path&         path,
+                          TVector<FileIndex>& files) SRX_NOEXCEPT override;
+
+    virtual TPair<EFileStatus, TOptional<FileIndex>> GetFileIndex(
+      const Path& filepath) const SRX_NOEXCEPT override;
+    virtual EFileStatus GetFileStatus(const Path& filename) const
+      SRX_NOEXCEPT override;
+
+    virtual Path GetSystemPath() const SRX_NOEXCEPT override;
 
     virtual TUniquePointer<Stream> OpenFile(const FileIndex& fileIndex,
                                             EAccessMode      mode,
@@ -73,9 +78,9 @@ public:
     virtual void   Shutdown() override;
 
 private:
-    IFileSystem*       GetFileSystem(StringView path) SRX_NOEXCEPT;
-    const IFileSystem* GetFileSystem(StringView path) const SRX_NOEXCEPT;
-    static StringView  GetFileSystemName(StringView path) SRX_NOEXCEPT;
+    IFileSystem*          GetFileSystem(PathStringView path) SRX_NOEXCEPT;
+    const IFileSystem*    GetFileSystem(PathStringView path) const SRX_NOEXCEPT;
+    static PathStringView GetFileSystemName(PathStringView path) SRX_NOEXCEPT;
 
 private:
     bool mInited = false;
