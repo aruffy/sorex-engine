@@ -48,11 +48,14 @@ namespace Sorex::FileSystem
     if (std::filesystem::is_directory(path) == false)
       return SRX_STATUS_MSG(EStatusCode::Not_Found,
                             "invalid path '{}' to directory",
-                            path.native());
+                            path.generic_string());
 
-    SRX_DEBUG("[Directory] Mount path '{}'", path.native());
-    SRX_CHECK(std::find(mMountedPaths.cbegin(), mMountedPaths.cend(), path)
-              == mMountedPaths.cend());
+    SRX_DEBUG("[Directory] Mount path '{}'", path.generic_string());
+    SRX_CHECK(
+      std::find_if(mMountedPaths.cbegin(),
+                   mMountedPaths.cend(),
+                   [&path](const auto& fspath) { return fspath.first == path; })
+      == mMountedPaths.cend());
 
     mMountedPaths.emplace_back(std::move(path), alias);
     return SRX_OK;

@@ -35,7 +35,7 @@ namespace
 {
   typedef Path::value_type Char;
 
-  constexpr Char           kSlash = Sorex::Utils::GetPathDelimiter<Char>();
+  constexpr Char           kSlash = Path::preferred_separator;
   constexpr PathStringView kEmptyStringView;
 }
 
@@ -81,11 +81,11 @@ namespace Sorex::Utils
 
   PathString MakePathWithClosingSlash(PathStringView path) SRX_NOEXCEPT
   {
-    if (path.empty())
-      return PathString(SRX_PATH("/"));
-
     if (path.back() == kSlash)
       return PathString(path);
+
+    if (path.empty())
+      return PathString(kSlash, 1);
 
     PathString res;
     res.reserve(path.length() + 1);
@@ -135,19 +135,10 @@ namespace Sorex::Utils
 
     const size_t indx = path.rfind(kSlash);
     if (indx == path.npos)
-      return std::make_pair(path, StringView());
+      return std::make_pair(path, PathStringView());
 
     return std::make_pair(path.substr(0, (bClosingSlash ? (indx + 1) : indx)),
                           path.substr(indx + 1));
-  }
-
-  void SplitPath(PathStringView                 path,
-                 TPair<PathString, PathString>& out,
-                 bool bClosingSlash /* = false */) SRX_NOEXCEPT
-  {
-    auto p = SplitPath(path, bClosingSlash);
-    out.first.assign(p.first);
-    out.second.assign(p.second);
   }
 
   PathStringView GetBaseName(PathStringView path,

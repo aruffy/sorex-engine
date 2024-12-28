@@ -51,7 +51,7 @@ namespace Sorex::FileSystem
       if (status)
         *status = SRX_STATUS_MSG(EStatusCode::Not_Found,
                                  "file '{}' not found",
-                                 filepath.native());
+                                 filepath.generic_string());
       return nullptr;
     }
 

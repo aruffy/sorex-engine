@@ -120,14 +120,14 @@ namespace Sorex::FileSystem
       if (!tmpStatus.Ok())
       {
         SRX_WARN("[Directory] Dir '{}' files indexing error: {}",
-                 path.first.native(),
+                 path.first.generic_string(),
                  tmpStatus.ToString());
         status = std::move(tmpStatus);
       }
     }
 
     SRX_DEBUG("[Directory] Path '{}' indexed {} files.",
-              GetPath().native(),
+              GetPath().generic_string(),
               fileNum);
 
     return status;
@@ -164,8 +164,9 @@ namespace Sorex::FileSystem
         if (const PathString* filePath =
               std::get_if<PathString>(&fileIndex.filepath))
         {
-          StringView ext = Utils::GetFileExtension(*filePath, true);
-          StringView fname(filePath->data(), filePath->length() - ext.length());
+          PathStringView ext = Utils::GetFileExtension(*filePath, true);
+          PathStringView fname(filePath->data(),
+                               filePath->length() - ext.length());
 
           bPush = (filename == fname);
         }
@@ -196,7 +197,8 @@ namespace Sorex::FileSystem
       std::find_if(it->second.files.begin(),
                    it->second.files.end(),
                    [key](const FileIndex& index) {
-                     return std::get<hash_t>(index.descriptor) == key;
+                     return std::holds_alternative<hash_t>(index.descriptor)
+                            && std::get<hash_t>(index.descriptor) == key;
                    });
 
     return fileIt != it->second.files.end()
@@ -214,14 +216,17 @@ namespace Sorex::FileSystem
     SRX_CHECK(std::holds_alternative<hash_t>(fileIndex.descriptor));
 
     auto dirIt = mCatalogs.find(fileIndex.id);
-    if (dirIt != mCatalogs.end())
+    if (dirIt != mCatalogs.end()
+        && std::holds_alternative<hash_t>(fileIndex.descriptor))
     {
-      auto fileIt =
-        std::find_if(dirIt->second.files.cbegin(),
-                     dirIt->second.files.cend(),
-                     [&fileIndex](const FileIndex& fidx) {
-                       return fileIndex.descriptor == fidx.descriptor;
-                     });
+      auto fileIt = std::find_if(
+        dirIt->second.files.cbegin(),
+        dirIt->second.files.cend(),
+        [&fileIndex](const FileIndex& fidx) {
+          return std::holds_alternative<hash_t>(fileIndex.descriptor)
+                 && std::get<hash_t>(fileIndex.descriptor)
+                      == std::get<hash_t>(fidx.descriptor);
+        });
 
       if (fileIt != dirIt->second.files.cend())
       {
