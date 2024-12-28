@@ -109,6 +109,6 @@ namespace Sorex::Utils
    * @param bClosingSlash - enable closing slash
    * @return name of root directory or empty string if path invalid.
    */
-  SRX_API StringView GetRootName(StringView path,
-                                 bool       bClosingSlash = false) SRX_NOEXCEPT;
+  SRX_API PathStringView GetRootName(PathStringView path,
+                                     bool bClosingSlash = false) SRX_NOEXCEPT;
 }  // namespace

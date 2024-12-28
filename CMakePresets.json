@@ -97,7 +97,7 @@
             "displayName": "Build Win x64 (Unit Tests)",
             "description": "Build config for unit tests on Windows platform",
             "configurePreset": "win_x64_unit_tests",
-            "configuration": "Release"
+            "configuration": "Debug"
         }
     ],
     "testPresets": [
