@@ -66,7 +66,7 @@ public:
     virtual EFileStatus GetFileStatus(const Path& filename) const
       SRX_NOEXCEPT override;
 
-    virtual Path GetSystemPath() const SRX_NOEXCEPT override;
+    virtual const Path& GetSystemPath() const SRX_NOEXCEPT override;
 
     virtual TUniquePointer<Stream> OpenFile(const FileIndex& fileIndex,
                                             EAccessMode      mode,
@@ -87,7 +87,5 @@ private:
 
     mutable Mutex                                 mMutex;
     THashMap<hash_t, TUniquePointer<IFileSystem>> mFilesystems;
-
-    String mAppDataPath;
   };
 }

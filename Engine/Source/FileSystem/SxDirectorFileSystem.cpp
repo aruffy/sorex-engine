@@ -176,7 +176,7 @@ namespace Sorex
     return root.empty() ? path : root;
   }
 
-  Path DirectorFileSystem::GetSystemPath() const SRX_NOEXCEPT
+  const Path& DirectorFileSystem::GetSystemPath() const SRX_NOEXCEPT
   {
     static const Path appPath = FileSystem::GetAppPath();
     return appPath;

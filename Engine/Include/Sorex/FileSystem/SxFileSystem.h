@@ -182,7 +182,7 @@ public:
      *
      * @return system path to the file system.
      */
-    virtual Path GetSystemPath() const SRX_NOEXCEPT = 0;
+    virtual const Path& GetSystemPath() const SRX_NOEXCEPT = 0;
 
     /**
      * @brief Opens a file at the specified path.

@@ -36,7 +36,7 @@ namespace Sorex::FileSystem
     SRX_CHECK(std::filesystem::is_directory(mSystemPath));
   }
 
-  Path Directory::GetSystemPath() const SRX_NOEXCEPT
+  const Path& Directory::GetSystemPath() const SRX_NOEXCEPT
   {
     return mSystemPath;
   }
