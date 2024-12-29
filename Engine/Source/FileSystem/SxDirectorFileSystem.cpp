@@ -53,35 +53,40 @@ namespace Sorex
   Status DirectorFileSystem::Mount(const Path&    path,
                                    PathStringView alias) SRX_NOEXCEPT
   {
-    SRX_ASSERT(alias.find(Path::preferred_separator) == alias.npos);
+    if (alias.empty() || alias.find(Path::preferred_separator) != alias.npos)
+      return SRX_STATUS_MSG(EStatusCode::Invalid_Argument,
+                            "requires alias to mount without separator");
 
-    PathStringView fsname =
-      alias.empty() ? GetFileSystemName(path.native()) : alias;
+    MutexLock _lock(mMutex);
 
-    MutexLock    _lock(mMutex);
-    const hash_t key = GetHash(fsname);
+    const hash_t key = GetHash(alias);
     if (auto it = mFilesystems.find(key); it != mFilesystems.end())
-      return SRX_STATUS_MSG(EStatusCode::Not_Unique,
-                            "file system '{}' has already been mounted",
-                            fsname);
+      return SRX_STATUS_MSG(
+        EStatusCode::Not_Unique,
+        "file system '{}' has already been mounted for '{}'",
+        Path(alias).generic_string(),
+        it->second.path.generic_string());
 
     // @TODO: add other file systems
 
-    if (!std::filesystem::is_directory(path))
+    Path dirPath = path.is_absolute() ? path : (GetSystemPath() / path);
+    if (!std::filesystem::is_directory(dirPath))
       return SRX_STATUS_MSG(EStatusCode::Invalid_Argument,
                             "invalid path to mount: '{}'",
-                            path.native());
+                            path.generic_string());
 
-    Path dirPath = path.is_absolute() ? path : (GetSystemPath() / path);
-    auto dirPtr  = MakeUnique<StaticDirectory>(std::move(dirPath));
-
+    auto dirPtr = MakeUnique<StaticDirectory>(std::move(dirPath));
     if (mInited)
     {
       if (Status status = dirPtr->IndexFiles(); !status.Ok())
         return status;
     }
 
-    mFilesystems[key] = std::move(dirPtr);
+    FileSystemInstance& fs = mFilesystems[key];
+    fs.filesystem          = std::move(dirPtr);
+    fs.path                = path;
+    fs.path.make_preferred();
+
     return SRX_OK;
   }
 
@@ -93,7 +98,7 @@ namespace Sorex
     // cppcheck-suppress unusedVariable
     for (auto& [_, fs] : mFilesystems)
     {
-      status = fs->IndexFiles();
+      status = fs.filesystem->IndexFiles();
 
       if (!status.Ok())
         return status;
@@ -109,14 +114,14 @@ namespace Sorex
 
     files.clear();
 
-    if (IFileSystem* fs = GetFileSystem(path.native()))
+    if (auto [fs, fspath] = GetFileSystemWithPath(path); fs)
     {
-      fs->GetFiles(path, files);
+      fs->GetFiles(fspath, files);
       for (FileIndex& fileIndex : files)
       {
         // @FIXME: how to find file system by a file index
         SRX_ASSERT(std::holds_alternative<std::monostate>(fileIndex.filepath));
-        fileIndex.filepath = PathString(Utils::GetRootName(path.native()));
+        fileIndex.filepath = PathString(GetFileSystemName(path.native()));
       }
     }
   }
@@ -126,16 +131,16 @@ namespace Sorex
   {
     MutexLock _lock(mMutex);
 
-    if (const IFileSystem* fs = GetFileSystem(filepath.native()))
+    auto [fs, path] = GetFileSystemWithPath(filepath);
+    if (fs)
     {
-      auto res = fs->GetFileIndex(filepath);
+      auto res = fs->GetFileIndex(path);
       if (res.second.has_value())
       {
         // @FIXME: how to find file system by a file index
         SRX_ASSERT(
           std::holds_alternative<std::monostate>(res.second->filepath));
-        res.second->filepath =
-          PathString(Utils::GetRootName(filepath.native()));
+        res.second->filepath = PathString(GetFileSystemName(filepath.native()));
       }
 
       return res;
@@ -149,8 +154,8 @@ namespace Sorex
   {
     MutexLock _lock(mMutex);
 
-    if (const IFileSystem* fs = GetFileSystem(filename.native()))
-      return fs->GetFileStatus(filename);
+    if (auto [fs, path] = GetFileSystemWithPath(filename); fs)
+      return fs->GetFileStatus(path);
 
     return EFileStatus::Unknown;
   }
@@ -159,20 +164,41 @@ namespace Sorex
     SRX_NOEXCEPT
   {
     auto it = mFilesystems.find(GetHash(GetFileSystemName(path)));
-    return it != mFilesystems.end() ? it->second.get() : nullptr;
+    return it != mFilesystems.end() ? it->second.filesystem.get() : nullptr;
   }
 
   const IFileSystem* DirectorFileSystem::GetFileSystem(
     PathStringView path) const SRX_NOEXCEPT
   {
     auto it = mFilesystems.find(GetHash(GetFileSystemName(path)));
-    return it != mFilesystems.cend() ? it->second.get() : nullptr;
+    return it != mFilesystems.cend() ? it->second.filesystem.get() : nullptr;
+  }
+
+  TPair<IFileSystem*, Path> DirectorFileSystem::GetFileSystemWithPath(
+    const Path& path) const SRX_NOEXCEPT
+  {
+    if (auto it = mFilesystems.find(GetHash(GetFileSystemName(path.native())));
+        it != mFilesystems.end())
+    {
+      const Path& fspath = it->second.path;
+      SRX_CHECK(fspath.native().length() <= path.native().length());
+      PathString relativePath =
+        path.native().substr(fspath.native().length() - 1);
+
+      Path p = fspath.is_relative() ? (GetSystemPath() / fspath) : fspath;
+      p      = p / relativePath;
+
+      return std::make_pair<IFileSystem*, Path>(it->second.filesystem.get(),
+                                                std::move(p));
+    }
+
+    return std::make_pair<IFileSystem*, Path>(nullptr, {});
   }
 
   PathStringView DirectorFileSystem::GetFileSystemName(PathStringView path)
     SRX_NOEXCEPT
   {
-    auto root = Utils::GetRootName(path);
+    auto root = Utils::GetRootName<SRX_PATH('/')>(path);
     return root.empty() ? path : root;
   }
 

@@ -54,6 +54,10 @@ namespace Sorex
     SRX_RTTI(DirectorFileSystem, Director::Component);
 
 public:
+    // Director::Component Interface
+    virtual Status Initialize() override;
+    virtual void   Shutdown() override;
+
     // IFileSystem Interface
     Status Mount(const Path& path, PathStringView alias) SRX_NOEXCEPT override;
     virtual Status IndexFiles() SRX_NOEXCEPT override;
@@ -73,19 +77,25 @@ public:
                                             Status*          status)
       SRX_NOEXCEPT override;
 
-    // Director::Component Interface
-    virtual Status Initialize() override;
-    virtual void   Shutdown() override;
+    const IFileSystem* GetFileSystem(PathStringView path) const SRX_NOEXCEPT;
 
 private:
     IFileSystem*          GetFileSystem(PathStringView path) SRX_NOEXCEPT;
-    const IFileSystem*    GetFileSystem(PathStringView path) const SRX_NOEXCEPT;
     static PathStringView GetFileSystemName(PathStringView path) SRX_NOEXCEPT;
+
+    TPair<IFileSystem*, Path> GetFileSystemWithPath(const Path& path) const
+      SRX_NOEXCEPT;
 
 private:
     bool mInited = false;
 
-    mutable Mutex                                 mMutex;
-    THashMap<hash_t, TUniquePointer<IFileSystem>> mFilesystems;
+    struct FileSystemInstance
+    {
+      Path                        path;
+      TUniquePointer<IFileSystem> filesystem;
+    };
+
+    mutable Mutex                        mMutex;
+    THashMap<hash_t, FileSystemInstance> mFilesystems;
   };
 }
