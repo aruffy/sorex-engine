@@ -34,9 +34,7 @@ using namespace Sorex::FileSystem;
 namespace
 {
   typedef Path::value_type Char;
-
   constexpr Char           kSlash = Path::preferred_separator;
-  constexpr PathStringView kEmptyStringView;
 }
 
 namespace Sorex::Utils
@@ -140,41 +138,4 @@ namespace Sorex::Utils
     return std::make_pair(path.substr(0, (bClosingSlash ? (indx + 1) : indx)),
                           path.substr(indx + 1));
   }
-
-  PathStringView GetBaseName(PathStringView path,
-                             bool bClosingSlash /* = false */) SRX_NOEXCEPT
-  {
-    const size_t length = path.length();
-    if (length == 0)
-      return kEmptyStringView;
-
-    if (path.back() == kSlash)
-      return PathStringView(path.data(),
-                            (bClosingSlash ? length : (length - 1)));
-
-    const size_t pos = path.find_last_of(kSlash);
-    if (pos != PathStringView::npos)
-      return path.substr(0, (bClosingSlash ? (pos + 1) : pos));
-
-    return kEmptyStringView;
-  }
-
-  PathStringView GetRootName(PathStringView path,
-                             bool bClosingSlash /* = false */) SRX_NOEXCEPT
-  {
-    const size_t length = path.length();
-    if (length == 0)
-      return kEmptyStringView;
-
-    if (length == 1 && path[0] == kSlash)
-      return bClosingSlash ? path : kEmptyStringView;
-
-    const size_t indx = path.find(kSlash, 1);
-    if (indx == path.npos)
-      return (path[0] == kSlash && bClosingSlash)
-               ? PathStringView(path.data(), 1)
-               : PathStringView();
-
-    return path.substr(0, (bClosingSlash ? (indx + 1) : indx));
-  }
-}
+}  // namespace

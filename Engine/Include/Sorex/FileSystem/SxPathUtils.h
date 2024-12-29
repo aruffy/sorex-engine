@@ -95,8 +95,25 @@ namespace Sorex::Utils
    * @param bClosingSlash - enable closing slash
    * @return directory name or empty string if path invalid.
    */
+  template<Path::value_type separator = Path::preferred_separator>
   SRX_API PathStringView GetBaseName(PathStringView path,
-                                     bool bClosingSlash = false) SRX_NOEXCEPT;
+                                     bool bClosingSlash = false) SRX_NOEXCEPT
+  {
+    const size_t length = path.length();
+    if (length == 0)
+      return {};
+
+    if (path.back() == separator)
+      return PathStringView(path.data(),
+                            (bClosingSlash ? length : (length - 1)));
+
+    const size_t pos = path.find_last_of(separator);
+    if (pos != PathStringView::npos)
+      return path.substr(0, (bClosingSlash ? (pos + 1) : pos));
+
+    return {};
+  }
+
   /**
    * @brief Return root dir (base) of a path.
    *
@@ -109,6 +126,23 @@ namespace Sorex::Utils
    * @param bClosingSlash - enable closing slash
    * @return name of root directory or empty string if path invalid.
    */
+  template<Path::value_type separator = Path::preferred_separator>
   SRX_API PathStringView GetRootName(PathStringView path,
-                                     bool bClosingSlash = false) SRX_NOEXCEPT;
+                                     bool bClosingSlash = false) SRX_NOEXCEPT
+  {
+    const size_t length = path.length();
+    if (length == 0)
+      return {};
+
+    if (length == 1 && path[0] == separator)
+      return bClosingSlash ? path : PathStringView();
+
+    const size_t indx = path.find(separator, 1);
+    if (indx == path.npos)
+      return (path[0] == separator && bClosingSlash)
+               ? PathStringView(path.data(), 1)
+               : PathStringView();
+
+    return path.substr(0, (bClosingSlash ? (indx + 1) : indx));
+  }
 }  // namespace
