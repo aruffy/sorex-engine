@@ -43,15 +43,12 @@ namespace Sorex::FileSystem
                                       int32       depth,
                                       Status&     status) SRX_NOEXCEPT
   {
-    SRX_CHECK(path.native().back() != Path::preferred_separator);
     SRX_TRACE("[Directory] Collect '{}' depth={}",
               path.generic_string(),
               depth);
 
-    SRX_CHECK(!path.empty());
-
     constexpr int kMaxDirDepth = 16;
-    if (depth > kMaxDirDepth)
+    if (path.empty() || depth > kMaxDirDepth)
     {
       status = SRX_STATUS_MSG(EStatusCode::Out_Of_Range,
                               "collecting depth limit is reached");
@@ -68,8 +65,11 @@ namespace Sorex::FileSystem
       return 0;
     }
 
-    const hash_t dirHash = GetHash(path);
-    Catalog&     catalog = mCatalogs[dirHash];
+    // @NOTE: check trailing separator
+    const hash_t dirHash =
+      path.has_filename() ? GetHash(path) : GetHash(path.parent_path());
+
+    Catalog& catalog = mCatalogs[dirHash];
     if (catalog.path.empty())
       catalog.path = path;
 

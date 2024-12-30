@@ -53,7 +53,7 @@ namespace Sorex
   Status DirectorFileSystem::Mount(const Path&    path,
                                    PathStringView alias) SRX_NOEXCEPT
   {
-    if (alias.empty() || alias.find(Path::preferred_separator) != alias.npos)
+    if (alias.empty() || alias.find(Path::preferred_separator, 1) != alias.npos)
       return SRX_STATUS_MSG(EStatusCode::Invalid_Argument,
                             "requires alias to mount without separator");
 
@@ -73,7 +73,7 @@ namespace Sorex
     if (!std::filesystem::is_directory(dirPath))
       return SRX_STATUS_MSG(EStatusCode::Invalid_Argument,
                             "invalid path to mount: '{}'",
-                            path.generic_string());
+                            dirPath.generic_string());
 
     auto dirPtr = MakeUnique<StaticDirectory>(std::move(dirPath));
     if (mInited)
@@ -177,19 +177,20 @@ namespace Sorex
   TPair<IFileSystem*, Path> DirectorFileSystem::GetFileSystemWithPath(
     const Path& path) const SRX_NOEXCEPT
   {
-    if (auto it = mFilesystems.find(GetHash(GetFileSystemName(path.native())));
-        it != mFilesystems.end())
+    PathStringView fsname = GetFileSystemName(path.native());
+    if (auto it = mFilesystems.find(GetHash(fsname)); it != mFilesystems.end())
     {
       const Path& fspath = it->second.path;
-      SRX_CHECK(fspath.native().length() <= path.native().length());
-      PathString relativePath =
-        path.native().substr(fspath.native().length() - 1);
+      SRX_CHECK(fsname.length() < path.native().length());
+      const Path relativePath =
+        Path(path.native().substr(fsname.length())).relative_path();
 
-      Path p = fspath.is_relative() ? (GetSystemPath() / fspath) : fspath;
-      p      = p / relativePath;
+      Path res = fspath.is_absolute()
+                   ? (fspath / relativePath.relative_path())
+                   : (GetSystemPath() / fspath / relativePath.relative_path());
 
       return std::make_pair<IFileSystem*, Path>(it->second.filesystem.get(),
-                                                std::move(p));
+                                                std::move(res));
     }
 
     return std::make_pair<IFileSystem*, Path>(nullptr, {});
