@@ -38,7 +38,7 @@ jobs:
         run: cmake --build ./build/${{ env.CI_BUILD_TEST_PRESET }}
 
       - name: Run Tests
-        run: ctest --test-dir build\${{ env.CI_BUILD_TEST_PRESET }}
+        run: ctest --test-dir ./build/${{ env.CI_BUILD_TEST_PRESET }}
 
       - name: Upload Test Results
         if: always()
@@ -101,5 +101,5 @@ jobs:
         if: always()
         uses: mikepenz/action-junit-report@v4
         with:
-          report_paths: '**/gtest-result/*.xml'
+          report_paths: 'build\${{ env.CI_CONFIG_TEST_PRESET }}\gtest-result\*.xml'
           check_name: 'Unit Tests Report (Windows)'
