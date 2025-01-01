@@ -88,7 +88,7 @@ jobs:
 
       - name: Run Tests
         shell: cmd
-        run: ctest --output-on-failure --test-dir build\${{ env.CI_CONFIG_TEST_PRESET }}\ -C Debug
+        run: ctest --output-on-failure -VV --test-dir build\${{ env.CI_CONFIG_TEST_PRESET }}\ -C Debug
 
       - name: Upload Test Results
         if: always()
