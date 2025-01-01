@@ -76,6 +76,13 @@ jobs:
           $vs = Get-VSSetupInstance -All -Prerelease | Select-Object -First 1
           & "$($vs.InstallationPath)\VC\Auxiliary\Build\vcvars64.bat"
 
+      - name: Set up Visual Studio Build Tools
+        shell: pwsh
+        run: |
+          echo "Setting up Visual Studio Build Tools"
+          choco install visualstudio2022buildtools --version=17.7.4 --package-parameters "--add Microsoft.VisualStudio.Component.VC.Tools.x86.x64 --add Microsoft.VisualStudio.Component.VC.CMake.Project --includeRecommended --quiet --norestart"
+          choco install visualstudio2022-workload-vctools --version=17.7.4 --includeRecommended --quiet --norestart
+
       - name: Configure CMake Preset
         shell: cmd
         run: |
