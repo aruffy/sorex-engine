@@ -76,6 +76,23 @@ jobs:
           $vs = Get-VSSetupInstance -All -Prerelease | Select-Object -First 1
           & "$($vs.InstallationPath)\VC\Auxiliary\Build\vcvars64.bat"
 
+      - name: Download VC++ Redistributable
+        shell: pwsh
+        run: |
+          $url = "https://aka.ms/vs/17/release/vc_redist.x64.exe"
+          $output = "vc_redist.x64.exe"
+          Invoke-WebRequest -Uri $url -OutFile $output
+
+      - name: Install VC++ Redistributable
+        shell: cmd
+        run: |
+          .\vc_redist.x64.exe /quiet /norestart
+
+      - name: Verify VC++ Installation
+        shell: cmd
+        run: |
+          reg query "HKLM\SOFTWARE\Microsoft\VisualStudio\14.0\VC\Runtimes\x64"
+
       - name: Configure CMake Preset
         shell: cmd
         run: |
