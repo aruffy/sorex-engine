@@ -30,7 +30,7 @@
                 "CMAKE_CXX_COMPILER": "cl.exe",
                 "SOREX_STATIC_LIBRARY": "ON",
                 "SRXENG_DISABLE_CHECK": "ON",
-                "SRXENG_ADDRESS_SANITIZER": "ON",
+                "SRXENG_ADDRESS_SANITIZER": "OFF",
                 "SOREX_BUILD_SANDBOX": "OFF",
                 "SOREX_BUILD_TESTS": "ON"
             }
