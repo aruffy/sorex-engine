@@ -108,7 +108,7 @@ jobs:
         run: |
           echo "%SystemRoot%\System32\VCRUNTIME140.dll"
           echo "%SystemRoot%\System32\MSVCP140.dll"
-          ctest --output-on-failure --debug --interactive-debug-mode 0 -VV -C Debug --test-dir build\${{ env.CI_CONFIG_TEST_PRESET }}\
+          ctest --output-on-failure -V -C Release --test-dir build\${{ env.CI_CONFIG_TEST_PRESET }}\
           build\${{ env.CI_CONFIG_TEST_PRESET }}\Engine\Test\Debug\SorexEngineUnitTests.exe
 
       - name: Upload Test Results
