@@ -25,31 +25,36 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#pragma once
-
-#include <Sorex/SxCoreMinimal.h>
-
-#include "SxFileSystem.h"
+#include <Sorex/FileSystem/SxFileSystem.h>
 
 namespace Sorex::FileSystem
 {
-  class Directory: public IFileSystem
+  SRX_API hash_t GetHash(PathStringView path) SRX_NOEXCEPT
   {
-public:
-    explicit Directory(Path path) SRX_NOEXCEPT;
-    virtual ~Directory() override {}
+    static const THash<PathStringView> kPathViewHasher;
+    return kPathViewHasher(path);
+  }
 
-    virtual const Path& GetSystemPath() const SRX_NOEXCEPT override;
-    virtual Status      Mount(const Path&    path,
-                              PathStringView alias = {}) SRX_NOEXCEPT override;
+  EFileStatus IFileSystem::GetFileStatus(const Path& filename) const
+    SRX_NOEXCEPT
+  {
+    return GetFileIndex(filename).first;
+  }
 
-protected:
-    SRX_INLINE const Path& GetPath() const SRX_NOEXCEPT { return mSystemPath; }
+  TUniquePointer<Stream> IFileSystem::OpenFile(const Path& filepath,
+                                               EAccessMode mode,
+                                               Status*     status) SRX_NOEXCEPT
+  {
+    const auto [fileStatus, fileIndex] = GetFileIndex(filepath);
+    if (fileStatus != EFileStatus::Existent || !fileIndex.has_value())
+    {
+      if (status)
+        *status = SRX_STATUS_MSG(EStatusCode::Not_Found,
+                                 "file '{}' not found",
+                                 filepath.generic_string());
+      return nullptr;
+    }
 
-protected:
-    TVector<TPair<Path, PathString>> mMountedPaths;
-
-private:
-    Path mSystemPath;
-  };
-}
+    return OpenFile(fileIndex.value(), mode, status);
+  }
+}  // namespace

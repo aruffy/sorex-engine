@@ -49,7 +49,7 @@ namespace Sorex::Platform
       case EMouseButton::Right:
         return GLFW_MOUSE_BUTTON_RIGHT;
       case EMouseButton::Middle:
-        GLFW_MOUSE_BUTTON_MIDDLE;
+        return GLFW_MOUSE_BUTTON_MIDDLE;
       case EMouseButton::Button_4:
         return GLFW_MOUSE_BUTTON_4;
       case EMouseButton::Button_5:

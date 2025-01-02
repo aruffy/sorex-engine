@@ -211,7 +211,7 @@ private:
     size_t n = static_cast<size_t>(size.width * size.height);
     if (!size.IsValid() || data.size() < n || format == EPixelFormat::None)
     {
-      SRX_NOEXCEPT("invalid argument");
+      SRX_NOENTRY("invalid argument");
       return 0;
     }
 

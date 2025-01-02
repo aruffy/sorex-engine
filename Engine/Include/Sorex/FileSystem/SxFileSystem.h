@@ -32,94 +32,138 @@
 
 #include <filesystem>
 
-namespace Sorex
+namespace Sorex::FileSystem
 {
-  // TODO: documentation: use /dir/to/file.txt format of directory. The
-  // FileSystem should format and map it
-  namespace FileSystem
+  using Path           = std::filesystem::path;
+  using PathString     = Path::string_type;
+  using PathStringView = BasicStringView<PathString::value_type>;
+
+  enum class EFileStatus
   {
-    using Path     = std::filesystem::path;
-    using PathStr  = BasicString<Path::value_type>;
-    using PathView = BasicStringView<Path::value_type>;
-    enum class EFileStatus
-    {
-      Unknown,  ///< Unknown file doesn't exists
-      Missing,  ///< File is missing (exp. downloading)
-      Existent  ///< File exists and ready to work
-    };
+    Unknown,  ///< Unknown file doesn't exists
+    Missing,  ///< File is missing (exp. downloading)
+    Existent  ///< File exists and ready to work
+  };
 
-    SRX_API static SRX_INLINE hash_t GetHash(PathView path) SRX_NOEXCEPT
-    {
-      static const THash<PathView> kPathViewHasher;
-      return kPathViewHasher(path);
-    }
+  SRX_API hash_t            GetHash(PathStringView path) SRX_NOEXCEPT;
+  SRX_API SRX_INLINE hash_t GetHash(const Path& path) SRX_NOEXCEPT
+  {
+    return GetHash(PathStringView(path.native()));
+  }
 
-    SRX_API static SRX_INLINE hash_t GetHash(const Path& path) SRX_NOEXCEPT
-    {
-      return GetHash(PathView(path.native()));
-    }
+  // Platform implementation
 
-    // @NOTE: Implemented in the Platform Code
-    // @TODO: Create/Remove File/Dir
-    // IsFileExist/IsDirExist
+  /**
+   * @brief Retrieve path to writable directory of the user.
+   *
+   * @return directory path in the generic format.
+   */
+  SRX_API Path GetUserAppsDataPath() SRX_NOEXCEPT;
 
-    // Platform implementation
+  /**
+   * @brief Retrieve path to folder where application was started.
+   *
+   * @return directory path in the generic format
+   */
+  SRX_API Path GetAppPath() SRX_NOEXCEPT;
 
-    /**
-     * @brief Retrieve path to writable directory of the user.
-     *
-     * @return directory path in the generic format.
-     */
-    SRX_API Path GetUserAppsDataPath() SRX_NOEXCEPT;
-
-    /**
-     * @brief Retrieve path to folder where application was started.
-     *
-     * @return directory path in the generic format
-     */
-    SRX_API Path GetAppPath() SRX_NOEXCEPT;
-  }  // namespace
+  /**
+   * @struct FileIndex
+   * @brief Represents an index for a file in the file system to optimize
+   * access.
+   *
+   * The main purpose of the FileIndex is to allow the file system
+   * implementaion to work with files more efficiently. It provides a way to
+   * access files faster than using a path string, storing
+   * implementation-specific data relevant to the file system.
+   *
+   * @var FileIndex::id
+   * Unique identifier for the file.
+   *
+   * @var FileIndex::descriptor
+   * A variant type that can hold an integer or hash_t representing
+   * the file's descriptor.
+   *
+   * @var FileIndex::filepath
+   * A variant type that can hold various representations of the file's
+   * path, including monostate.
+   */
+  struct FileIndex
+  {
+    size_t                id;
+    TVariant<int, hash_t> descriptor;
+    TVariant<std::monostate,
+             Path,
+             TRef<const Path>,
+             PathString,
+             TRef<const PathString>>
+      filepath;
+  };
 
   class IFileSystem
   {
 public:
     virtual ~IFileSystem() = default;
 
-    virtual Status IndexFiles() SRX_NOEXCEPT = 0;
+    /**
+     * @brief Adds the specified path to the file system, making it and its
+     * contents visible for file system.
+     *
+     * @param path The path to mount.
+     * @param alias - name to use for filesystem; if empty use the original
+     * path.
+     *
+     * Example: filesystem->Mount("/path/to/something", SRX_PATH("data"));
+     *  filesystem->GetFileIndex(SRX_PATH("data/file.txt"));
+     *
+     * @return SRX_OK if the path was successfully mounted.
+     */
+    virtual Status Mount(const Path&    path,
+                         PathStringView alias) SRX_NOEXCEPT = 0;
 
+    /**
+     * @brief Indexes the files in the file system.
+     *
+     * This function prepares the file system by indexing files, ensuring they
+     * are ready for use. It should be called after all paths are mounted and
+     * before accessing file system files.
+     *
+     * @return Status indicating the result of the indexing operation.
+     */
+    virtual Status IndexFiles() SRX_NOEXCEPT = 0;
 
     /**
      * @brief Retrieve list of all files from filesystem by the path.
      *
      *  If path is a directory it should provide all files in the directory;
-     *  If path is a path to the file it should provide all files with the same
-     * name:
-     *      `/path/to/file` can return `/path/to/file.xml`, `/path/to/file.png`,
-     * ...
+     *  @note: if path is a directory it shouldn't search it in subdirs - no
+     * recursion; If path is a path to the file it should provide all files with
+     * the same name:
+     *      `/path/to/file` can return `/path/to/file.xml`,
+     * `/path/to/file.png`,
      *
      * @param path - path to search;
-     * @param out files - list to store files;
+     * @param out files - list to store file indecies;
      */
-    virtual void GetFiles(StringView       path,
-                          TVector<String>& files) SRX_NOEXCEPT = 0;
+    virtual void GetFiles(const Path&         path,
+                          TVector<FileIndex>& files) SRX_NOEXCEPT = 0;
+
+    /**
+     * @brief Retrieve file status and its index if the file isn't exist.
+     *
+     * @param filename - path to search for the file.
+     * @return pair of file status and file index if the file is found.
+     */
+    virtual TPair<EFileStatus, TOptional<FileIndex>> GetFileIndex(
+      const Path& filepath) const SRX_NOEXCEPT = 0;
 
     /**
      * @brief Retrive status of a file.
      *
-     * @param filename - name of the file.
+     * @param filename - path of the file.
      * @return status of the file.
      */
-    virtual FileSystem::EFileStatus GetFileStatus(StringView filename)
-      SRX_NOEXCEPT = 0;
-
-    /**
-     * @brief Retrive the file index.
-     *
-     * @param filename - name of the file.
-     * @return index of the file.
-    virtual const FileSystem::FileIndex* GetFileIndex(StringView filename) const
-    = 0;
-     */
+    virtual EFileStatus GetFileStatus(const Path& filename) const SRX_NOEXCEPT;
 
     /**
      * @brief Check if file exists.
@@ -127,7 +171,7 @@ public:
      * @param path - path to the file
      * @return True if file exists in the file system.
      */
-    SRX_INLINE bool IsFileExists(StringView path) SRX_NOEXCEPT
+    SRX_INLINE bool IsFileExists(const Path& path) const SRX_NOEXCEPT
     {
       return GetFileStatus(path) == FileSystem::EFileStatus::Existent;
     }
@@ -136,18 +180,45 @@ public:
      * @brief Retrieve absolute path to the file system in the native path
      * format.
      *
-     * @return path to the file system.
+     * @return system path to the file system.
      */
-    virtual FileSystem::Path GetSystemPath() const SRX_NOEXCEPT = 0;
+    virtual const Path& GetSystemPath() const SRX_NOEXCEPT = 0;
 
     /**
-     * @brief Open file.
+     * @brief Opens a file at the specified path.
      *
-     * @param path
-     * @param error
-     * @return pointer to the opened file or NULL.
+     * This function attempts to open a file and returns a pointer to the opened
+     * file. If the operation fails, it sets the status accordingly.
+     *
+     * @param path The path to the file to be opened.
+     * @param status Pointer to a Status object that will be updated with the
+     * result of the operation.
+     *
+     * @return A unique pointer to the opened file, or NULL if the operation
+     * failed.
      */
-    virtual TUniquePointer<Stream> OpenFile(StringView path,
-                                            Status*    status) SRX_NOEXCEPT = 0;
+    virtual TUniquePointer<Stream> OpenFile(const FileIndex& fileIndex,
+                                            EAccessMode      mode,
+                                            Status* status) SRX_NOEXCEPT = 0;
+
+    /**
+     * @brief Opens a file specified by the given filepath.
+     *
+     * This function attempts to open a file and returns a unique pointer to the
+     * stream if successful. If the file does not exist, it updates the provided
+     * status pointer with an error message.
+     *
+     * @param filepath The path of the file to be opened.
+     * @param status A pointer to a Status object that will be updated with
+     * error information if the file is not found.
+     *
+     * @return A unique pointer to the opened stream, or nullptr if the file
+     * does not exist.
+     */
+    virtual TUniquePointer<Stream> OpenFile(const Path& filepath,
+                                            EAccessMode mode,
+                                            Status*     status) SRX_NOEXCEPT;
   };
-}
+}  // namespace
+
+using SxFileSystem = Sorex::FileSystem::IFileSystem;

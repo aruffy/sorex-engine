@@ -25,31 +25,44 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#pragma once
-
-#include <Sorex/SxCoreMinimal.h>
-
-#include "SxFileSystem.h"
+#include <Sorex/FileSystem/SxDirectory.h>
 
 namespace Sorex::FileSystem
 {
-  class Directory: public IFileSystem
+  // @NOTE: This isn't effecient class to work with the file system.
+  // @TODO: Optimize it according to the needs.
+  // @TODO: Don't store names of directories and files.
+  class StaticDirectory final: public Directory
   {
 public:
-    explicit Directory(Path path) SRX_NOEXCEPT;
-    virtual ~Directory() override {}
+    explicit StaticDirectory(Path path) SRX_NOEXCEPT;
 
-    virtual const Path& GetSystemPath() const SRX_NOEXCEPT override;
-    virtual Status      Mount(const Path&    path,
-                              PathStringView alias = {}) SRX_NOEXCEPT override;
+    virtual Status Mount(const Path&    path,
+                         PathStringView alias = {}) SRX_NOEXCEPT override;
+    virtual Status IndexFiles() SRX_NOEXCEPT override;
+    virtual void   GetFiles(const Path&         path,
+                            TVector<FileIndex>& files) SRX_NOEXCEPT override;
 
-protected:
-    SRX_INLINE const Path& GetPath() const SRX_NOEXCEPT { return mSystemPath; }
+    virtual TPair<EFileStatus, TOptional<FileIndex>> GetFileIndex(
+      const Path& path) const SRX_NOEXCEPT override;
 
-protected:
-    TVector<TPair<Path, PathString>> mMountedPaths;
+    virtual TUniquePointer<Stream> OpenFile(
+      const FileIndex& fileIndex,
+      EAccessMode      mode   = EAccessMode::Read,
+      Status*          status = nullptr) SRX_NOEXCEPT override;
 
 private:
-    Path mSystemPath;
+    int32 CollectFiles(const Path& path,
+                       int32       depth,
+                       Status&     status) SRX_NOEXCEPT;
+
+private:
+    struct Catalog
+    {
+      Path               path;
+      TVector<FileIndex> files;  // TODO: Use THashSet<FileIndex>
+    };
+
+    THashMap<hash_t, Catalog> mCatalogs;
   };
-}
+}  // namespace

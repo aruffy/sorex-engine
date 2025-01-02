@@ -30,27 +30,25 @@
 #include <Sorex/SxCoreMinimal.h>
 #include <Sorex/FileSystem/SxFileSystem.h>
 
+#ifdef SOREX_PLATFORM_WIN32
+#  define SRX_PATH(str) (L##str)
+#  define SRX_PATH_STRV(str) Sorex::FileSystem::PathStringView(L##str)
+#else
+#  define SRX_PATH(str) (str)
+#  define SRX_PATH_STRV(str) Sorex::FileSystem::PathStringView(str)
+#endif
+
+using namespace Sorex::FileSystem;
+
 namespace Sorex::Utils
 {
-  SRX_INLINE constexpr char GetPathDelimiter() SRX_NOEXCEPT
-  {
-    return '/';
-  }
+  SRX_API PathString CombinePath(const TVector<PathStringView>& dirs)
+    SRX_NOEXCEPT;
+  SRX_API PathString CombinePath(const TVector<PathString>& dirs) SRX_NOEXCEPT;
 
-  /**
-   * @brief Combine dirs to a path.
-   *
-   * @return combined path in generic format
-   */
-  String CombinePath(const TVector<StringView>& dirs) SRX_NOEXCEPT;
-  String CombinePath(const TVector<String>& dirs) SRX_NOEXCEPT;
-
-  /**
-   * @brief Ensure that path closed with slash.
-   *
-   * @return path with slash on the end
-   */
-  String EnsureClosingSlash(StringView path) SRX_NOEXCEPT;
+  // @TODO: EnsureTrailingSlash
+  SRX_API PathString MakePathWithClosingSlash(PathStringView path) SRX_NOEXCEPT;
+  SRX_API void       EnsurePathClosingSlash(PathString& path) SRX_NOEXCEPT;
 
   /**
    * @brief Retrieve extension of file.
@@ -59,8 +57,8 @@ namespace Sorex::Utils
    * @param bIncludeDot - include dot of the extension in result;
    * @return extension of the file by path;
    */
-  StringView GetFileExtension(StringView path,
-                              bool       bIncludeDot = false) SRX_NOEXCEPT;
+  SRX_API PathStringView
+  GetFileExtension(PathStringView path, bool bIncludeDot = false) SRX_NOEXCEPT;
 
   /**
    * @brief Split path to two parts <dirname, filename>.
@@ -70,9 +68,9 @@ namespace Sorex::Utils
    * @param bClosingSlash - enable closing slash for `dirname`
    * @return pair <dirname, filename>.
    */
-  TPair<StringView, StringView> SplitPath(StringView path,
-                                          bool       bClosingSlash = false)
-    SRX_NOEXCEPT;
+  SRX_API TPair<PathStringView, PathStringView> SplitPath(
+    PathStringView path,
+    bool           bClosingSlash = false) SRX_NOEXCEPT;
 
   /**
    * @brief Split path to two parts <dirname, filename>.
@@ -81,9 +79,9 @@ namespace Sorex::Utils
    * @param bClosingSlash - enable closing slash for `dirname`
    * @param out - pair of string to store <dirname, filename>
    */
-  void SplitPath(StringView             path,
-                 TPair<String, String>& out,
-                 bool                   bClosingSlash = false) SRX_NOEXCEPT;
+  SRX_API void SplitPath(PathStringView                 path,
+                         TPair<PathString, PathString>& out,
+                         bool bClosingSlash = false) SRX_NOEXCEPT;
 
   /**
    * @brief Return dir (base) path.
@@ -92,31 +90,29 @@ namespace Sorex::Utils
    * Return directory name in format `/path/to/dir`.
    * If bClosingSlash is True the closing slash will be included
    * `/path/to/dir/`.
-   *
-   * @note: don't use with string literal
    *
    * @param path - path for decomposing
    * @param bClosingSlash - enable closing slash
    * @return directory name or empty string if path invalid.
    */
-  StringView GetBaseName(StringView path,
-                         bool       bClosingSlash = false) SRX_NOEXCEPT;
+  template<Path::value_type separator = Path::preferred_separator>
+  SRX_API PathStringView GetBaseName(PathStringView path,
+                                     bool bClosingSlash = false) SRX_NOEXCEPT
+  {
+    const size_t length = path.length();
+    if (length == 0)
+      return {};
 
-  /**
-   * @brief Return dir (base) path.
-   *
-   * It work only with generic format (with '/' slach separator)
-   * Return directory name in format `/path/to/dir`.
-   * If bClosingSlash is True the closing slash will be included
-   * `/path/to/dir/`.
-   *
-   * @param path - path for decomposing
-   * @param bClosingSlash - enable closing slash
-   * @param base - string that will be store the result
-   */
-  void GetBaseName(StringView path,
-                   String&    base,
-                   bool       bClosingSlash = false) SRX_NOEXCEPT;
+    if (path.back() == separator)
+      return PathStringView(path.data(),
+                            (bClosingSlash ? length : (length - 1)));
+
+    const size_t pos = path.find_last_of(separator);
+    if (pos != PathStringView::npos)
+      return path.substr(0, (bClosingSlash ? (pos + 1) : pos));
+
+    return {};
+  }
 
   /**
    * @brief Return root dir (base) of a path.
@@ -130,40 +126,23 @@ namespace Sorex::Utils
    * @param bClosingSlash - enable closing slash
    * @return name of root directory or empty string if path invalid.
    */
-  StringView GetRootName(StringView path,
-                         bool       bClosingSlash = false) SRX_NOEXCEPT;
+  template<Path::value_type separator = Path::preferred_separator>
+  SRX_API PathStringView GetRootName(PathStringView path,
+                                     bool bClosingSlash = false) SRX_NOEXCEPT
+  {
+    const size_t length = path.length();
+    if (length == 0)
+      return {};
 
-  /**
-   * @brief Return root dir (base) of a path.
-   *
-   * It work only with generic format (with '/' slach separator)
-   * Return directory name in format `/dir`
-   * Example: `/dir_name/path/to/file` -> `/dir_name`
-   * If bClosingSlash is True the closing slash will be included.
-   *
-   * @param path - path for decomposing
-   * @param bClosingSlash - enable closing slash
-   * @param root - string to store name of root directory or empty string if
-   * path invalid.
-   */
-  SRX_INLINE void GetRootName(StringView path,
-                              String&    root,
-                              bool       bClosingSlash = false) SRX_NOEXCEPT;
+    if (length == 1 && path[0] == separator)
+      return bClosingSlash ? path : PathStringView();
 
-}
+    const size_t indx = path.find(separator, 1);
+    if (indx == path.npos)
+      return (path[0] == separator && bClosingSlash)
+               ? PathStringView(path.data(), 1)
+               : PathStringView();
 
-SRX_INLINE void Sorex::Utils::GetBaseName(StringView path,
-                                          String&    basename,
-                                          bool bClosingSlash /* = false */)
-  SRX_NOEXCEPT
-{
-  basename = Sorex::Utils::GetBaseName(path, bClosingSlash);
-}
-
-SRX_INLINE void Sorex::Utils::GetRootName(StringView path,
-                                          String&    root,
-                                          bool bClosingSlash /* = false */)
-  SRX_NOEXCEPT
-{
-  root = Sorex::Utils::GetRootName(path, bClosingSlash);
-}
+    return path.substr(0, (bClosingSlash ? (indx + 1) : indx));
+  }
+}  // namespace

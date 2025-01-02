@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.8.0)
+cmake_minimum_required(VERSION 3.18.0)
 
 include(CTest)
 include(TargetPlatform)
@@ -120,9 +120,13 @@ target_link_libraries(
   ${ENGINE_UNITTEST_TARGET} PRIVATE Sorex::Sorex glm::glm ${GTEST_LIBRARIES}
 )
 
-set(ENGINE_UNITTEST_NAME "CTest_${ENGINE_UNITTEST_TARGET}")
-add_test(NAME ${ENGINE_UNITTEST_NAME}
-         COMMAND $<TARGET_FILE:${ENGINE_UNITTEST_TARGET}>
-)
+# set(ENGINE_UNITTEST_NAME "CTest_${ENGINE_UNITTEST_TARGET}")
 
-set_property(TEST ${ENGINE_UNITTEST_NAME} PROPERTY LABELS engine)
+# add_test(NAME ${ENGINE_UNITTEST_NAME} COMMAND
+# $<TARGET_FILE:${ENGINE_UNITTEST_TARGET}> )
+
+# set_property(TEST ${ENGINE_UNITTEST_NAME} PROPERTY LABELS engine)
+
+include(GoogleTest)
+set(GTEST_OUTPUT "${CMAKE_BINARY_DIR}/gtest-result")
+gtest_discover_tests(${ENGINE_UNITTEST_TARGET} XML_OUTPUT_DIR ${GTEST_OUTPUT})

@@ -35,56 +35,67 @@
 namespace Sorex
 {
   using namespace Sorex::FileSystem;
+
   /**
-   * @class App::FileSystem - represent the file system of the application.
-   *      Use genereic format of the path with the '/' slash separator.
+   * @class DirectorFileSystem
+   * @brief Represents the root file system of the director (application).
+   *
+   * This class simplifies interactions with the file system,
+   * collecting resources for the application and providing easy access
+   * to them using a generic path format with '/' as the separator.
+   *
+   * Example: filesystem->Mount("/MyData/Folder");
+   * filesystem->GetFileIndex("/MyData/Folder/To/File.txt");
    */
-  class RootFileSystem final
+  class DirectorFileSystem final
     : public Director::Component
     , public IFileSystem
   {
-    SRX_RTTI(RootFileSystem, Director::Component);
+    SRX_RTTI(DirectorFileSystem, Director::Component);
 
 public:
-    // IFileSystem Interface
-    virtual Status      IndexFiles() SRX_NOEXCEPT override;
-    virtual void        GetFiles(StringView       path,
-                                 TVector<String>& files) SRX_NOEXCEPT override;
-    virtual EFileStatus GetFileStatus(StringView name) SRX_NOEXCEPT override;
-
-    virtual Path GetSystemPath() const SRX_NOEXCEPT override;
-
-    virtual TUniquePointer<Stream> OpenFile(StringView path, Status* status)
-      SRX_NOEXCEPT override;
-
     // Director::Component Interface
     virtual Status Initialize() override;
     virtual void   Shutdown() override;
 
-    /**
-     * @brief Add the current path to the app file system.
-     *
-     * @note The path must be subdir of the application folder with leading
-     * slash. Example: "/Textures/Props"
-     *
-     * @param path - path to directory to mount.
-     * @param[out] error - description of error;
-     * @return true if directory was mounted.
-     */
-    Status Mount(StringView path) SRX_NOEXCEPT;
-    // const String& GetAppDataPath() SRX_NOEXCEPT;
+    // IFileSystem Interface
+    Status Mount(const Path& path, PathStringView alias) SRX_NOEXCEPT override;
+    virtual Status IndexFiles() SRX_NOEXCEPT override;
+
+    virtual void GetFiles(const Path&         path,
+                          TVector<FileIndex>& files) SRX_NOEXCEPT override;
+
+    virtual TPair<EFileStatus, TOptional<FileIndex>> GetFileIndex(
+      const Path& filepath) const SRX_NOEXCEPT override;
+    virtual EFileStatus GetFileStatus(const Path& filename) const
+      SRX_NOEXCEPT override;
+
+    virtual const Path& GetSystemPath() const SRX_NOEXCEPT override;
+
+    virtual TUniquePointer<Stream> OpenFile(const FileIndex& fileIndex,
+                                            EAccessMode      mode,
+                                            Status*          status)
+      SRX_NOEXCEPT override;
+
+    const IFileSystem* GetFileSystem(PathStringView path) const SRX_NOEXCEPT;
 
 private:
-    IFileSystem*       GetFileSystem(StringView path) SRX_NOEXCEPT;
-    const IFileSystem* GetFileSystem(StringView path) const SRX_NOEXCEPT;
-    static StringView  GetFileSystemName(StringView path) SRX_NOEXCEPT;
+    IFileSystem*          GetFileSystem(PathStringView path) SRX_NOEXCEPT;
+    static PathStringView GetFileSystemName(PathStringView path) SRX_NOEXCEPT;
+
+    TPair<IFileSystem*, Path> GetFileSystemWithPath(const Path& path) const
+      SRX_NOEXCEPT;
 
 private:
     bool mInited = false;
 
-    mutable Mutex                                 mMutex;
-    THashMap<hash_t, TUniquePointer<IFileSystem>> mFilesystems;
+    struct FileSystemInstance
+    {
+      Path                        path;
+      TUniquePointer<IFileSystem> filesystem;
+    };
 
-    String mAppDataPath;
+    mutable Mutex                        mMutex;
+    THashMap<hash_t, FileSystemInstance> mFilesystems;
   };
 }
