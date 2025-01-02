@@ -79,9 +79,10 @@ jobs:
       - name: Download VC++ Redistributable
         shell: pwsh
         run: |
-          $url = "https://aka.ms/vs/17/debug/vc_redist.x64.exe"
+          $url = "https://aka.ms/vs/17/release/vc_redist.x64.exe"
           $output = "vc_redist.x64.exe"
           Invoke-WebRequest -Uri $url -OutFile $output
+          if (!(Test-Path $output)) { throw "VS Redist x64: Download failed!" }
 
       - name: Install VC++ Redistributable
         shell: cmd
