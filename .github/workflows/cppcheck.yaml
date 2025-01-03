@@ -13,7 +13,7 @@ jobs:
       steps:
         - name: Set up cppcheck
           run: |
-            sudo apt-get update && sudo apt-get -y install util-linux cppcheck python3
+            sudo apt-get update && sudo apt-get -y install util-linux cppcheck python3 xorg-dev
 
         - name: Check out the repository
           uses: actions/checkout@v4

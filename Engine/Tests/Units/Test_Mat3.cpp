@@ -4,8 +4,8 @@
 #include <gtc/type_ptr.hpp>
 #include <glm.hpp>
 
-#include <Sorex/Math/Matrix3x3.h>
-#include <Sorex/Math/Maths.h>
+#include <Sorex/Math/SxMatrix3x3.h>
+#include <Sorex/Math/SxMaths.h>
 
 using namespace Sorex;
 

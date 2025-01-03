@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.8.0)
+cmake_minimum_required(VERSION 3.18.0)
 
 include(CTest)
 include(TargetPlatform)
@@ -15,6 +15,11 @@ add_executable(${ENGINE_UNITTEST_TARGET} ${UNITTEST_SOURCE})
 target_compile_definitions(
   ${ENGINE_UNITTEST_TARGET} PRIVATE ${TARGET_PLATFORM}=1
 )
+
+if(MSVC)
+  add_compile_options("/permissive-")
+  target_compile_options(${ENGINE_UNITTEST_TARGET} PRIVATE "/FS" "/utf-8")
+endif()
 
 find_package(GTest QUIET)
 
@@ -91,6 +96,7 @@ endif(GTEST_FOUND)
 
 target_include_directories(
   ${ENGINE_UNITTEST_TARGET} PRIVATE "${SOREX_ENGINE_DIR}/Include"
+                                    "${SOREX_ENGINE_DIR}/Source"
 )
 target_include_directories(
   ${ENGINE_UNITTEST_TARGET} PRIVATE ${GTEST_INCLUDE_DIR}
@@ -114,9 +120,13 @@ target_link_libraries(
   ${ENGINE_UNITTEST_TARGET} PRIVATE Sorex::Sorex glm::glm ${GTEST_LIBRARIES}
 )
 
-set(ENGINE_UNITTEST_NAME "CTest_${ENGINE_UNITTEST_TARGET}")
-add_test(NAME ${ENGINE_UNITTEST_NAME}
-         COMMAND $<TARGET_FILE:${ENGINE_UNITTEST_TARGET}>
-)
+# set(ENGINE_UNITTEST_NAME "CTest_${ENGINE_UNITTEST_TARGET}")
 
-set_property(TEST ${ENGINE_UNITTEST_NAME} PROPERTY LABELS engine)
+# add_test(NAME ${ENGINE_UNITTEST_NAME} COMMAND
+# $<TARGET_FILE:${ENGINE_UNITTEST_TARGET}> )
+
+# set_property(TEST ${ENGINE_UNITTEST_NAME} PROPERTY LABELS engine)
+
+include(GoogleTest)
+set(GTEST_OUTPUT "${CMAKE_BINARY_DIR}/gtest-result")
+gtest_discover_tests(${ENGINE_UNITTEST_TARGET} XML_OUTPUT_DIR ${GTEST_OUTPUT})

@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include <Sorex/Utils/BytesUtils.h>
+#include <Sorex/Utils/SxBytesUtils.h>
 
 using namespace Sorex;
 

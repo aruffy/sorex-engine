@@ -4,7 +4,7 @@
 #include <vector>
 #include <limits>
 
-#include <Sorex/Math/Maths.h>
+#include <Sorex/Math/SxMaths.h>
 
 using namespace Sorex;
 

@@ -14,6 +14,8 @@ option(SOREX_STATIC_LIBRARY "Compile Sorex engine as static library" OFF)
 option(SRXENG_ADDRESS_SANITIZER "Enable address sanitizer for engine code" OFF)
 option(SRXENG_BUILD_PIC "Build position independent code (-fPIC)" OFF)
 
+option(SRXENG_DISABLE_CHECK "Disable engine check macros: useful for tests" OFF)
+
 if(SRXENG_BUILD_PIC)
   set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 endif()
@@ -73,6 +75,11 @@ if(SRXENG_ADDRESS_SANITIZER)
     target_link_options(${ENGINE_TARGET} PUBLIC -fsanitize=address)
     target_link_options(${ENGINE_TARGET} PUBLIC -fsanitize=undefined)
   endif()
+endif()
+
+if(SRXENG_DISABLE_CHECK)
+  message(STATUS "[${ENGINE_TARGET}] Disable check macros")
+  target_compile_definitions(${ENGINE_TARGET} PUBLIC SOREX_DISABLE_CHECK)
 endif()
 
 target_precompile_headers(

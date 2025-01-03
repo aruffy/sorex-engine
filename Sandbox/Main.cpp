@@ -1,16 +1,19 @@
 #include <iostream>
 
-#include <Sorex/RuntimeClass.h>
-#include <Sorex/Status.h>
-#include <Sorex/JournalManager.h>
+#include <Sorex/SxRuntimeClass.h>
+#include <Sorex/SxStatus.h>
+#include <Sorex/SxJournalManager.h>
 
-#include <Sorex/Time.h>
-#include <Sorex/Launcher.h>
-#include <Sorex/Director.h>
+#include <Sorex/SxTime.h>
+#include <Sorex/SxLauncher.h>
+#include <Sorex/SxDirector.h>
 
-#include <Sorex/DesktopLauncher.h>
+#include <Sorex/SxDesktopLauncher.h>
 
 using namespace Sorex;
+
+class MyDirector final: public Director
+{};
 
 int main(const int argc, const char* argv[])
 {
@@ -41,7 +44,7 @@ int main(const int argc, const char* argv[])
 
   SRX_INFO("Hello, from main thread (MACRO)");
 
-  Platform::DesktopLauncher().Run<Director>();
+  Platform::DesktopLauncher().Run<MyDirector>();
 
   SystemTime stm;
   Time::GetLocalTime(stm);

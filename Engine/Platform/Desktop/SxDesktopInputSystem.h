@@ -1,0 +1,81 @@
+/**************************************************************************/
+/*                         This file is part of:                          */
+/*                                SOREX                                   */
+/*                 Simple OpenGL Rendering Engine eXtended                */
+/**************************************************************************/
+/* Copyright (c) 2022-2024 Aleksandr Ershov (Ruffy).                      */
+/*                                                                        */
+/* Permission is hereby granted, free of charge, to any person obtaining  */
+/* a copy of this software and associated documentation files (the        */
+/* "Software"), to deal in the Software without restriction, including    */
+/* without limitation the rights to use, copy, modify, merge, publish,    */
+/* distribute, sublicense, and/or sell copies of the Software, and to     */
+/* permit persons to whom the Software is furnished to do so, subject to  */
+/* the following conditions:                                              */
+/*                                                                        */
+/* The above copyright notice and this permission notice shall be         */
+/* included in all copies or substantial portions of the Software.        */
+/*                                                                        */
+/* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,        */
+/* EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF     */
+/* MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. */
+/* IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY   */
+/* CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,   */
+/* TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE      */
+/* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
+/**************************************************************************/
+
+#pragma once
+
+#include <Sorex/Input/SxInputSystem.h>
+
+#include "SxDesktopGraphicsFramework.h"
+#include "SxDesktopMouse.h"
+
+namespace Sorex::Platform
+{
+  class DesktopInputSystem final
+    : public InputSystem
+    , public DesktopGraphicsFramework::IListener
+  {
+    SRX_RTTI(Platform::DesktopInputSystem, InputSystem);
+
+public:
+    static TUniquePointer<DesktopInputSystem> Create(
+      DesktopGraphicsFramework& glfw) SRX_NOEXCEPT;
+
+    virtual ~DesktopInputSystem() override;
+
+    DesktopInputSystem(const DesktopInputSystem& other)            = delete;
+    DesktopInputSystem& operator=(const DesktopInputSystem& other) = delete;
+
+    // Interface Director::Component
+    virtual Status Initialize() override;
+    virtual void   Shutdown() override;
+
+    // Interface DesktopGraphicsFramework::IListener
+    virtual void OnWindowCreate(GLFWwindow& window) override;
+
+    // Interface InputSystem
+    virtual Mouse* GetMouse() override { return &mMouse; }
+
+private:
+    explicit DesktopInputSystem(DesktopGraphicsFramework& glfw) SRX_NOEXCEPT;
+
+    static DesktopInputSystem* inputSystem;
+    static void                OnMouseClickCallback(GLFWwindow* window,
+                                                    int         button,
+                                                    int         action,
+                                                    int         modify) SRX_NOEXCEPT;
+    static void                OnMouseMoveCallback(GLFWwindow* window,
+                                                   double      x,
+                                                   double      y) SRX_NOEXCEPT;
+    static void                OnMouseScrollCallback(GLFWwindow* window,
+                                                     double      x,
+                                                     double      y) SRX_NOEXCEPT;
+
+private:
+    DesktopGraphicsFramework& mGlfw;
+    DesktopMouse              mMouse;
+  };
+}  // namespace

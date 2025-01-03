@@ -2,7 +2,7 @@
 
 #include <cmath>
 
-#include <Sorex/Math/Point.h>
+#include <Sorex/Math/SxPoint.h>
 
 using namespace Sorex::Math;
 
