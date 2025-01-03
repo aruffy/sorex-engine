@@ -27,82 +27,70 @@
 
 #pragma once
 
-#include <Sorex/SxCoreMinimal.h>
+#include <Sorex/SxDirector.h>
 
+#include "SxRenderer.h"
 #include "SxTextureBitmap.h"
 
 namespace Sorex::Graphics
 {
-  class Texture2D
+  class Texture2D;
+  class RenderDevice: public Director::Component
+  {
+    SRX_RTTI(Graphics::RenderDevice, Director::Component)
+
+public:
+    RenderDevice()                   = default;
+    virtual ~RenderDevice() override = default;
+
+    virtual void Cleanup() = 0;
+
+    template<typename T>
+      requires std::is_base_of_v<Renderer, T>
+    TUniquePointer<T> CreateRenderer() SRX_NOEXCEPT
+    {
+      if (auto renderer = CreateRenderer(T::GetRuntimeType()))
+      {
+        SRX_CHECK_MSG(renderer->IsA<T>(), "invalid renderer type");
+        return std::static_pointer_cast<T>(renderer);
+      }
+
+      return nullptr;
+    }
+
+    /**
+     * @brief Create new 2D texture that can be handled by the render device.
+     *
+     * @param name - name of the texture
+     * @return pointer to 2D texture;
+     */
+    virtual TUniquePointer<Texture2D> CreateTexture2D(StringView name) = 0;
+
+    /**
+     * @brief Retrieve supported texture pixel format.
+     *
+     * If the arg `format` is supported that it must be the result;
+     * Else should find similar supported pixel format for the `format` from
+     * args list; If it is inpossible, return pixel format that has bigger color
+     * component size (no need to compress color). For example: ARGB1555 ->
+     * RGBA5551.
+     *
+     * @param - source format;
+     * @return - supported pixel format.
+     */
+    virtual EPixelFormat GetSupportedPixelFormat(EPixelFormat format) const = 0;
+
+protected:
+    virtual TUniquePointer<Renderer> CreateRenderer(const RuntimeClass& cls)
+      SRX_NOEXCEPT = 0;
+  };
+
+  class IRenderDeviceResource
   {
 public:
-    explicit Texture2D(StringView name);
-    // virtual ~Texture2D() override = default;
+    virtual RenderDevice* GetRenderDevice() const = 0;
 
-    /**
-     * @brief Initialize texture with certain bitmap.
-     *
-     * @param bitmap - texture bitmap
-     * @param error - error description
-     * @return - True if initialization was successful, else False.
-     */
-    // virtual bool Initialize(const TextureBitmap* bitmap, Error* error) = 0;
-
-    /**
-     * @brief Initialize texture with certain bitmap.
-     *
-     * @param bitmap - texture bitmap
-     * @param error - error description
-     * @return - True if initialization was successful, else False.
-     */
-    virtual Status Initialize(TUniquePointer<TextureBitmap> bitmap) = 0;
-
-    /**
-     * @brief Retrieve scale of texture.
-     *
-     * @return value of texture scale.
-     */
-    virtual float GetScale() const { return 1.f; }
-
-    /**
-     * @brief Retrieve size of texture.
-     *
-     * Width and height values of size are always power of two.
-     *
-     * @return size of texture;
-     */
-    virtual SizeInt GetSize() const = 0;
-
-    /**
-     * @brief Retrive size of raw texture.
-     *
-     * Raw texture (TextureBitmap) can have any size, but the size of texture
-     * class could be expanded to power of two. This method must return real
-     * location and size of the raw texture content.
-     *
-     * @return rectangle of the texture;
-     */
-    virtual Rectangle GetContentRect() const = 0;
-
-    /**
-     * @brief Retrieve texture format.
-     *
-     * @return format of the texture.
-     */
-    virtual ETextureFormat GetFormat() const = 0;
-
-    /**
-     * @brief Retrieve texture sampler.
-     *
-     */
-    // virtual const TextureSampler* GetSampler() const = 0;
-
-    /**
-     * @brief Set texture sampler.
-     *
-     */
-    // virtual void SetSampler(const TextureSampler* sampler) = 0;
+protected:
+    virtual ~IRenderDeviceResource() = default;
   };
-}  // namespace
-
-using SxTexture = Sorex::Graphics::Texture2D;
+}
