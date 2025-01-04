@@ -52,4 +52,4 @@ protected:
 private:
     Path mSystemPath;
   };
-}
+}  // namespace

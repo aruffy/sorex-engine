@@ -28,6 +28,7 @@
 #pragma once
 
 #include <Sorex/SxDirector.h>
+#include <Sorex/SxStream.h>
 
 #include "SxRenderer.h"
 #include "SxTextureBitmap.h"
@@ -47,9 +48,10 @@ public:
 
     template<typename T>
       requires std::is_base_of_v<Renderer, T>
-    TUniquePointer<T> CreateRenderer() SRX_NOEXCEPT
+    TUniquePointer<T> CreateRenderer(const ssize_t capacity = SRX_UNKNOWN_SIZE)
+      SRX_NOEXCEPT
     {
-      if (auto renderer = CreateRenderer(T::GetRuntimeType()))
+      if (auto renderer = CreateRenderer(T::GetRuntimeType(), capacity))
       {
         SRX_CHECK_MSG(renderer->IsA<T>(), "invalid renderer type");
         return std::static_pointer_cast<T>(renderer);
@@ -81,7 +83,8 @@ public:
     virtual EPixelFormat GetSupportedPixelFormat(EPixelFormat format) const = 0;
 
 protected:
-    virtual TUniquePointer<Renderer> CreateRenderer(const RuntimeClass& cls)
+    virtual TUniquePointer<Renderer> CreateRenderer(const RuntimeClass& cls,
+                                                    ssize_t capacity)
       SRX_NOEXCEPT = 0;
   };
 
@@ -93,4 +96,4 @@ public:
 protected:
     virtual ~IRenderDeviceResource() = default;
   };
-}
+}  // namespace
