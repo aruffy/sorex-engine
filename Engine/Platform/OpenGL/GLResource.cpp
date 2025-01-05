@@ -70,9 +70,10 @@ public:
     isInited = false;
   }
 
-  RFY_NODISCARD GLResourceToken AllocateResource(GLRenderDevice* glRenderDevice,
-                                                 GLResourceType  type)
+  /* RFY_NODISCARD GLResourceToken AllocateResource(GLRenderDevice*
+  glRenderDevice, GLResourceType  type)
   {
     return glRenderDevice ? glRenderDevice->Allocate(type) : nullptr;
-  }
-}
+  } */
+
+}  // namespace

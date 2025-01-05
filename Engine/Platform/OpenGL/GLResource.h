@@ -95,6 +95,6 @@ private:
 
   using GLResourceToken = TUniquePointer<GLResourceReference>;
 
-  RFY_NODISCARD GLResourceToken AllocateResource(GLRenderDevice* glRenderDevice,
-                                                 GLResourceType  type);
+  /* RFY_NODISCARD GLResourceToken AllocateResource(GLRenderDevice*
+     glRenderDevice, GLResourceType  type); */
 }

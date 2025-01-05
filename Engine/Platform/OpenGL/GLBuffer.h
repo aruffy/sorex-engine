@@ -30,6 +30,7 @@
 #include <Sorex/Graphics/SxVertex.h>
 
 #include "GLResource.h"
+#include "GLTypes.h"
 
 namespace Sorex::Graphics
 {
@@ -39,39 +40,40 @@ namespace Sorex::Graphics
     class Buffer
     {
   public:
-      Buffer(GLRenderDevice* glRenderDevice, GLResourceType type);
-      virtual ~Buffer() {}
+      Buffer(GLRenderDevice* glRenderDevice, GLResourceType type) SRX_NOEXCEPT;
+      virtual ~Buffer() = default;
 
       Buffer(const Buffer& other)            = delete;
       Buffer& operator=(const Buffer& other) = delete;
 
       SRX_INLINE GLResourceReference* GetResourceToken()
       {
-        return _glToken.get();
+        return mGlToken.get();
       }
+
       SRX_INLINE const GLResourceReference* GetResourceToken() const
       {
-        return _glToken.get();
+        return mGlToken.get();
       }
 
       SRX_INLINE GLRenderDevice* GetRenderDevice()
       {
-        return _glToken ? _glToken->GetRenderDevice() : nullptr;
+        return mGlToken ? mGlToken->GetRenderDevice() : nullptr;
       }
 
-      SRX_INLINE GLResourceType GetType() const { return _type; }
+      SRX_INLINE GLResourceType GetType() const { return mType; }
 
   private:
-      GLResourceToken _glToken;
-      GLResourceType  _type;
+      GLResourceToken mGlToken;
+      GLResourceType  mType;
     };
   }  // namespace OpenGL
 
   struct GLBufferData
   {
-    size_t      size     = 0;
-    size_t      capacity = 0;
-    const byte* memptr   = nullptr;
+    GLsizei       size     = 0;
+    GLsizei       capacity = 0;
+    const GLbyte* memptr   = nullptr;
 
     bool IsEmpty() const { return (memptr == nullptr || size == 0); }
   };
@@ -88,38 +90,38 @@ public:
 public:
     GLBuffer(GLRenderDevice* glRenderDevice,
              GLResourceType  type,
-             size_t          capacity);
+             size_t          capacity) SRX_NOEXCEPT;
     virtual ~GLBuffer() override {}
 
     GLBuffer(const GLBuffer& other)            = delete;
     GLBuffer& operator=(const GLBuffer& other) = delete;
 
-    SRX_INLINE Iterator begin() { return _buffer.begin(); }
-    SRX_INLINE Iterator end() { return _buffer.end(); }
+    SRX_INLINE Iterator begin() { return mBuffer.begin(); }
+    SRX_INLINE Iterator end() { return mBuffer.end(); }
 
-    SRX_INLINE ConstIterator cbegin() { return _buffer.cbegin(); }
-    SRX_INLINE ConstIterator cend() { return _buffer.cend(); }
+    SRX_INLINE ConstIterator cbegin() { return mBuffer.cbegin(); }
+    SRX_INLINE ConstIterator cend() { return mBuffer.cend(); }
 
-    SRX_INLINE bool IsEmpty() const { return _buffer.empty(); }
-    SRX_INLINE void Clear() { _buffer.clear(); }
+    SRX_INLINE bool IsEmpty() const { return mBuffer.empty(); }
+    SRX_INLINE void Clear() { mBuffer.clear(); }
 
-    size_t GetSize() const { return _buffer.size(); }
-    size_t GetCapacity() const { return _buffer.capacity(); }
+    size_t GetSize() const { return mBuffer.size(); }
+    size_t GetCapacity() const { return mBuffer.capacity(); }
 
     GLBufferData GetData() const;
 
-    RFY_NODISCARD ValueType* Allocate(size_t number) RFY_NOEXCEPT;
-    bool                     PushBack(const ValueType& value) RFY_NOEXCEPT;
+    SRX_NODISCARD ValueType* Allocate(size_t number) SRX_NOEXCEPT;
+    bool                     PushBack(const ValueType& value) SRX_NOEXCEPT;
 
 private:
-    Container _buffer;
+    Container mBuffer;
   };
 
   template<typename VertexType>
   class GLVertexBuffer final: public GLBuffer<VertexType>
   {
 public:
-    GLVertexBuffer(GLRenderDevice* glRenderDevice, size_t capacity)
+    GLVertexBuffer(GLRenderDevice* glRenderDevice, size_t capacity) SRX_NOEXCEPT
       : GLBuffer<VertexType>(glRenderDevice,
                              GLResourceType::VertexBuffer,
                              capacity)
@@ -131,14 +133,14 @@ public:
     }
   };
 
-  template<typename index_t = uint16>
+  template<typename index_t = GLshort>
   class GLIndexBuffer final: public GLBuffer<index_t>
   {
     template<typename T>
-    static constexpr bool TIsIndexType = TIsSame_Value<index_t, T>;
+    static constexpr bool TIsIndexType = std::is_same_v<index_t, T>;
 
     static constexpr bool kIsValidIndexType =
-      (TIsIndexType<byte> || TIsIndexType<uint16> || TIsIndexType<uint32>);
+      (TIsIndexType<GLbyte> || TIsIndexType<GLshort> || TIsIndexType<GLint>);
 
     static_assert(kIsValidIndexType, "invalid index type");
 
@@ -146,7 +148,7 @@ public:
     using IndexType = index_t;
 
 public:
-    GLIndexBuffer(GLRenderDevice* glRenderDevice, size_t capacity)
+    GLIndexBuffer(GLRenderDevice* glRenderDevice, size_t capacity) SRX_NOEXCEPT
       : GLBuffer<IndexType>(glRenderDevice,
                             GLResourceType::IndexBuffer,
                             capacity)
@@ -156,39 +158,39 @@ public:
   template<typename ValueType>
   GLBuffer<ValueType>::GLBuffer(GLRenderDevice* glRenderDevice,
                                 GLResourceType  type,
-                                size_t          capacity)
+                                size_t          capacity) SRX_NOEXCEPT
     : OpenGL::Buffer(glRenderDevice, type)
   {
-    _buffer.reserve(capacity);
+    mBuffer.reserve(capacity);
   }
 
   template<typename ValueType>
   GLBufferData GLBuffer<ValueType>::GetData() const
   {
-    return GLBufferData{ _buffer.size() * sizeof(ValueType),
-                         _buffer.capacity() * sizeof(ValueType),
-                         reinterpret_cast<const byte*>(_buffer.data()) };
+    return GLBufferData{ mBuffer.size() * sizeof(ValueType),
+                         mBuffer.capacity() * sizeof(ValueType),
+                         reinterpret_cast<const GLbyte*>(mBuffer.data()) };
   }
 
   template<typename ValueType>
-  RFY_NODISCARD ValueType* GLBuffer<ValueType>::Allocate(size_t number)
-    RFY_NOEXCEPT
+  SRX_NODISCARD ValueType* GLBuffer<ValueType>::Allocate(size_t number)
+    SRX_NOEXCEPT
   {
-    const size_t size = _buffer.size();
-    if (size + number > _buffer.capacity())
+    const size_t size = mBuffer.size();
+    if (size + number > mBuffer.capacity())
       return nullptr;
 
-    _buffer.resize(size + number);
-    return &_buffer[size];
+    mBuffer.resize(size + number);
+    return &mBuffer[size];
   }
 
   template<typename ValueType>
-  bool GLBuffer<ValueType>::PushBack(const ValueType& value) RFY_NOEXCEPT
+  bool GLBuffer<ValueType>::PushBack(const ValueType& value) SRX_NOEXCEPT
   {
-    if (_buffer.size() >= _buffer.capacity())
+    if (mBuffer.size() == mBuffer.capacity())
       return false;
 
-    _buffer.push_back(value);
+    mBuffer.push_back(value);
     return true;
   }
 }  // namespace

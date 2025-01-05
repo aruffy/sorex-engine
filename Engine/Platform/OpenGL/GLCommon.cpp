@@ -36,7 +36,7 @@ namespace Sorex::Graphics::OpenGL
     while (error != GL_NO_ERROR)
     {
       bError = true;
-      SRX_ERROR("OpenGL error <{}> func `{}` \n\t in {}:{}",
+      SRX_ERROR("[OpenGL] Error code={} func `{}` \n\t in {}:{}",
                 error,
                 func,
                 file,
