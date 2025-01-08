@@ -25,55 +25,48 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#include "GLResource.h"
+#pragma once
+
+#include <Sorex/Graphics/SxRenderDevice.h>
+
+#include "GLTypes.h"
+#include "GLResourceToken.h"
 
 namespace Sorex::Graphics
 {
-
-  class GLRenderDevice
+  class GLRenderDevice final: public RenderDevice
   {
+    SRX_RTTI(Graphics::GLRenderDevice, Graphics::RenderDevice)
+
 public:
-    GLResourceToken Allocate(GLResourceType) { return nullptr; }
-    void            Deallocate(GLResourceReference* ref) {}
+    // Interface Director::Component
+    virtual Status Initialize() override;
+
+    /**
+     * @brief Allocate new OpenGL resource.
+     *
+     * @param type - type of resource
+     * @return resource token
+     */
+    GLResourceToken Allocate(GLResourceType type) SRX_NOEXCEPT;
+
+    /**
+     * @brief Deallocate OpenGL resource.
+     *
+     * @param glResource - resource reference
+     */
+    void Deallocate(GLResourceReference* glResource) SRX_NOEXCEPT;
+
+protected:
+    virtual TUniquePointer<Renderer> CreateRenderer(const RuntimeClass& cls,
+                                                    ssize_t capacity)
+      SRX_NOEXCEPT override
+    {
+      return nullptr;
+    }
+
+private:
+    TList<GLResource> mResources;
   };
-
-  GLResourceReference::GLResourceReference(GLRenderDevice* glRenderDevice,
-                                           size_t          rid)
-    : _id(rid)
-    , _glDevice(glRenderDevice)
-  {}
-
-  GLResourceReference::~GLResourceReference()
-  {
-    if (IsValid())
-      _glDevice->Deallocate(this);
-  }
-
-  bool GLResourceReference::IsValid() const
-  {
-    return (_glDevice && _id != kInvalidReferenceId);
-  }
-
-  void GLResourceReference::OnExpired()
-  {
-    _glDevice = nullptr;
-    _id       = kInvalidReferenceId;
-  }
-
-  void GLResource::Reset()
-  {
-    id       = kInvalidResourceId;
-    token    = nullptr;
-    value    = 0u;
-    target   = 0u;
-    type     = GLResourceType::Idle;
-    isInited = false;
-  }
-
-  /* RFY_NODISCARD GLResourceToken AllocateResource(GLRenderDevice*
-  glRenderDevice, GLResourceType  type)
-  {
-    return glRenderDevice ? glRenderDevice->Allocate(type) : nullptr;
-  } */
 
 }  // namespace

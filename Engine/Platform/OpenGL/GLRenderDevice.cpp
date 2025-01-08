@@ -25,76 +25,72 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#pragma once
+#include "GLRenderDevice.h"
 
-#include <Sorex/SxCoreMinimal.h>
+#include <Sorex/SxThread.h>
 
 namespace Sorex::Graphics
 {
-  enum class GLResourceType
+
+  Status GLRenderDevice::Initialize()
   {
-    Idle,
-    Texture2D,
-    VertexArray,
-    VertexBuffer,
-    IndexBuffer,
-    ShaderProgram,
-    VertexShader,
-    FragmentShader
-  };
+    // _extensions    = MakeUnique<GLExtensions>();
+    // _renderContext = MakeUnique<GLRenderContext>(*this);
 
-  class GLRenderDevice;
-  class GLResourceReference
+#ifdef SOREX_OPENGL_DEBUG_OUTPUT
+    OpenGL::EnableDebugOutput(this);
+#endif
+    return SRX_OK;
+  }
+
+  SRX_TYPENAME GLResourceToken GLRenderDevice::Allocate(GLResourceType type)
+    SRX_NOEXCEPT
   {
-public:
-    static constexpr size_t kInvalidReferenceId =
-      std::numeric_limits<size_t>::max();
+    SRX_CHECK(Thread::IsMainThread());
 
-public:
-    GLResourceReference() = default;
-    GLResourceReference(GLRenderDevice* glRenderDevice, size_t rid);
-
-    GLResourceReference(const GLResourceReference& other)            = delete;
-    GLResourceReference& operator=(const GLResourceReference& other) = delete;
-
-    ~GLResourceReference();
-
-    SRX_INLINE size_t GetId() const { return _id; }
-
-    SRX_INLINE GLRenderDevice*       GetRenderDevice() { return _glDevice; }
-    SRX_INLINE const GLRenderDevice* GetRenderDevice() const
+    GLuint id     = 0;
+    GLenum target = 0;
+    switch (type)
     {
-      return _glDevice;
+    case GLResourceType::VertexArray:
+      glGenVertexArrays(1, &id);
+      target = GL_VERTEX_ARRAY;
+      break;
+
+    case GLResourceType::VertexBuffer:
+    case GLResourceType::IndexBuffer:
+      glGenBuffers(1, &id);
+      target = (type == GLResourceType::VertexBuffer ? GL_ARRAY_BUFFER
+                                                     : GL_ELEMENT_ARRAY_BUFFER);
+      break;
+
+    case GLResourceType::VertexShader:
+    case GLResourceType::FragmentShader:
+      target = (type == GLResourceType::VertexShader ? GL_VERTEX_SHADER
+                                                     : GL_FRAGMENT_SHADER);
+      id     = glCreateShader(target);
+      break;
+
+    case GLResourceType::ShaderProgram:
+      id = glCreateProgram();
+      break;
+
+    case GLResourceType::Texture2D:
+      glGenTextures(1, &id);
+      target = GL_TEXTURE_2D;
+      break;
+
+    default:
+      SRX_NOENTRY("[GLRenderDevice] Allocation: Invalid type");
+      return nullptr;
     }
 
-    bool IsValid() const;
-    void OnExpired();
+    GLResource glResource;
+    glResource.id     = id;
+    glResource.type   = type;
+    glResource.target = target;
+    auto it = mResources.insert(mResources.cbegin(), std::move(glResource));
 
-private:
-    size_t          _id       = kInvalidReferenceId;
-    GLRenderDevice* _glDevice = nullptr;
-  };
-
-  struct GLResource
-  {
-    static constexpr unsigned int kInvalidResourceId =
-      std::numeric_limits<unsigned int>::max();
-
-    uint32 id = kInvalidResourceId;
-
-    GLResourceReference* token = nullptr;
-
-    uint32         value  = 0;
-    unsigned int   target = 0u;
-    GLResourceType type   = GLResourceType::Idle;
-
-    bool isInited = false;
-
-    void Reset();
-  };
-
-  using GLResourceToken = TUniquePointer<GLResourceReference>;
-
-  /* RFY_NODISCARD GLResourceToken AllocateResource(GLRenderDevice*
-     glRenderDevice, GLResourceType  type); */
-}
+    return MakeUnique<GLResourceReference>(this, &(*it));
+  }
+}  // namespace

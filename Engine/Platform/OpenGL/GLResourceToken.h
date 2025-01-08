@@ -27,74 +27,68 @@
 
 #pragma once
 
-#include <Sorex/SxDirector.h>
-#include <Sorex/SxStream.h>
-
-#include "SxRenderer.h"
-#include "SxTextureBitmap.h"
+#include "GLTypes.h"
 
 namespace Sorex::Graphics
 {
-  class Texture2D;
-  class RenderDevice: public Director::Component
+  enum class GLResourceType
   {
-    SRX_RTTI(Graphics::RenderDevice, Director::Component)
+    Idle,
+    Texture2D,
+    VertexArray,
+    VertexBuffer,
+    IndexBuffer,
+    ShaderProgram,
+    VertexShader,
+    FragmentShader
+  };
+
+  struct GLResource
+  {
+    static constexpr GLuint kInvalidResourceId =
+      std::numeric_limits<GLuint>::max();
+
+    GLResourceType type = GLResourceType::Idle;
+
+    GLuint id     = kInvalidResourceId;
+    GLenum target = 0;
+    GLuint value  = 0;
+    bool   inited = false;
+  };
+
+  class GLRenderDevice;
+  class GLResourceReference final
+  {
+    friend class GLRenderDevice;
 
 public:
-    RenderDevice()                   = default;
-    virtual ~RenderDevice() override = default;
+    SRX_INLINE GLResourceReference(GLRenderDevice* glDevice,
+                                   GLResource*     glResource) SRX_NOEXCEPT
+      : mRenderDevice(glDevice)
+      , mResource(glResource)
+    {}
 
-    // virtual void Cleanup() = 0;
+    GLResourceReference(const GLResourceReference& other)            = delete;
+    GLResourceReference& operator=(const GLResourceReference& other) = delete;
 
-    template<typename T>
-      requires std::is_base_of_v<Renderer, T>
-    TUniquePointer<T> CreateRenderer(const ssize_t capacity = SRX_UNKNOWN_SIZE)
-      SRX_NOEXCEPT
+    ~GLResourceReference();
+
+    SRX_INLINE GLRenderDevice*       GetRenderDevice() { return mRenderDevice; }
+    SRX_INLINE const GLRenderDevice* GetRenderDevice() const
     {
-      if (auto renderer = CreateRenderer(T::GetRuntimeType(), capacity))
-      {
-        SRX_CHECK_MSG(renderer->IsA<T>(), "invalid renderer type");
-        return std::static_pointer_cast<T>(renderer);
-      }
-
-      return nullptr;
+      return mRenderDevice;
     }
 
-    /**
-     * @brief Create new 2D texture that can be handled by the render device.
-     *
-     * @param name - name of the texture
-     * @return pointer to 2D texture;
-     */
-    // virtual TUniquePointer<Texture2D> CreateTexture2D(StringView name) = 0;
+    SRX_INLINE bool IsValid() const { return mResource && mRenderDevice; }
 
-    /**
-     * @brief Retrieve supported texture pixel format.
-     *
-     * If the arg `format` is supported that it must be the result;
-     * Else should find similar supported pixel format for the `format` from
-     * args list; If it is inpossible, return pixel format that has bigger color
-     * component size (no need to compress color). For example: ARGB1555 ->
-     * RGBA5551.
-     *
-     * @param - source format;
-     * @return - supported pixel format.
-     */
-    // virtual EPixelFormat GetSupportedPixelFormat(EPixelFormat format) const =
-    // 0;
+private:
+    void        MakeExpired() SRX_NOEXCEPT;
+    GLResource* GetDeviceResource() SRX_NOEXCEPT { return mResource; }
 
-protected:
-    virtual TUniquePointer<Renderer> CreateRenderer(const RuntimeClass& cls,
-                                                    ssize_t capacity)
-      SRX_NOEXCEPT = 0;
+private:
+    GLRenderDevice* mRenderDevice;
+    GLResource*     mResource;
   };
 
-  class IRenderDeviceResource
-  {
-public:
-    virtual RenderDevice* GetRenderDevice() const = 0;
-
-protected:
-    virtual ~IRenderDeviceResource() = default;
-  };
-}  // namespace
+  using GLResourceToken = TUniquePointer<GLResourceReference>;
+}
