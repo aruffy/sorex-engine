@@ -29,8 +29,8 @@
 
 #include <Sorex/Graphics/SxVertex.h>
 
-#include "GLResource.h"
 #include "GLTypes.h"
+#include "GLResourceToken.h"
 
 namespace Sorex::Graphics
 {

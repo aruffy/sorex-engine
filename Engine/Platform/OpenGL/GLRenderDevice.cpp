@@ -93,4 +93,86 @@ namespace Sorex::Graphics
 
     return MakeUnique<GLResourceReference>(this, &(*it));
   }
+
+  void GLRenderDevice::Deallocate(GLResourceReference* glResourceReference)
+    SRX_NOEXCEPT
+  {
+    if (GLResource* resource = GetResource(glResourceReference))
+      DeallocateResource(*resource);
+  }
+
+  void GLRenderDevice::DeallocateResource(GLResource& resource) SRX_NOEXCEPT
+  {
+    SRX_CHECK(Thread::IsMainThread());
+
+    if (resource.id == GLResource::kInvalidResourceId)
+      return;
+
+    switch (resource.type)
+    {
+    case GLResourceType::VertexArray:
+      glDeleteVertexArrays(1, &resource.id);
+      break;
+
+    case GLResourceType::VertexBuffer:
+    case GLResourceType::IndexBuffer:
+      glDeleteBuffers(1, &resource.id);
+      break;
+
+    case GLResourceType::VertexShader:
+    case GLResourceType::FragmentShader:
+      glDeleteShader(resource.id);
+      break;
+
+    case GLResourceType::ShaderProgram:
+      glDeleteProgram(resource.id);
+      // _uniforms.erase(resource.id);
+
+      /* if (!_isDestroying && _activeShaderProgram)
+      {
+        GLResource* program =
+          GetResource(_activeShaderProgram->GetResourceToken());
+        if (program && program->id == resource.id)
+          _activeShaderProgram = nullptr;
+      } */
+      break;
+
+    case GLResourceType::Texture2D:
+      glDeleteTextures(1, &resource.id);
+      break;
+
+    default:
+      SRX_NOENTRY("[GLRenderDevice] Deallocate: unknown resource");
+      return;
+    }
+
+    // resource.Reset();
+
+#ifdef RUFFY_GAME_DEVELOPMENT
+    // _stats.renderDeviceResources.Decrease();
+#endif
+  }
+
+  GLResource* GLRenderDevice::GetResource(
+    const GLResourceReference* glResourceReference) const SRX_NOEXCEPT
+  {
+    if (!IsValidResourceReference(glResourceReference))
+    {
+      SRX_NOENTRY("[GLRenderDevice] Invalid graphics resource reference");
+      return nullptr;
+    }
+
+    return glResourceReference->GetDeviceResource();
+  }
+
+  bool GLRenderDevice::IsValidResourceReference(
+    const GLResourceReference* glResource) const SRX_NOEXCEPT
+  {
+    const bool bIsValid = glResource && glResource->IsValid();
+    SRX_CHECK(bIsValid && glResource->GetRenderDevice() == this
+              && glResource->GetResource());
+
+    return bIsValid;
+  }
+
 }  // namespace

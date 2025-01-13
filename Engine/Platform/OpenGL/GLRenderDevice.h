@@ -66,6 +66,13 @@ protected:
     }
 
 private:
+    GLResource* GetResource(
+      const GLResourceReference* glResourceReference) const SRX_NOEXCEPT;
+    bool IsValidResourceReference(const GLResourceReference* glResource) const
+      SRX_NOEXCEPT;
+    void DeallocateResource(GLResource& resource) SRX_NOEXCEPT;
+
+private:
     TList<GLResource> mResources;
   };
 

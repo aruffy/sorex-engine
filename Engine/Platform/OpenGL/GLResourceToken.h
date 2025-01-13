@@ -83,7 +83,7 @@ public:
 
 private:
     void        MakeExpired() SRX_NOEXCEPT;
-    GLResource* GetDeviceResource() SRX_NOEXCEPT { return mResource; }
+    GLResource* GetDeviceResource() const SRX_NOEXCEPT { return mResource; }
 
 private:
     GLRenderDevice* mRenderDevice;
