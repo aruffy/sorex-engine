@@ -39,6 +39,11 @@ namespace Sorex::Graphics
     SRX_RTTI(Graphics::GLRenderDevice, Graphics::RenderDevice)
 
 public:
+    virtual ~GLRenderDevice() override;
+
+    GLRenderDevice(const GLRenderDevice& other)            = delete;
+    GLRenderDevice& operator=(const GLRenderDevice& other) = delete;
+
     // Interface Director::Component
     virtual Status Initialize() override;
 
@@ -73,7 +78,7 @@ private:
     void DeallocateResource(GLResource& resource) SRX_NOEXCEPT;
 
 private:
-    TList<GLResource> mResources;
+    TLinkedList<GLResource> mResources;
   };
 
 }  // namespace

@@ -32,13 +32,24 @@
 namespace Sorex::Graphics
 {
 
+  GLRenderDevice::~GLRenderDevice()
+  {
+    for (auto res : mResources)
+    {
+      if (res.reference)
+        res.reference->MakeExpired();
+
+      DeallocateResource(res);
+    }
+  }
+
   Status GLRenderDevice::Initialize()
   {
     // _extensions    = MakeUnique<GLExtensions>();
     // _renderContext = MakeUnique<GLRenderContext>(*this);
 
 #ifdef SOREX_OPENGL_DEBUG_OUTPUT
-    OpenGL::EnableDebugOutput(this);
+    // OpenGL::EnableDebugOutput(this);
 #endif
     return SRX_OK;
   }
@@ -89,16 +100,21 @@ namespace Sorex::Graphics
     glResource.id     = id;
     glResource.type   = type;
     glResource.target = target;
-    auto it = mResources.insert(mResources.cbegin(), std::move(glResource));
+    mResources.push_front(std::move(glResource));
 
-    return MakeUnique<GLResourceReference>(this, &(*it));
+    return MakeUnique<GLResourceReference>(this, &(mResources.front()));
   }
 
   void GLRenderDevice::Deallocate(GLResourceReference* glResourceReference)
     SRX_NOEXCEPT
   {
     if (GLResource* resource = GetResource(glResourceReference))
+    {
       DeallocateResource(*resource);
+
+      glResourceReference->MakeExpired();
+      mResources.remove(*resource);  // @note: resource = nullptr;
+    }
   }
 
   void GLRenderDevice::DeallocateResource(GLResource& resource) SRX_NOEXCEPT
@@ -146,8 +162,6 @@ namespace Sorex::Graphics
       return;
     }
 
-    // resource.Reset();
-
 #ifdef RUFFY_GAME_DEVELOPMENT
     // _stats.renderDeviceResources.Decrease();
 #endif
@@ -170,7 +184,7 @@ namespace Sorex::Graphics
   {
     const bool bIsValid = glResource && glResource->IsValid();
     SRX_CHECK(bIsValid && glResource->GetRenderDevice() == this
-              && glResource->GetResource());
+              && glResource->GetDeviceResource());
 
     return bIsValid;
   }

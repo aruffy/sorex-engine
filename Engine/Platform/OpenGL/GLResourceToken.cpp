@@ -31,6 +31,19 @@
 
 namespace Sorex::Graphics
 {
+  GLResourceReference::GLResourceReference(GLRenderDevice* glDevice,
+                                           GLResource* glResource) SRX_NOEXCEPT
+    : mRenderDevice(glDevice)
+    , mResource(glResource)
+  {
+    if (glResource)
+    {
+      SRX_CHECK(!glResource->reference);
+      glResource->reference = this;
+    }
+  }
+
+
   void GLResourceReference::MakeExpired() SRX_NOEXCEPT
   {
     mResource     = nullptr;

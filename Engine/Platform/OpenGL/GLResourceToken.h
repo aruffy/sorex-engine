@@ -43,6 +43,7 @@ namespace Sorex::Graphics
     FragmentShader
   };
 
+  class GLResourceReference;
   struct GLResource
   {
     static constexpr GLuint kInvalidResourceId =
@@ -53,7 +54,18 @@ namespace Sorex::Graphics
     GLuint id     = kInvalidResourceId;
     GLenum target = 0;
     GLuint value  = 0;
-    bool   inited = false;
+
+    bool                 inited = false;
+    GLResourceReference* reference;
+
+    SRX_INLINE bool operator==(const GLResource& other) const SRX_NOEXCEPT
+    {
+      return type == other.type && target == other.target && id == other.id;
+    }
+    SRX_INLINE bool operator!=(const GLResource& other) const SRX_NOEXCEPT
+    {
+      return !(*this == other);
+    }
   };
 
   class GLRenderDevice;
@@ -62,11 +74,8 @@ namespace Sorex::Graphics
     friend class GLRenderDevice;
 
 public:
-    SRX_INLINE GLResourceReference(GLRenderDevice* glDevice,
-                                   GLResource*     glResource) SRX_NOEXCEPT
-      : mRenderDevice(glDevice)
-      , mResource(glResource)
-    {}
+    GLResourceReference(GLRenderDevice* glDevice,
+                        GLResource*     glResource) SRX_NOEXCEPT;
 
     GLResourceReference(const GLResourceReference& other)            = delete;
     GLResourceReference& operator=(const GLResourceReference& other) = delete;

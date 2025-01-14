@@ -53,7 +53,7 @@ public:
     {
       if (auto renderer = CreateRenderer(T::GetRuntimeType(), capacity))
       {
-        SRX_CHECK_MSG(renderer->IsA<T>(), "invalid renderer type");
+        SRX_CHECK_MSG(renderer->template IsA<T>(), "invalid renderer type");
         return std::static_pointer_cast<T>(renderer);
       }
 
