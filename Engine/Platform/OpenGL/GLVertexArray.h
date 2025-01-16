@@ -27,81 +27,74 @@
 
 #pragma once
 
-#include "GLTypes.h"
+#include "GLBuffer.h"
 
 namespace Sorex::Graphics
 {
-  enum class GLResourceType
+  template<typename VertexType, typename IndexType = uint16>
+  class GLVertexArray
   {
-    Idle,
-    Texture2D,
-    VertexArray,
-    VertexBuffer,
-    IndexBuffer,
-    ShaderProgram,
-    VertexShader,
-    FragmentShader
-  };
-
-  class GLResourceReference;
-  struct GLResource
-  {
-    static constexpr GLuint kInvalidResourceId =
-      std::numeric_limits<GLuint>::max();
-
-    GLResourceType type = GLResourceType::Idle;
-
-    GLuint id     = kInvalidResourceId;
-    GLenum target = 0;
-    GLuint value  = 0;
-
-    bool                 inited = false;
-    GLResourceReference* reference;
-
-    SRX_INLINE bool operator==(const GLResource& other) const SRX_NOEXCEPT
-    {
-      return type == other.type && target == other.target && id == other.id;
-    }
-    SRX_INLINE bool operator!=(const GLResource& other) const SRX_NOEXCEPT
-    {
-      return !(*this == other);
-    }
-  };
-
-  class GLRenderDevice;
-  class GLResourceReference final
-  {
-    friend class GLRenderDevice;
+public:
+    using VertexBuffer = GLVertexBuffer<VertexType>;
+    using IndexBuffer  = GLIndexBuffer<IndexType>;
 
 public:
-    GLResourceReference(GLRenderDevice* glDevice,
-                        GLResource*     glResource) SRX_NOEXCEPT;
+    explicit GLVertexArray(GLRenderDevice* glRenderDevice);
 
-    GLResourceReference(const GLResourceReference& other)            = delete;
-    GLResourceReference& operator=(const GLResourceReference& other) = delete;
+    Status Initialize(size_t vtxCapacity, size_t indxCapacity = 0) SRX_NOEXCEPT;
 
-    ~GLResourceReference();
+    VertexBuffer*       GetVertexBuffer() { return mVtxBuffer.get(); }
+    const VertexBuffer* GetVertexBuffer() const { return mVtxBuffer.get(); }
 
-    SRX_INLINE GLRenderDevice*       GetRenderDevice() { return mRenderDevice; }
-    SRX_INLINE const GLRenderDevice* GetRenderDevice() const
+    IndexBuffer*       GetIndexBuffer() { return mIndxBuffer.get(); }
+    const IndexBuffer* GetIndexBuffer() const { return mIndxBuffer.get(); }
+
+    GLResourceReference*       GetResourceToken() { return mGlToken.get(); }
+    const GLResourceReference* GetResourceToken() const
     {
-      return mRenderDevice;
+      return mGlToken.get();
     }
 
-    SRX_INLINE bool IsValid() const { return mResource && mRenderDevice; }
+private:
+    GLRenderDevice* GetRenderDevice()
+    {
+      return mGlToken ? mGlToken->GetRenderDevice() : nullptr;
+    }
+
+    template<typename T>
+    T* CreateBuffer(TUniquePointer<T>& buffer,
+                    const size_t       capacity) RFY_NOEXCEPT;
 
 private:
-    void        MakeExpired() SRX_NOEXCEPT;
-    GLResource* GetDeviceResource() const SRX_NOEXCEPT { return mResource; }
+    GLResourceToken mGlToken;
 
-private:
-    GLRenderDevice* mRenderDevice;
-    GLResource*     mResource;
+    TUniquePointer<VertexBuffer> mVtxBuffer;
+    TUniquePointer<IndexBuffer>  mIndxBuffer;
   };
 
-  using GLResourceToken = TUniquePointer<GLResourceReference>;
+  template<typename VertexType, typename IndexType>
+  GLVertexArray<VertexType, IndexType>::GLVertexArray(
+    GLRenderDevice* glRenderDevice)
+    : mGlToken(AllocateResource(glRenderDevice, GLResourceType::VertexArray))
+  {}
 
-  SRX_NODISCARD GLResourceToken AllocateResource(GLRenderDevice* glRenderDevice,
-                                                 GLResourceType  type)
-    SRX_NOEXCEPT;
-}
+
+  template<typename VertexType, typename IndexType>
+  Status GLVertexArray<VertexType, IndexType>::Initialize(
+    size_t vtxCapacity,
+    size_t indxCapacity /* = 0 */) SRX_NOEXCEPT
+  {
+    SRX_CHECK_MSG(vtxCapacity > 0, "invalid vertex capacity");
+
+    GLRenderDevice* glDevice = GetRenderDevice();
+    if (glDevice == nullptr)
+      return SRX_STATUS_MSG(EStatusCode::Invalid_State, "invalid device token");
+
+    mVtxBuffer = MakeUnique<VertexBuffer>(glDevice, vtxCapacity);
+
+    if (indxCapacity > 0)
+      mIndxBuffer = MakeUnique<IndexBuffer>(glDevice, indxCapacity);
+
+    return SRX_OK;
+  }
+}  // namespace Ruffy::Graphics

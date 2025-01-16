@@ -27,81 +27,64 @@
 
 #pragma once
 
-#include "GLTypes.h"
+#include <Sorex/SxCoreMinimal.h>
+
+#include "GLResourceToken.h"
 
 namespace Sorex::Graphics
 {
-  enum class GLResourceType
+  enum class EShaderType
   {
-    Idle,
-    Texture2D,
-    VertexArray,
-    VertexBuffer,
-    IndexBuffer,
-    ShaderProgram,
-    VertexShader,
-    FragmentShader
+    Vertex,
+    Fragment
   };
 
-  class GLResourceReference;
-  struct GLResource
+  struct GLShaderSource
   {
-    static constexpr GLuint kInvalidResourceId =
-      std::numeric_limits<GLuint>::max();
-
-    GLResourceType type = GLResourceType::Idle;
-
-    GLuint id     = kInvalidResourceId;
-    GLenum target = 0;
-    GLuint value  = 0;
-
-    bool                 inited = false;
-    GLResourceReference* reference;
-
-    SRX_INLINE bool operator==(const GLResource& other) const SRX_NOEXCEPT
-    {
-      return type == other.type && target == other.target && id == other.id;
-    }
-    SRX_INLINE bool operator!=(const GLResource& other) const SRX_NOEXCEPT
-    {
-      return !(*this == other);
-    }
+    EShaderType type;
+    StringView  text;
   };
 
   class GLRenderDevice;
-  class GLResourceReference final
+  class GLShader
   {
-    friend class GLRenderDevice;
-
 public:
-    GLResourceReference(GLRenderDevice* glDevice,
-                        GLResource*     glResource) SRX_NOEXCEPT;
+    SRX_INLINE GLShader(GLRenderDevice*       glRenderDevice,
+                        const GLShaderSource& source) SRX_NOEXCEPT
+      : GLShader(glRenderDevice, source.type, source.text)
+    {}
+    SRX_INLINE GLShader(GLRenderDevice* glRenderDevice,
+                        EShaderType     type,
+                        StringView      source) SRX_NOEXCEPT;
 
-    GLResourceReference(const GLResourceReference& other)            = delete;
-    GLResourceReference& operator=(const GLResourceReference& other) = delete;
+    const String& GetShaderSource() const { return mSource; }
+    EShaderType   GetShaderType() const { return mType; }
 
-    ~GLResourceReference();
-
-    SRX_INLINE GLRenderDevice*       GetRenderDevice() { return mRenderDevice; }
-    SRX_INLINE const GLRenderDevice* GetRenderDevice() const
-    {
-      return mRenderDevice;
-    }
-
-    SRX_INLINE bool IsValid() const { return mResource && mRenderDevice; }
+    SRX_INLINE GLRenderDevice* GetRenderDevice();
+    GLResourceReference* GetResourceToken() { return mGlResourceToken.get(); }
 
 private:
-    void        MakeExpired() SRX_NOEXCEPT;
-    GLResource* GetDeviceResource() const SRX_NOEXCEPT { return mResource; }
+    GLResourceToken mGlResourceToken;
 
-private:
-    GLRenderDevice* mRenderDevice;
-    GLResource*     mResource;
+    EShaderType mType;
+    String      mSource;
   };
 
-  using GLResourceToken = TUniquePointer<GLResourceReference>;
+  SRX_INLINE GLRenderDevice* GLShader::GetRenderDevice()
+  {
+    return mGlResourceToken ? mGlResourceToken->GetRenderDevice() : nullptr;
+  }
 
-  SRX_NODISCARD GLResourceToken AllocateResource(GLRenderDevice* glRenderDevice,
-                                                 GLResourceType  type)
-    SRX_NOEXCEPT;
+  SRX_INLINE GLShader::GLShader(GLRenderDevice* glRenderDevice,
+                                EShaderType     type,
+                                StringView      source) SRX_NOEXCEPT
+    : mGlResourceToken(AllocateResource(glRenderDevice,
+                                        type == EShaderType::Vertex
+                                          ? GLResourceType::VertexShader
+                                          : GLResourceType::FragmentShader))
+    , mType(type)
+    , mSource(source)
+  {}
+
+  using GLShaderPtr = TSharedPointer<GLShader>;
 }

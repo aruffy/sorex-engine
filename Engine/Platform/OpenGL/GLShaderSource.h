@@ -27,81 +27,27 @@
 
 #pragma once
 
-#include "GLTypes.h"
+#include "GLShader.h"
 
 namespace Sorex::Graphics
 {
-  enum class GLResourceType
+  struct GLShaderSource
   {
-    Idle,
-    Texture2D,
-    VertexArray,
-    VertexBuffer,
-    IndexBuffer,
-    ShaderProgram,
-    VertexShader,
-    FragmentShader
-  };
-
-  class GLResourceReference;
-  struct GLResource
-  {
-    static constexpr GLuint kInvalidResourceId =
-      std::numeric_limits<GLuint>::max();
-
-    GLResourceType type = GLResourceType::Idle;
-
-    GLuint id     = kInvalidResourceId;
-    GLenum target = 0;
-    GLuint value  = 0;
-
-    bool                 inited = false;
-    GLResourceReference* reference;
-
-    SRX_INLINE bool operator==(const GLResource& other) const SRX_NOEXCEPT
-    {
-      return type == other.type && target == other.target && id == other.id;
-    }
-    SRX_INLINE bool operator!=(const GLResource& other) const SRX_NOEXCEPT
-    {
-      return !(*this == other);
-    }
-  };
-
-  class GLRenderDevice;
-  class GLResourceReference final
-  {
-    friend class GLRenderDevice;
-
 public:
-    GLResourceReference(GLRenderDevice* glDevice,
-                        GLResource*     glResource) SRX_NOEXCEPT;
+    hash_t      hash;
+    EShaderType type;
+    StringView  text;
 
-    GLResourceReference(const GLResourceReference& other)            = delete;
-    GLResourceReference& operator=(const GLResourceReference& other) = delete;
+    static hash_t GetHash(const String& str);
 
-    ~GLResourceReference();
+    // TODO: Make loadable
+    static const Instance kColorVertexShaderSource;
+    static const Instance kColorFragmentShaderSource;
 
-    SRX_INLINE GLRenderDevice*       GetRenderDevice() { return mRenderDevice; }
-    SRX_INLINE const GLRenderDevice* GetRenderDevice() const
-    {
-      return mRenderDevice;
-    }
+    static const Instance kTextureVertexShaderSource;
+    static const Instance kTextureFragmentShaderSource;
 
-    SRX_INLINE bool IsValid() const { return mResource && mRenderDevice; }
-
-private:
-    void        MakeExpired() SRX_NOEXCEPT;
-    GLResource* GetDeviceResource() const SRX_NOEXCEPT { return mResource; }
-
-private:
-    GLRenderDevice* mRenderDevice;
-    GLResource*     mResource;
+    static const Instance kBitmapTextFragmentShaderSource;
+    static const Instance kSignedDistanceFieldFragmentShaderSource;
   };
-
-  using GLResourceToken = TUniquePointer<GLResourceReference>;
-
-  SRX_NODISCARD GLResourceToken AllocateResource(GLRenderDevice* glRenderDevice,
-                                                 GLResourceType  type)
-    SRX_NOEXCEPT;
 }

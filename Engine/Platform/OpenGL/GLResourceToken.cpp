@@ -56,4 +56,14 @@ namespace Sorex::Graphics
       mRenderDevice->Deallocate(this);
   }
 
+  SRX_NODISCARD GLResourceToken AllocateResource(GLRenderDevice* glRenderDevice,
+                                                 GLResourceType  type)
+    SRX_NOEXCEPT
+  {
+    if (auto token = glRenderDevice->Allocate(type))
+      return token;
+
+    SRX_NOENTRY("GLResource allocation failed");
+    return nullptr;
+  }
 }  // namespace

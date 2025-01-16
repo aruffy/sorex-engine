@@ -27,7 +27,7 @@
 
 #include "GLBuffer.h"
 
-// #include "GLRenderDevice.h"
+#include "GLRenderDevice.h"
 
 namespace Sorex::Graphics
 {
@@ -36,11 +36,10 @@ namespace Sorex::Graphics
     Buffer::Buffer(GLRenderDevice* glDevice, GLResourceType type) SRX_NOEXCEPT
       : mType(type)
     {
-      /* RFY_CHECK(type == GLResourceType::VertexBuffer
+      SRX_CHECK(type == GLResourceType::VertexBuffer
                 || type == GLResourceType::IndexBuffer);
-      _glToken = glDevice ? glDevice->Allocate(type) : nullptr;
-
-      RFY_CHECK_MSG(_glToken, "allocation buffer failed"); */
+      mGlToken = glDevice ? glDevice->Allocate(type) : nullptr;
+      SRX_CHECK_MSG(mGlToken, "allocation buffer failed");
     }
   };
 }

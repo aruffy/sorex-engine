@@ -88,22 +88,19 @@ public:
     using ConstIterator = typename Container::const_iterator;
 
 public:
-    GLBuffer(GLRenderDevice* glRenderDevice,
-             GLResourceType  type,
-             size_t          capacity) SRX_NOEXCEPT;
-    virtual ~GLBuffer() override {}
+    virtual ~GLBuffer() override = default;
 
     GLBuffer(const GLBuffer& other)            = delete;
     GLBuffer& operator=(const GLBuffer& other) = delete;
 
-    SRX_INLINE Iterator begin() { return mBuffer.begin(); }
-    SRX_INLINE Iterator end() { return mBuffer.end(); }
+    Iterator begin() { return mBuffer.begin(); }
+    Iterator end() { return mBuffer.end(); }
 
-    SRX_INLINE ConstIterator cbegin() { return mBuffer.cbegin(); }
-    SRX_INLINE ConstIterator cend() { return mBuffer.cend(); }
+    ConstIterator cbegin() { return mBuffer.cbegin(); }
+    ConstIterator cend() { return mBuffer.cend(); }
 
-    SRX_INLINE bool IsEmpty() const { return mBuffer.empty(); }
-    SRX_INLINE void Clear() { mBuffer.clear(); }
+    bool IsEmpty() const { return mBuffer.empty(); }
+    void Clear() { mBuffer.clear(); }
 
     size_t GetSize() const { return mBuffer.size(); }
     size_t GetCapacity() const { return mBuffer.capacity(); }
@@ -112,6 +109,11 @@ public:
 
     SRX_NODISCARD ValueType* Allocate(size_t number) SRX_NOEXCEPT;
     bool                     PushBack(const ValueType& value) SRX_NOEXCEPT;
+
+protected:
+    GLBuffer(GLRenderDevice* glRenderDevice,
+             GLResourceType  type,
+             size_t          capacity) SRX_NOEXCEPT;
 
 private:
     Container mBuffer;
