@@ -60,10 +60,8 @@ namespace Sorex::Graphics
                                                  GLResourceType  type)
     SRX_NOEXCEPT
   {
-    if (auto token = glRenderDevice->Allocate(type))
-      return token;
-
-    SRX_NOENTRY("GLResource allocation failed");
-    return nullptr;
+    auto token = glRenderDevice ? glRenderDevice->Allocate(type) : nullptr;
+    SRX_CHECK_MSG(token, "GLResource allocation failed");
+    return token;
   }
 }  // namespace

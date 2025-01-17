@@ -28,6 +28,7 @@
 #pragma once
 
 #include <Sorex/SxCoreMinimal.h>
+#include <Sorex/Utils/SxString.h>
 
 #include "GLResourceToken.h"
 
@@ -39,10 +40,24 @@ namespace Sorex::Graphics
     Fragment
   };
 
-  struct GLShaderSource
+  class GLShaderSource final
   {
-    EShaderType type;
-    StringView  text;
+public:
+    SRX_INLINE GLShaderSource(EShaderType type, StringView src) SRX_NOEXCEPT
+      : mType(type)
+      , mSource(src)
+      , mHash(Sorex::Utils::GetHash(src))
+    {}
+
+    EShaderType   GetShaderType() const { return mType; }
+    const String& GetShaderSource() const { return mSource; }
+
+    hash_t GetHash() const { return mHash; }
+
+private:
+    EShaderType mType;
+    String      mSource;
+    hash_t      mHash;
   };
 
   class GLRenderDevice;
@@ -50,30 +65,37 @@ namespace Sorex::Graphics
   {
 public:
     SRX_INLINE GLShader(GLRenderDevice*       glRenderDevice,
-                        const GLShaderSource& source) SRX_NOEXCEPT
-      : GLShader(glRenderDevice, source.type, source.text)
-    {}
+                        const GLShaderSource& source) SRX_NOEXCEPT;
+
     SRX_INLINE GLShader(GLRenderDevice* glRenderDevice,
                         EShaderType     type,
                         StringView      source) SRX_NOEXCEPT;
 
-    const String& GetShaderSource() const { return mSource; }
-    EShaderType   GetShaderType() const { return mType; }
+    const GLShaderSource* GetShaderSource() const { return &mSource; }
+    EShaderType GetShaderType() const { return mSource.GetShaderType(); }
 
     SRX_INLINE GLRenderDevice* GetRenderDevice();
     GLResourceReference* GetResourceToken() { return mGlResourceToken.get(); }
 
 private:
     GLResourceToken mGlResourceToken;
-
-    EShaderType mType;
-    String      mSource;
+    GLShaderSource  mSource;  // TODO: Cleanup after compilation
   };
 
   SRX_INLINE GLRenderDevice* GLShader::GetRenderDevice()
   {
     return mGlResourceToken ? mGlResourceToken->GetRenderDevice() : nullptr;
   }
+
+  SRX_INLINE GLShader::GLShader(GLRenderDevice*       glRenderDevice,
+                                const GLShaderSource& source) SRX_NOEXCEPT
+    : mGlResourceToken(AllocateResource(glRenderDevice,
+                                        source.GetShaderType()
+                                            == EShaderType::Vertex
+                                          ? GLResourceType::VertexShader
+                                          : GLResourceType::FragmentShader))
+    , mSource(source)
+  {}
 
   SRX_INLINE GLShader::GLShader(GLRenderDevice* glRenderDevice,
                                 EShaderType     type,
@@ -82,9 +104,9 @@ private:
                                         type == EShaderType::Vertex
                                           ? GLResourceType::VertexShader
                                           : GLResourceType::FragmentShader))
-    , mType(type)
-    , mSource(source)
+    , mSource(type, source)
   {}
+
 
   using GLShaderPtr = TSharedPointer<GLShader>;
 }

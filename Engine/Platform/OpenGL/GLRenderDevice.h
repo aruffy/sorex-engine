@@ -31,6 +31,7 @@
 
 #include "GLTypes.h"
 #include "GLResourceToken.h"
+#include "GLShader.h"
 
 namespace Sorex::Graphics
 {
@@ -62,6 +63,9 @@ public:
      */
     void Deallocate(GLResourceReference* glResource) SRX_NOEXCEPT;
 
+    GLShaderPtr GetOrCreateShader(const GLShaderSource& shaderSource)
+      SRX_NOEXCEPT;
+
 protected:
     virtual TUniquePointer<Renderer> CreateRenderer(const RuntimeClass& cls,
                                                     ssize_t capacity)
@@ -78,7 +82,8 @@ private:
     void DeallocateResource(GLResource& resource) SRX_NOEXCEPT;
 
 private:
-    TLinkedList<GLResource> mResources;
+    TLinkedList<GLResource>       mResources;
+    THashMap<hash_t, GLShaderPtr> mShaders;
   };
 
 }  // namespace

@@ -189,4 +189,20 @@ namespace Sorex::Graphics
     return bIsValid;
   }
 
+  GLShaderPtr GLRenderDevice::GetOrCreateShader(
+    const GLShaderSource& shaderSource) SRX_NOEXCEPT
+  {
+    const auto key = shaderSource.GetHash();
+    if (auto it = mShaders.find(key); it != mShaders.end())
+      return it->second;
+
+    if (GLShaderPtr shader = std::make_shared<GLShader>(this, shaderSource))
+    {
+      mShaders[key] = shader;
+      return shader;
+    }
+
+    return nullptr;
+  }
+
 }  // namespace

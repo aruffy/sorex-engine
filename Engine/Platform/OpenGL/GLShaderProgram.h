@@ -32,7 +32,7 @@
 // #include "GLUniform.h"
 // #include "GLTexture2D.h"
 
-namespace Ruffy::Graphics
+namespace Sorex::Graphics
 {
   // @note: used as array index
   enum class ERenderingMode : uint32
@@ -45,62 +45,52 @@ namespace Ruffy::Graphics
   };
 
   class GLRenderDevice;
-  class GLShaderProgram
+  class GLShaderProgram final
   {
 public:
-    static TUniquePointer<GLShaderProgram> CreateFromSource(
-      GLRenderDevice*                 glRenderDevice,
-      const GLShaderSource::Instance& vert,
-      const GLShaderSource::Instance& frag,
-      Error*                          error);
+    static TUniquePointer<GLShaderProgram> Create(
+      GLRenderDevice&       glRenderDevice,
+      const GLShaderSource& vert,
+      const GLShaderSource& frag,
+      Status&               status) SRX_NOEXCEPT;
+
+    GLShaderProgram(GLRenderDevice* glRenderDevice,
+                    GLShaderPtr     vert,
+                    GLShaderPtr     frag) SRX_NOEXCEPT;
 
     GLShaderProgram(const GLShaderProgram& other)      = delete;
     GLShaderProgram& operator=(GLShaderProgram& other) = delete;
 
-    RFY_NODISCARD bool Initialize(Error* error) RFY_NOEXCEPT;
+    Status Initialize() SRX_NOEXCEPT;
 
-    inline const GLResourceReference* GetResourceToken() const
-    {
-      return _glResourceToken.get();
-    }
-    inline GLRenderDevice* GetRenderDevice();
+    const GLResourceReference* GetResourceToken() const { return mToken.get(); }
+    SRX_INLINE GLRenderDevice* GetRenderDevice();
 
-    inline ERenderingMode GetRenderingMode() const { return _mode; }
-    inline void SetRenderingMode(ERenderingMode value) { _mode = value; }
+    ERenderingMode GetRenderingMode() const { return mMode; }
+    void SetRenderingMode(const ERenderingMode value) { mMode = value; }
 
-    const TVector<GLShaderPointer>& GetShaders() const { return _shaders; }
-    GLShaderPointer                 GetShader(EShaderType shaderType);
+    TSpan<const GLShaderPtr> GetShaders() const { return mShaders; }
+    GLShaderPtr              GetShader(EShaderType shaderType) SRX_NOEXCEPT;
 
-    inline const TVector<GLUniform*>& GetUniforms() const { return _uniforms; }
-    const GLUniform*                  GetShaderParam(const String& name) const;
-    GLUniform*                        GetShaderParam(const String& name);
-
-    bool SetTexture(uint32                index,
-                    const Texture2D*      texture,
-                    const TextureSampler* sampler,
-                    Error*                error);
+    // inline const TVector<GLUniform*>& GetUniforms() const { return _uniforms;
+    // }
+    // const GLUniform* GetShaderParam(const String& name) const;
+    // GLUniform*       GetShaderParam(const String& name);
 
 private:
-    GLShaderProgram(GLRenderDevice* glRenderDevice,
-                    GLShaderPointer vert,
-                    GLShaderPointer frag);
-
-    // cppcheck-suppress functionConst
-    bool       SetTexCoordTransform(uint32         index,
-                                    const Vector2& transform,
-                                    Error*         error);
-    GLUniform* FindUniform(const hash_t hash) const;
+    // GLUniform* FindUniform(const hash_t hash) const;
 
 private:
-    GLResourceToken _glResourceToken;
+    GLResourceToken mToken;
 
-    ERenderingMode           _mode;
-    TVector<GLShaderPointer> _shaders;
-    TVector<GLUniform*>      _uniforms;
+    ERenderingMode       mMode;
+    TVector<GLShaderPtr> mShaders;
+
+    // TVector<GLUniform*>  _uniforms;
   };
 
-  inline GLRenderDevice* GLShaderProgram::GetRenderDevice()
+  SRX_INLINE GLRenderDevice* GLShaderProgram::GetRenderDevice()
   {
-    return _glResourceToken ? _glResourceToken->GetRenderDevice() : nullptr;
+    return mToken ? mToken->GetRenderDevice() : nullptr;
   }
 }
