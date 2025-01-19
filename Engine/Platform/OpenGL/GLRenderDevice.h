@@ -32,6 +32,7 @@
 #include "GLTypes.h"
 #include "GLResourceToken.h"
 #include "GLShader.h"
+#include "GLShaderProgram.h"
 
 namespace Sorex::Graphics
 {
@@ -65,6 +66,10 @@ public:
 
     GLShaderPtr GetOrCreateShader(const GLShaderSource& shaderSource)
       SRX_NOEXCEPT;
+
+    /* Status GLRenderDevice::BuildShaderProgram(
+      const GLShaderProgram& shaderProgram,
+      TVector<GLUniform*>&   uniforms); */
 
 protected:
     virtual TUniquePointer<Renderer> CreateRenderer(const RuntimeClass& cls,

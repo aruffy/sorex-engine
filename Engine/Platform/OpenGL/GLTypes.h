@@ -52,10 +52,24 @@
 
 #endif
 
-using GLString     = Sorex::BasicString<GLchar>;
-using GLStringView = Sorex::BasicStringView<GLchar>;
 
-namespace Ruffy::Graphics::OpenGL
+namespace Sorex::Graphics
 {
-  bool GLAPIENTRY CheckErrors(const char* func, const char* file, int line);
+  using GLString     = Sorex::BasicString<GLchar>;
+  using GLStringView = Sorex::BasicStringView<GLchar>;
+
+  namespace OpenGL
+  {
+    namespace Concept
+    {
+      template<typename T>
+      concept GLBuiltin =
+        std::is_same_v<T, GLbyte> || std::is_same_v<T, GLubyte>
+        || std::is_same_v<T, GLushort> || std::is_same_v<T, GLshort>
+        || std::is_same_v<T, GLuint> || std::is_same_v<T, GLint>
+        || std::is_same_v<T, GLfloat> || std::is_same_v<T, GLdouble>;
+    }
+
+    bool GLAPIENTRY CheckErrors(const char* func, const char* file, int line);
+  }
 }

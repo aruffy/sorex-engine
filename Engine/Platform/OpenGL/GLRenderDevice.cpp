@@ -205,4 +205,38 @@ namespace Sorex::Graphics
     return nullptr;
   }
 
+  /*   bool GLRenderDevice::BuildShaderProgram(const GLShaderProgram*
+    shaderProgram, TVector<GLUniform*>&   uniforms, Error* error)
+    {
+      RFY_CHECK(Thread::IsMainThread());
+
+      const GLResourceReference* token =
+        shaderProgram ? shaderProgram->GetResourceToken() : nullptr;
+      GLResource* program = GetResource(token);
+
+      if (program == nullptr)
+      {
+        RFY_MAKE_ERR(
+          error,
+          Error::Invalid_Argument,
+          "[GLRenderDevice] Shader program invalid or has expired token");
+        return false;
+      }
+
+      if (program->isInited)
+        return true;
+
+      // Compile shaders if needed
+      const TVector<GLShaderPointer>& shaders = shaderProgram->GetShaders();
+      for (size_t i = 0; i < shaders.size(); ++i)
+      {
+        const GLShaderPointer& shader   = shaders[i];
+        uint32                 shaderId = CompileShader(shader, error);
+
+        if (!shaderId)
+          return false;
+
+        OPENGL_CALL(glAttachShader(program->id, shaderId));
+      } */
+
 }  // namespace

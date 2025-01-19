@@ -142,7 +142,7 @@ public:
     static constexpr bool TIsIndexType = std::is_same_v<index_t, T>;
 
     static constexpr bool kIsValidIndexType =
-      (TIsIndexType<GLbyte> || TIsIndexType<GLshort> || TIsIndexType<GLint>);
+      (TIsIndexType<GLubyte> || TIsIndexType<GLushort> || TIsIndexType<GLuint>);
 
     static_assert(kIsValidIndexType, "invalid index type");
 
