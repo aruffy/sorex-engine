@@ -50,7 +50,7 @@ namespace Sorex::Graphics
   };
 
   class GLRenderDevice;
-  class GLUniform
+  class GLUniform final
   {
 public:
     explicit GLUniform(const GLUniformInfo& uniform) SRX_NOEXCEPT;
@@ -58,6 +58,10 @@ public:
 
     GLUniform(const GLUniform& other)            = delete;
     GLUniform& operator=(const GLUniform& other) = delete;
+
+    GLUniform(GLUniform&& other) SRX_NOEXCEPT;
+    GLUniform& operator=(GLUniform&& other) SRX_NOEXCEPT;
+
 
     EStatusCode Apply() SRX_NOEXCEPT;
 
@@ -127,6 +131,7 @@ private:
 private:
     enum class ESetterType : uint8
     {
+      None,
       Int,
       UInt,
       Float,
@@ -145,8 +150,8 @@ private:
     };
 
 private:
-    const GLUniformInfo mParams;
-    MemoryBlock         mValue;
+    GLUniformInfo mParams;
+    MemoryBlock   mValue;
 
     Setter      mSetter;
     ESetterType mSetterType;

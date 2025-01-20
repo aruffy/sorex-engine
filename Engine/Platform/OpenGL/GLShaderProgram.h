@@ -29,7 +29,8 @@
 
 #include "GLResourceToken.h"
 #include "GLShader.h"
-// #include "GLUniform.h"
+#include "GLUniform.h"
+
 // #include "GLTexture2D.h"
 
 namespace Sorex::Graphics
@@ -86,7 +87,7 @@ private:
     ERenderingMode       mMode;
     TVector<GLShaderPtr> mShaders;
 
-    // TVector<GLUniform*>  _uniforms;
+    TVector<GLUniform> mUniforms;
   };
 
   SRX_INLINE GLRenderDevice* GLShaderProgram::GetRenderDevice()

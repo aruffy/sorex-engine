@@ -68,8 +68,7 @@ namespace Sorex::Graphics
       return SRX_STATUS_MSG(EStatusCode::Invalid_State,
                             "Invalid render device");
 
-    // return glDevice->BuildShaderProgram(this, _uniforms);
-    return SRX_OK;
+    return glDevice->BuildShaderProgram(*this, mUniforms);
   }
 
   GLShaderPtr GLShaderProgram::GetShader(EShaderType shaderType) SRX_NOEXCEPT
@@ -83,20 +82,4 @@ namespace Sorex::Graphics
 
     return (it != mShaders.end() ? (*it) : nullptr);
   }
-  /*
-    RFY_NODISCARD bool GLShaderProgram::Initialize(Error* error) RFY_NOEXCEPT
-    {
-      GLRenderDevice* glDevice = GetRenderDevice();
-      if (!glDevice)
-      {
-        RFY_MAKE_ERR(error, Error::Invalid_State, "Invalid render device");
-        return false;
-      }
-
-      if (glDevice->BuildShaderProgram(this, _uniforms, error) == false)
-        return false;
-
-      return true;
-    }
-   */
-}
+}  // namespace

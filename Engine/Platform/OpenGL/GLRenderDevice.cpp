@@ -28,6 +28,7 @@
 #include "GLRenderDevice.h"
 
 #include <Sorex/SxThread.h>
+#include <Sorex/Utils/SxString.h>
 
 namespace Sorex::Graphics
 {
@@ -96,13 +97,17 @@ namespace Sorex::Graphics
       return nullptr;
     }
 
-    GLResource glResource;
-    glResource.id     = id;
-    glResource.type   = type;
-    glResource.target = target;
-    mResources.push_front(std::move(glResource));
+    mResources.emplace_front();
+    GLResource& glResource = mResources.front();
+    auto        token      = MakeUnique<GLResourceReference>(this, &glResource);
 
-    return MakeUnique<GLResourceReference>(this, &(mResources.front()));
+    glResource.id        = id;
+    glResource.type      = type;
+    glResource.target    = target;
+    glResource.inited    = false;
+    glResource.reference = token.get();
+
+    return token;
   }
 
   void GLRenderDevice::Deallocate(GLResourceReference* glResourceReference)
@@ -205,38 +210,181 @@ namespace Sorex::Graphics
     return nullptr;
   }
 
-  /*   bool GLRenderDevice::BuildShaderProgram(const GLShaderProgram*
-    shaderProgram, TVector<GLUniform*>&   uniforms, Error* error)
+  Status GLRenderDevice::BuildShaderProgram(
+    const GLShaderProgram& shaderProgram,
+    TVector<GLUniform>&    uniforms) SRX_NOEXCEPT
+  {
+    SRX_CHECK(Thread::IsMainThread());
+
+    const GLResourceReference* token   = shaderProgram.GetResourceToken();
+    GLResource*                program = GetResource(token);
+
+    if (program == nullptr)
+      return SRX_STATUS_MSG(
+        EStatusCode::Invalid_Argument,
+        "[GLRenderDevice] Shader program invalid or has expired token");
+
+    if (program->inited)
     {
-      RFY_CHECK(Thread::IsMainThread());
+      SRX_NOENTRY("shader program already inited");
+      return SRX_OK;
+    }
 
-      const GLResourceReference* token =
-        shaderProgram ? shaderProgram->GetResourceToken() : nullptr;
-      GLResource* program = GetResource(token);
+    GLuint                   shaderId;
+    TSpan<const GLShaderPtr> shaders = shaderProgram.GetShaders();
+    for (const GLShaderPtr& shader : shaders)
+    {
+      if (auto status = CompileShader(shader, shaderId); !status.Ok())
+        return status;
 
-      if (program == nullptr)
-      {
-        RFY_MAKE_ERR(
-          error,
-          Error::Invalid_Argument,
-          "[GLRenderDevice] Shader program invalid or has expired token");
-        return false;
-      }
+      SRX_OPENGL_CALL(glAttachShader(program->id, shaderId));
+    }
 
-      if (program->isInited)
-        return true;
+    // TODO: From shader_program [attrib, name]
+    // TODO: Default Uniform Block
+    SRX_OPENGL_CALL(glBindAttribLocation(program->id,
+                                         (GLuint)EVertexAttrib::Position,
+                                         "a_position"));
+    SRX_OPENGL_CALL(glBindAttribLocation(program->id,
+                                         (GLuint)EVertexAttrib::Color,
+                                         "a_color"));
+    SRX_OPENGL_CALL(glBindAttribLocation(program->id,
+                                         (GLuint)EVertexAttrib::Color_1,
+                                         "a_color_1"));
+    SRX_OPENGL_CALL(glBindAttribLocation(program->id,
+                                         (GLuint)EVertexAttrib::TexCoord,
+                                         "a_texcoord"));
+    SRX_OPENGL_CALL(glBindAttribLocation(program->id,
+                                         (GLuint)EVertexAttrib::TexCoord_1,
+                                         "a_texcoord_1"));
 
-      // Compile shaders if needed
-      const TVector<GLShaderPointer>& shaders = shaderProgram->GetShaders();
-      for (size_t i = 0; i < shaders.size(); ++i)
-      {
-        const GLShaderPointer& shader   = shaders[i];
-        uint32                 shaderId = CompileShader(shader, error);
+    SRX_OPENGL_CALL(glLinkProgram(program->id));
+    SRX_OPENGL_CALL(glValidateProgram(program->id));
 
-        if (!shaderId)
-          return false;
+    GLint success;
+    SRX_OPENGL_CALL(glGetProgramiv(program->id, GL_LINK_STATUS, &success));
+    if (success != GL_TRUE)
+    {
+      GLint length;
+      SRX_OPENGL_CALL(glGetProgramiv(program->id, GL_INFO_LOG_LENGTH, &length));
 
-        OPENGL_CALL(glAttachShader(program->id, shaderId));
-      } */
+      GLString errmsg(length + 1, GLchar(0));
+      SRX_OPENGL_CALL(
+        glGetProgramInfoLog(program->id, length, NULL, &errmsg[0]));
 
+      return SRX_STATUS_MSG(EStatusCode::Not_Available,
+                            "Shader program linker failed: {}",
+                            errmsg);
+    }
+
+    // if (LoadUniforms(*program, uniforms, error) == false)
+    // return false;
+
+    program->value  = static_cast<GLuint>(uniforms.size());
+    program->inited = true;
+    return SRX_OK;
+  }
+
+  Status GLRenderDevice::CompileShader(const GLShaderPtr& shader,
+                                       GLuint&            shaderId) SRX_NOEXCEPT
+  {
+    SRX_CHECK(Thread::IsMainThread());
+
+    GLResourceReference* token = shader ? shader->GetResourceToken() : nullptr;
+    GLResource*          resource = GetResource(token);
+
+    if (resource == nullptr)
+      return SRX_STATUS_MSG(EStatusCode::Invalid_Argument,
+                            "[GLRenderDevice] Invalid shader to compile");
+
+    if (resource->inited)
+    {
+      shaderId = resource->id;
+      return SRX_OK;
+    }
+
+    SRX_CHECK(shader->GetShaderSource());
+    const GLchar* source = static_cast<const GLchar*>(
+      shader->GetShaderSource()->GetScript().c_str());
+
+    SRX_OPENGL_CALL(glShaderSource(resource->id, 1, &source, NULL));
+    SRX_OPENGL_CALL(glCompileShader(resource->id));
+
+    Status status;
+    GLint  success;
+    SRX_OPENGL_CALL(glGetShaderiv(resource->id, GL_COMPILE_STATUS, &success));
+    if (success != GL_TRUE)
+    {
+      GLint length;
+      SRX_OPENGL_CALL(glGetShaderiv(resource->id, GL_INFO_LOG_LENGTH, &length));
+
+      GLString errmsg(length, GLchar(0));
+      SRX_CHECK(errmsg.length() >= (size_t)length);
+      SRX_OPENGL_CALL(
+        glGetShaderInfoLog(resource->id, length, NULL, &errmsg[0]));
+
+      // TODO: make error_category OpenGL
+      status = SRX_STATUS_MSG(EStatusCode::Invalid_Argument,
+                              "[GLShader] OpenGL shader compile error: {}",
+                              errmsg);
+    }
+    else
+    {
+      shaderId         = resource->id;
+      resource->inited = true;
+    }
+
+    return status;
+  }
+
+  Status GLRenderDevice::LoadUniforms(GLResource&         program,
+                                      TVector<GLUniform>& uniforms) SRX_NOEXCEPT
+  {
+    SRX_CHECK(program.type == GLResourceType::ShaderProgram);
+
+    GLint number = 0, maxLength = 0;
+    SRX_OPENGL_CALL(glGetProgramiv(program.id, GL_ACTIVE_UNIFORMS, &number));
+    SRX_OPENGL_CALL(
+      glGetProgramiv(program.id, GL_ACTIVE_UNIFORM_MAX_LENGTH, &maxLength));
+
+    uniforms.clear();
+
+    if (number <= 0)
+      return SRX_OK;
+
+    SRX_CHECK(maxLength);
+    GLString buffer(maxLength + 1, GLchar(0));
+
+    GLchar*       name = &buffer[0];
+    GLUniformInfo uniform;
+    GLsizei       length;
+
+    uniforms.reserve((size_t)number);
+
+    for (GLuint i = 0; i < static_cast<GLuint>(number); ++i)
+    {
+      SRX_OPENGL_CALL(glGetActiveUniform(program.id,
+                                         i,
+                                         maxLength,
+                                         &length,
+                                         &uniform.count,
+                                         &uniform.type,
+                                         name));
+
+      // @note: cut the uniform name for arrays
+      if (const size_t indx = buffer.find('['); indx != buffer.npos)
+        buffer[indx] = GLchar(0);
+
+      uniform.location =
+        SRX_OPENGL_CALL(glGetUniformLocation(program.id, name));
+      uniform.hash = Sorex::Utils::GetHash(StringView(name));
+
+#ifdef SRX_DEBUG_MEDIUM
+      uniform.name.assign(name);
+#endif
+      uniforms.emplace_back(uniform);
+    }
+
+    return SRX_OK;
+  }
 }  // namespace

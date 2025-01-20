@@ -28,11 +28,13 @@
 #pragma once
 
 #include <Sorex/Graphics/SxRenderDevice.h>
+#include <Sorex/Graphics/SxVertex.h>
 
 #include "GLTypes.h"
 #include "GLResourceToken.h"
 #include "GLShader.h"
 #include "GLShaderProgram.h"
+#include "GLUniform.h"
 
 namespace Sorex::Graphics
 {
@@ -67,9 +69,10 @@ public:
     GLShaderPtr GetOrCreateShader(const GLShaderSource& shaderSource)
       SRX_NOEXCEPT;
 
-    /* Status GLRenderDevice::BuildShaderProgram(
-      const GLShaderProgram& shaderProgram,
-      TVector<GLUniform*>&   uniforms); */
+    Status BuildShaderProgram(const GLShaderProgram& shaderProgram,
+                              TVector<GLUniform>&    uniforms) SRX_NOEXCEPT;
+    Status LoadUniforms(GLResource&         program,
+                        TVector<GLUniform>& uniforms) SRX_NOEXCEPT;
 
 protected:
     virtual TUniquePointer<Renderer> CreateRenderer(const RuntimeClass& cls,
@@ -85,6 +88,9 @@ private:
     bool IsValidResourceReference(const GLResourceReference* glResource) const
       SRX_NOEXCEPT;
     void DeallocateResource(GLResource& resource) SRX_NOEXCEPT;
+
+    Status CompileShader(const GLShaderPtr& shader,
+                         GLuint&            shaderId) SRX_NOEXCEPT;
 
 private:
     TLinkedList<GLResource>       mResources;

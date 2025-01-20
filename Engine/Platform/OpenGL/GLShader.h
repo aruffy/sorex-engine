@@ -49,10 +49,10 @@ public:
       , mHash(Sorex::Utils::GetHash(src))
     {}
 
-    EShaderType   GetShaderType() const { return mType; }
-    const String& GetShaderSource() const { return mSource; }
+    EShaderType GetShaderType() const { return mType; }
 
-    hash_t GetHash() const { return mHash; }
+    const String& GetScript() const { return mSource; }
+    hash_t        GetHash() const { return mHash; }
 
 private:
     EShaderType mType;

@@ -38,18 +38,17 @@
 #endif
 
 #if defined(SOREX_OPENGL_DEBUG_OUTPUT) && defined(GL_DEBUG_OUTPUT)
-#  define SRX_OPENGL_FN(expr) expr
+#  define SRX_OPENGL_CALL(expr) expr
 
 #elif defined(SOREX_DEBUG_MEDIUM)
-#  define SRX_OPENGL_FN(expr)                                           \
-    ((void)(expr));                                                     \
+#  define SRX_OPENGL_CALL(expr)                                         \
+    (expr);                                                             \
     SRX_ASSERT_MSG(                                                     \
       !Sorex::Graphics::OpenGL::CheckErrors(#expr, __FILE__, __LINE__), \
       #expr)
 
 #else
-#  define SRX_OPENGL_FN(expr) ((void)(expr))
-
+#  define SRX_OPENGL_CALL(expr) expr
 #endif
 
 

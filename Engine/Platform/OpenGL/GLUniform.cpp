@@ -27,14 +27,6 @@
 
 #include "GLUniform.h"
 
-#include "GLRenderDevice.h"
-
-namespace
-{
-  /* const Sorex::THash<Sorex::Graphics::GLStringView> glHasher =
-    Sorex::THash<Sorex::Graphics::GLStringView>(); */
-}
-
 namespace Sorex::Graphics
 {
   bool GLUniformInfo::IsValid(const GLUniformInfo& uniform) SRX_NOEXCEPT
@@ -45,10 +37,39 @@ namespace Sorex::Graphics
 
   GLUniform::GLUniform(const GLUniformInfo& uniform) SRX_NOEXCEPT
     : mParams(uniform)
+    , mSetterType(ESetterType::None)
     , mIsUpdated(false)  // https://docs.gl/es3/glUniform
   {
     SRX_CHECK(GLUniformInfo::IsValid(uniform));
     Allocate();
+  }
+
+  GLUniform::GLUniform(GLUniform&& other) SRX_NOEXCEPT
+    : mParams(other.mParams)
+    , mValue(other.mValue)
+    , mSetter(other.mSetter)
+    , mSetterType(other.mSetterType)
+    , mIsUpdated(other.mIsUpdated)
+  {
+    other.mSetterType = ESetterType::None;
+    other.mValue.Nullify();
+  }
+
+  GLUniform& GLUniform::operator=(GLUniform&& other) SRX_NOEXCEPT
+  {
+    if (mValue.IsValid())
+      delete[] mValue.GetData();
+
+    mParams     = other.mParams;
+    mValue      = other.mValue;
+    mSetter     = other.mSetter;
+    mSetterType = other.mSetterType;
+    mIsUpdated  = other.mIsUpdated;
+
+    other.mSetterType = ESetterType::None;
+    other.mValue.Nullify();
+
+    return *this;
   }
 
   GLUniform::~GLUniform()
