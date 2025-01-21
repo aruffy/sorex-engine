@@ -73,8 +73,8 @@ public:
     TSpan<const GLShaderPtr> GetShaders() const { return mShaders; }
     GLShaderPtr              GetShader(EShaderType shaderType) SRX_NOEXCEPT;
 
-    // inline const TVector<GLUniform*>& GetUniforms() const { return _uniforms;
-    // }
+    TSpan<const GLUniform> GetUniforms() const { return mUniforms; }
+
     // const GLUniform* GetShaderParam(const String& name) const;
     // GLUniform*       GetShaderParam(const String& name);
 

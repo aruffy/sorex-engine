@@ -55,6 +55,38 @@ public:
       return mGlToken.get();
     }
 
+    SRX_INLINE VertexType* AllocateVertex(const size_t num) SRX_NOEXCEPT
+    {
+      return mVtxBuffer ? mVtxBuffer->Allocate(num) : nullptr;
+    }
+    SRX_INLINE size_t GetVertexCapacity() const SRX_NOEXCEPT
+    {
+      return mVtxBuffer ? mVtxBuffer->GetCapacity() : 0;
+    }
+    SRX_INLINE size_t GetVertexNum() const SRX_NOEXCEPT
+    {
+      return mVtxBuffer ? mVtxBuffer->GetSize() : 0;
+    }
+
+    bool IsEmpty() const SRX_NOEXCEPT
+    {
+      if (mVtxBuffer && mVtxBuffer->IsEmpty())
+      {
+        SRX_CHECK(!mIndxBuffer || mIndxBuffer->IsEmpty());
+        return true;
+      }
+
+      return false;
+    }
+
+    void Clear() SRX_NOEXCEPT
+    {
+      if (mVtxBuffer)
+        mVtxBuffer->Clear();
+      if (mIndxBuffer)
+        mIndxBuffer->Clear();
+    }
+
 private:
     GLRenderDevice* GetRenderDevice()
     {
@@ -63,7 +95,7 @@ private:
 
     template<typename T>
     T* CreateBuffer(TUniquePointer<T>& buffer,
-                    const size_t       capacity) RFY_NOEXCEPT;
+                    const size_t       capacity) SRX_NOEXCEPT;
 
 private:
     GLResourceToken mGlToken;
@@ -94,6 +126,8 @@ private:
 
     if (indxCapacity > 0)
       mIndxBuffer = MakeUnique<IndexBuffer>(glDevice, indxCapacity);
+    else
+      mIndxBuffer = nullptr;
 
     return SRX_OK;
   }
