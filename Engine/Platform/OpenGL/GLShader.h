@@ -107,6 +107,20 @@ private:
     , mSource(type, source)
   {}
 
-
   using GLShaderPtr = TSharedPointer<GLShader>;
-}
+
+  namespace OpenGL
+  {
+    struct Shader
+    {
+      static const GLShaderSource kColorVertexShaderSource;
+      static const GLShaderSource kColorFragmentShaderSource;
+
+      // static const GLShaderSource kTextureVertexShaderSource;
+      // static const GLShaderSource kTextureFragmentShaderSource;
+      //
+      // static const GLShaderSource kBitmapTextFragmentShaderSource;
+      // static const GLShaderSource kSignedDistanceFieldFragmentShaderSource;
+    };
+
+  }
