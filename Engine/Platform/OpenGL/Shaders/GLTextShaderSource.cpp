@@ -53,7 +53,7 @@ distance);
         }
     )";
 }
-*/
+
 namespace Ruffy::Graphics
 {
   const GLShaderSource::Instance
@@ -70,3 +70,4 @@ namespace Ruffy::Graphics
       __kSignedDistanceFieldFragmentShaderSource
     };
 }
+*/

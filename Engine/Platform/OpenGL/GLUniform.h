@@ -108,7 +108,7 @@ public:
       return SetValueInternal(&vecs[0][0], N * sizeof(T) * vecs.size());
     }
 
-    template<OpenGL::Concept::GLBuiltin T>
+    template<OpenGL::Concept::GLFloatingPoint T>
     EStatusCode SetMatrix(const T*     mat,
                           const size_t m,
                           const size_t n) SRX_NOEXCEPT
@@ -116,7 +116,7 @@ public:
       return SetValueInternal(static_cast<const void*>(mat), m * n * sizeof(T));
     }
 
-    template<typename T>
+    template<OpenGL::Concept::GLFloatingPoint T>
     EStatusCode SetMatrix(const Math::TMatrix3x3<T>& matrix) SRX_NOEXCEPT
     {
       return SetValueInternal(static_cast<const void*>(matrix.GetValuePtr()),
@@ -158,4 +158,4 @@ private:
 
     bool mIsUpdated;
   };
-}
+}  // namespace

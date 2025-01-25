@@ -43,6 +43,8 @@ namespace Sorex::Graphics
     FragmentShader
   };
 
+  String ToString(const GLResourceType type) SRX_NOEXCEPT;
+
   class GLResourceReference;
   struct GLResource
   {

@@ -31,6 +31,31 @@
 
 namespace Sorex::Graphics
 {
+  String ToString(const GLResourceType type) SRX_NOEXCEPT
+  {
+    switch (type)
+    {
+    case GLResourceType::Idle:
+      return "Idle";
+    case GLResourceType::Texture2D:
+      return "Texture 2D";
+    case GLResourceType::VertexArray:
+      return "Vertex Array";
+    case GLResourceType::VertexBuffer:
+      return "Vertex Buffer";
+    case GLResourceType::IndexBuffer:
+      return "Index Buffer";
+    case GLResourceType::ShaderProgram:
+      return "Shader Program";
+    case GLResourceType::VertexShader:
+      return "Vertex Shader";
+    case GLResourceType::FragmentShader:
+      return "Fragment Shader";
+    default:
+      return "Unknown";
+    }
+  }
+
   GLResourceReference::GLResourceReference(GLRenderDevice* glDevice,
                                            GLResource* glResource) SRX_NOEXCEPT
     : mRenderDevice(glDevice)

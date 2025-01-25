@@ -94,4 +94,4 @@ private:
   {
     return mToken ? mToken->GetRenderDevice() : nullptr;
   }
-}
+}  // namespace

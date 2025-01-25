@@ -51,16 +51,14 @@ namespace Sorex::Graphics
     if (!status.Ok())
       return status;
 
-    /*
-        mShaderProgram = GLShaderProgram::CreateFromSource(
-          _glDevice,
-          GLShaderSource::kColorVertexShaderSource,
-          GLShaderSource::kColorFragmentShaderSource,
-          error);
-     */
-    // if (!_shaderProgram)
-    // return false;
-    mShaderProgram->SetRenderingMode(ERenderingMode::Lines);
+    mShaderProgram =
+      GLShaderProgram::Create(*mRenderDevice,
+                              OpenGL::Shader::kColorVertexShaderSource,
+                              OpenGL::Shader::kColorFragmentShaderSource,
+                              status);
+    if (mShaderProgram)
+      mShaderProgram->SetRenderingMode(ERenderingMode::Lines);
+
     return status;
   }
 

@@ -123,4 +123,5 @@ private:
       // static const GLShaderSource kSignedDistanceFieldFragmentShaderSource;
     };
 
-  }
+  }  // namespace OpenGL
+}  // namespace

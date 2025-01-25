@@ -35,6 +35,7 @@
 #include "GLShader.h"
 #include "GLShaderProgram.h"
 #include "GLUniform.h"
+#include "GLRenderContext.h"
 
 namespace Sorex::Graphics
 {
@@ -43,6 +44,7 @@ namespace Sorex::Graphics
     SRX_RTTI(Graphics::GLRenderDevice, Graphics::RenderDevice)
 
 public:
+    GLRenderDevice() SRX_NOEXCEPT;
     virtual ~GLRenderDevice() override;
 
     GLRenderDevice(const GLRenderDevice& other)            = delete;
@@ -95,6 +97,9 @@ private:
 private:
     TLinkedList<GLResource>       mResources;
     THashMap<hash_t, GLShaderPtr> mShaders;
+
+    TUniquePointer<GLRenderContext> mRenderContext;
+    GLShaderProgram*                mActiveShaderProgram;
   };
 
 }  // namespace

@@ -32,9 +32,12 @@
 
 namespace Sorex::Graphics
 {
+  GLRenderDevice::GLRenderDevice() SRX_NOEXCEPT: mActiveShaderProgram(nullptr)
+  {}
 
   GLRenderDevice::~GLRenderDevice()
   {
+    mActiveShaderProgram = nullptr;
     for (auto res : mResources)
     {
       if (res.reference)
@@ -47,7 +50,7 @@ namespace Sorex::Graphics
   Status GLRenderDevice::Initialize()
   {
     // _extensions    = MakeUnique<GLExtensions>();
-    // _renderContext = MakeUnique<GLRenderContext>(*this);
+    mRenderContext = MakeUnique<GLRenderContext>(*this);
 
 #ifdef SOREX_OPENGL_DEBUG_OUTPUT
     // OpenGL::EnableDebugOutput(this);
@@ -59,6 +62,7 @@ namespace Sorex::Graphics
     SRX_NOEXCEPT
   {
     SRX_CHECK(Thread::IsMainThread());
+    SRX_DEBUG("[GLRenderDevice] Allocate '{}' resource", ToString(type));
 
     GLuint id     = 0;
     GLenum target = 0;
@@ -125,6 +129,8 @@ namespace Sorex::Graphics
   void GLRenderDevice::DeallocateResource(GLResource& resource) SRX_NOEXCEPT
   {
     SRX_CHECK(Thread::IsMainThread());
+    SRX_TRACE("[GLRenderDevice] Deallocate '{}' resource",
+              ToString(resource.type));
 
     if (resource.id == GLResource::kInvalidResourceId)
       return;
@@ -147,15 +153,15 @@ namespace Sorex::Graphics
 
     case GLResourceType::ShaderProgram:
       glDeleteProgram(resource.id);
-      // _uniforms.erase(resource.id);
 
-      /* if (!_isDestroying && _activeShaderProgram)
+      if (mActiveShaderProgram)
       {
         GLResource* program =
-          GetResource(_activeShaderProgram->GetResourceToken());
+          GetResource(mActiveShaderProgram->GetResourceToken());
+
         if (program && program->id == resource.id)
-          _activeShaderProgram = nullptr;
-      } */
+          mActiveShaderProgram = nullptr;
+      }
       break;
 
     case GLResourceType::Texture2D:
@@ -224,17 +230,23 @@ namespace Sorex::Graphics
         EStatusCode::Invalid_Argument,
         "[GLRenderDevice] Shader program invalid or has expired token");
 
+    SRX_DEBUG("[GLRenderDevice] Build {}: {}",
+              ToString(program->type),
+              program->id);
+
     if (program->inited)
     {
       SRX_NOENTRY("shader program already inited");
       return SRX_OK;
     }
 
+    Status                   status;
     GLuint                   shaderId;
     TSpan<const GLShaderPtr> shaders = shaderProgram.GetShaders();
     for (const GLShaderPtr& shader : shaders)
     {
-      if (auto status = CompileShader(shader, shaderId); !status.Ok())
+      status = CompileShader(shader, shaderId);
+      if (!status.Ok())
         return status;
 
       SRX_OPENGL_CALL(glAttachShader(program->id, shaderId));
@@ -277,12 +289,14 @@ namespace Sorex::Graphics
                             errmsg);
     }
 
-    // if (LoadUniforms(*program, uniforms, error) == false)
-    // return false;
+    status = LoadUniforms(*program, uniforms);
+    if (status.Ok())
+    {
+      program->value  = static_cast<GLuint>(uniforms.size());
+      program->inited = true;
+    }
 
-    program->value  = static_cast<GLuint>(uniforms.size());
-    program->inited = true;
-    return SRX_OK;
+    return status;
   }
 
   Status GLRenderDevice::CompileShader(const GLShaderPtr& shader,
@@ -296,6 +310,10 @@ namespace Sorex::Graphics
     if (resource == nullptr)
       return SRX_STATUS_MSG(EStatusCode::Invalid_Argument,
                             "[GLRenderDevice] Invalid shader to compile");
+
+    SRX_DEBUG("[GLRenderDevice] Compile {}: {}",
+              ToString(resource->type),
+              resource->id);
 
     if (resource->inited)
     {
@@ -384,6 +402,10 @@ namespace Sorex::Graphics
 #endif
       uniforms.emplace_back(uniform);
     }
+
+    SRX_DEBUG("[GLRenderDevice] Load program {} uniforms {}",
+              program.id,
+              uniforms.size());
 
     return SRX_OK;
   }

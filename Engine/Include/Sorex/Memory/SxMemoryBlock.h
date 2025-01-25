@@ -276,4 +276,4 @@ private:
 
 
   using MemoryBlock = TMemoryBlock<byte>;
-}
+}  // namespace

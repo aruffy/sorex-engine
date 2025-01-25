@@ -64,9 +64,9 @@ namespace
 
 namespace Sorex::Graphics::OpenGL
 {
-  const GLShaderSource Shaders::kColorVertexShaderSource =
-    GLShaderSource(EShaderType::Vertex_Shader, __kColorVertexShaderSource);
+  const GLShaderSource Shader::kColorVertexShaderSource =
+    GLShaderSource(EShaderType::Vertex, __kColorVertexShaderSource);
 
-  const GLShaderSource Shaders::kColorFragmentShaderSource =
-    (EShaderType::Fragment_Shader, __kColorFragmentShaderSource);
+  const GLShaderSource Shader::kColorFragmentShaderSource =
+    GLShaderSource(EShaderType::Fragment, __kColorFragmentShaderSource);
 }  // namespace

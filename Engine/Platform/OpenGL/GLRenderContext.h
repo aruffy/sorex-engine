@@ -28,51 +28,59 @@
 #pragma once
 
 #include <Sorex/SxCoreMinimal.h>
+// #include <Ruffy/Graphics/Rendering/BlendMode.h>
+// #include <Ruffy/Graphics/Rendering/TextureSampler.h>
 
-#include <glad/glad.h>
-
-// #define SOREX_OPENGL_TEXTURE_NUMBER (8)
-
-#ifdef SOREX_DEBUG_HIGH
-#  define SOREX_OPENGL_DEBUG_OUTPUT (1)
-#endif
-
-#if defined(SOREX_OPENGL_DEBUG_OUTPUT) && defined(GL_DEBUG_OUTPUT)
-#  define SRX_OPENGL_CALL(expr) expr
-
-#elif defined(SOREX_DEBUG_MEDIUM)
-#  define SRX_OPENGL_CALL(expr)                                         \
-    (expr);                                                             \
-    SRX_ASSERT_MSG(                                                     \
-      !Sorex::Graphics::OpenGL::CheckErrors(#expr, __FILE__, __LINE__), \
-      #expr)
-
-#else
-#  define SRX_OPENGL_CALL(expr) expr
-#endif
-
+#include "GLTypes.h"
+#include "GLRenderTechnique.h"
 
 namespace Sorex::Graphics
 {
-  using GLString     = Sorex::BasicString<GLchar>;
-  using GLStringView = Sorex::BasicStringView<GLchar>;
-
-  namespace OpenGL
+  class GLRenderDevice;
+  class GLRenderContext
   {
-    namespace Concept
+public:
+    struct Blend
     {
-      template<typename T>
-      concept GLBuiltin =
-        std::is_same_v<T, GLbyte> || std::is_same_v<T, GLubyte>
-        || std::is_same_v<T, GLushort> || std::is_same_v<T, GLshort>
-        || std::is_same_v<T, GLuint> || std::is_same_v<T, GLint>
-        || std::is_same_v<T, GLfloat> || std::is_same_v<T, GLdouble>;
+      // BlendMode mode;
+      // Color     color;
+    };
 
-      template<typename T>
-      concept GLFloatingPoint =
-        std::is_same_v<T, GLfloat> || std::is_same_v<T, GLdouble>;
-    }
+public:
+    explicit GLRenderContext(const GLRenderDevice& renderDevice) SRX_NOEXCEPT;
 
-    bool GLAPIENTRY CheckErrors(const char* func, const char* file, int line);
-  }
+    void Apply(const GLRenderTechnique& technique) SRX_NOEXCEPT;
+
+    void Reset() SRX_NOEXCEPT;
+    void Clear() SRX_NOEXCEPT;  // cppcheck-suppress functionStatic
+
+    void SetClearColor(const Color value) { mColor = value; }
+
+    // error_t SetTexture(size_t slot, const GLTexture2D* texture);
+    // error_t SetTextureSampler(size_t slot, const TextureSampler& sampler);
+
+    // bool ActivateTexture(GLenum slot, Error* error);
+
+private:
+    // void ApplyBlendMode(BlendMode mode);
+    /* void ApplyTextureSampler(GLenum                target,
+                             const TextureSampler& sampler,
+                             bool                  bMipmaps = false);
+*/
+private:
+    // const GLRenderDevice& mDevice;
+
+    Color mColor;
+    // Blend mBlend;
+
+    /*     struct TextureSample
+        {
+          const GLTexture2D* texture = nullptr;
+
+          TextureSampler sampler;
+          bool           bUpdateSampler = true;
+        };
+
+        TVector<TextureSample> _textures; */
+  };
 }
