@@ -36,6 +36,7 @@
 #include "GLShaderProgram.h"
 #include "GLUniform.h"
 #include "GLRenderContext.h"
+#include "GLVertexArray.h"
 
 namespace Sorex::Graphics
 {
@@ -68,11 +69,17 @@ public:
      */
     void Deallocate(GLResourceReference* glResource) SRX_NOEXCEPT;
 
+    template<typename VertexType, typename IndexType>
+    Status Draw(const GLVertexArray<VertexType, IndexType>& vtxArray)
+      SRX_NOEXCEPT;
+
     GLShaderPtr GetOrCreateShader(const GLShaderSource& shaderSource)
       SRX_NOEXCEPT;
 
     Status BuildShaderProgram(const GLShaderProgram& shaderProgram,
                               TVector<GLUniform>&    uniforms) SRX_NOEXCEPT;
+    Status ApplyRenderTechnique(const GLRenderTechnique& technique)
+      SRX_NOEXCEPT;
     Status LoadUniforms(GLResource&         program,
                         TVector<GLUniform>& uniforms) SRX_NOEXCEPT;
 
@@ -94,6 +101,18 @@ private:
     Status CompileShader(const GLShaderPtr& shader,
                          GLuint&            shaderId) SRX_NOEXCEPT;
 
+    template<typename VertexType, typename IndexType>
+    Status BindVertexArray(const GLVertexArray<VertexType, IndexType>& vtxArray)
+      SRX_NOEXCEPT;
+
+    Status ActivateShaderProgram(GLenum& mode) SRX_NOEXCEPT;
+
+    Status InitializeBuffer(GLResource&         resource,
+                            const GLBufferData& buffer) SRX_NOEXCEPT;
+    Status UpdateBufferData(const GLResource&   resource,
+                            const GLBufferData& data) SRX_NOEXCEPT;
+    void   EnableVertexAttributes(const VertexLayout& vtxLayout) SRX_NOEXCEPT;
+
 private:
     TLinkedList<GLResource>       mResources;
     THashMap<hash_t, GLShaderPtr> mShaders;
@@ -102,4 +121,108 @@ private:
     GLShaderProgram*                mActiveShaderProgram;
   };
 
+  template<typename IndexType>
+  constexpr GLenum ConvertIndexType() SRX_NOEXCEPT
+  {
+    if constexpr (std::is_same_v<IndexType, GLbyte>)
+      return GL_UNSIGNED_BYTE;
+    else if constexpr (std::is_same_v<IndexType, GLushort>)
+      return GL_UNSIGNED_SHORT;
+    else if constexpr (std::is_same_v<IndexType, GLuint>)
+      return GL_UNSIGNED_INT;
+
+    SRX_NOENTRY("Invalid Index Type");
+    return GL_NONE;
+  }
+
+  template<typename VertexType, typename IndexType>
+  Status GLRenderDevice::Draw(
+    const GLVertexArray<VertexType, IndexType>& vtxArray) SRX_NOEXCEPT
+  {
+    GLenum mode;
+    Status status = ActivateShaderProgram(mode);
+    if (!status.Ok())
+      return status;
+
+    status = BindVertexArray(vtxArray);
+    if (!status.Ok())
+      return status;
+
+    if (const GLIndexBuffer<IndexType>* indexBuffer = vtxArray.GetIndexBuffer())
+    {
+      SRX_OPENGL_CALL(
+        glDrawElements(mode,
+                       static_cast<GLsizei>(indexBuffer->GetSize()),
+                       ConvertIndexType<IndexType>(),
+                       (const GLvoid*)0));
+    }
+    else if (const GLVertexBuffer<VertexType>* vtxBuffer =
+               vtxArray.GetVertexBuffer())
+    {
+      SRX_OPENGL_CALL(
+        glDrawArrays(mode, 0, static_cast<GLsizei>(vtxBuffer->GetSize())));
+    }
+
+    // @FIXME:
+#ifdef RUFFY_GAME_DEVELOPMENT
+    _stats.drawCalls.Increase();
+#endif
+
+    SRX_OPENGL_CALL(glBindVertexArray(0));
+    return status;
+  }
+
+  template<typename VertexType, typename IndexType>
+  Status GLRenderDevice::BindVertexArray(
+    const GLVertexArray<VertexType, IndexType>& vtxArray) SRX_NOEXCEPT
+  {
+    GLResource* vao = GetResource(vtxArray.GetResourceToken());
+    const GLVertexBuffer<VertexType>* vtxBuffer = vtxArray.GetVertexBuffer();
+    if (vao == nullptr || vtxBuffer == nullptr)
+      return SRX_STATUS_MSG(
+        EStatusCode::Invalid_Argument,
+        "{} has invalid state or expired resource reference",
+        ToString(GLResourceType::VertexArray));
+
+    SRX_OPENGL_CALL(glBindVertexArray(vao->id));
+    GLResource* vbo = GetResource(vtxBuffer->GetResourceToken());
+    if (vbo == nullptr)
+      return SRX_STATUS_MSG(EStatusCode::Invalid_State,
+                            "{} has expired resource reference",
+                            ToString(GLResourceType::VertexBuffer));
+
+    // TODO: if not vao->inited
+    Status status;
+    SRX_OPENGL_CALL(glBindBuffer(vbo->target, vbo->id));
+    if (vbo->inited == false)
+    {
+      status = InitializeBuffer(*vbo, vtxBuffer->GetData());
+      if (!status.Ok())
+        return status;
+
+      EnableVertexAttributes(vtxBuffer->GetVertexLayout());
+    }
+
+    UpdateBufferData(*vbo, vtxBuffer->GetData());
+
+    if (const GLIndexBuffer<IndexType>* indxBuffer = vtxArray.GetIndexBuffer())
+    {
+      GLResource* ebo = GetResource(indxBuffer->GetResourceToken());
+      if (ebo == nullptr)
+        return SRX_STATUS_MSG(EStatusCode::Invalid_State,
+                              "Index buffer has expired resource reference");
+
+      SRX_OPENGL_CALL(glBindBuffer(ebo->target, ebo->id));
+      if (ebo->inited == false)
+      {
+        status = InitializeBuffer(*ebo, indxBuffer->GetData());
+        if (!status.Ok())
+          return status;
+      }
+
+      UpdateBufferData(*ebo, indxBuffer->GetData());
+    }
+
+    return status;
+  }
 }  // namespace

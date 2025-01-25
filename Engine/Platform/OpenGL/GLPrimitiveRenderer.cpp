@@ -71,20 +71,18 @@ namespace Sorex::Graphics
     Flush();
 
     // _canvasState = &state;
-    // return mRenderDevice->ApplyRenderTechnique(_technique, error);
-    return SRX_OK;
+    return mRenderDevice->ApplyRenderTechnique(mTechnique);
   }
 
   void GLPrimitiveRenderer::Flush() SRX_NOEXCEPT
   {
     if (IsEmpty())
       return;
-    /*
-        Error error;
-        if (_glDevice->Draw(_vtxArray, &error) == false)
-          RFY_WARN("[GLPrimitiveRenderer] Draw call failed: {}",
-                   error.ToString().c_str());
-     */
+
+    if (auto status = mRenderDevice->Draw(mVtxArray); !status.Ok())
+    {
+      SRX_WARN("[GLPrimitiveRenderer] Draw call failed: {}", status.ToString());
+    }
 
     Reset();
   }
@@ -297,4 +295,4 @@ namespace Sorex::Graphics
     Flush();
     mShaderProgram->SetRenderingMode(mode);
   }
-}
+}  // namespace

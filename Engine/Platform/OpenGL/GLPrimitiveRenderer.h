@@ -33,6 +33,7 @@
 
 #include "GLVertexArray.h"
 #include "GLShaderProgram.h"
+#include "GLRenderTechnique.h"
 
 namespace Sorex::Graphics
 {
@@ -84,8 +85,8 @@ private:
     GLRenderDevice* mRenderDevice;
     // const CanvasState* mCanvasState;
 
-    TArray<Point, 4> mPoints;
-    // GLRenderTechnique mTechnique;
+    TArray<Point, 4>  mPoints;
+    GLRenderTechnique mTechnique;
 
     VertexArray mVtxArray;
     size_t      mVtxCapacity;

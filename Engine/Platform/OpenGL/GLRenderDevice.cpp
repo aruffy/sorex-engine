@@ -30,6 +30,27 @@
 #include <Sorex/SxThread.h>
 #include <Sorex/Utils/SxString.h>
 
+#include <glm.hpp>
+#include <gtc/matrix_transform.hpp>
+#include <gtc/type_ptr.hpp>
+
+namespace
+{
+  using namespace Sorex;
+  const TArray<GLenum, 5> kDrawModes = { GL_NONE,
+                                         GL_POINTS,
+                                         GL_LINES,
+                                         GL_TRIANGLES,
+                                         GL_TRIANGLE_STRIP };
+
+  inline GLenum ConvertRenderingMode(const Graphics::ERenderingMode mode)
+    SRX_NOEXCEPT
+  {
+    const uint32 index = static_cast<uint32>(mode);
+    return (index < kDrawModes.size()) ? kDrawModes[index] : GL_NONE;
+  }
+}
+
 namespace Sorex::Graphics
 {
   GLRenderDevice::GLRenderDevice() SRX_NOEXCEPT: mActiveShaderProgram(nullptr)
@@ -408,5 +429,156 @@ namespace Sorex::Graphics
               uniforms.size());
 
     return SRX_OK;
+  }
+
+  Status GLRenderDevice::ApplyRenderTechnique(
+    const GLRenderTechnique& technique) SRX_NOEXCEPT
+  {
+    SRX_CHECK(mRenderContext);
+
+    if (!technique.program)
+      return SRX_STATUS_MSG(EStatusCode::Invalid_Argument,
+                            "invalid technique shader program");
+
+    mActiveShaderProgram = technique.program;
+    return SRX_OK;
+  }
+
+  Status GLRenderDevice::ActivateShaderProgram(GLenum& mode) SRX_NOEXCEPT
+  {
+    SRX_CHECK(Thread::IsMainThread());
+
+    GLResource* program = GetResource(mActiveShaderProgram->GetResourceToken());
+    if (program == nullptr)
+      return SRX_STATUS_MSG(EStatusCode::Invalid_State,
+                            "invalid shader program");
+
+    // @TODO: Set value=1 if activated to skip following steps, check uniform
+    // updates to apply uniforms
+
+    mode = ConvertRenderingMode(mActiveShaderProgram->GetRenderingMode());
+    if (mode == GL_NONE)
+      return SRX_STATUS_MSG(EStatusCode::Invalid_State,
+                            "invalid rendering mode: {}",
+                            (int)mActiveShaderProgram->GetRenderingMode());
+
+    if (!program->inited)
+    {
+      if (auto status = mActiveShaderProgram->Initialize(); !status.Ok())
+        return status;
+    }
+
+    SRX_OPENGL_CALL(glUseProgram(program->id));
+
+    TSpan<GLUniform> uniforms = mActiveShaderProgram->GetUniforms();
+    for (auto& uniform : uniforms)
+    {
+      // @FIXME: uncomment
+#ifdef RUFFY_ENGINE_DEBUG
+      const GLint loc = OPENGL_CALL(
+        glGetUniformLocation(program->id, uniform->GetName().c_str()));
+      RFY_ASSERT(loc >= 0 && uniform->GetLocation() == loc);
+#endif
+      // @fixme: add camera
+      if (uniform.GetType() == GL_FLOAT_MAT4)
+      {
+        // @FIXME:
+        // const glm::mat4 camera = glm::ortho(0.f, 800.f, 600.f, 0.f,
+        // -1.f, 1.f); RFY_VERIFY(uniform.SetMatrix(glm::value_ptr(camera), 4,
+        // 4)
+        // == Error::Ok);
+      }
+
+      if (auto rc = uniform.Apply(); rc != EStatusCode::Ok)
+        return SRX_STATUS_MSG(rc,
+                              "Applying uniform <{}> type={} loc={} failed",
+                              uniform.GetHash(),
+                              uniform.GetType(),
+                              uniform.GetLocation());
+
+      // @FIXME:
+      if (uniform.GetType() == GL_SAMPLER_2D)
+      {
+        // GLenum textureIndex;
+        // uniform->GetValue(textureIndex);
+        // if (_renderContext->ActivateTexture(textureIndex, error) == false)
+        // return false;
+      }
+    }
+
+    return SRX_OK;
+  }
+
+  Status GLRenderDevice::InitializeBuffer(GLResource&         resource,
+                                          const GLBufferData& buffer)
+    SRX_NOEXCEPT
+  {
+    if (!buffer.capacity)
+      return SRX_STATUS_MSG(
+        EStatusCode::Invalid_State,
+        "[GLRenderDevice] Vertex buffer has invalid capacity");
+
+    // @TODO: Type of buffer static/dynamic ...
+    SRX_OPENGL_CALL(
+      glBufferData(resource.target, buffer.capacity, NULL, GL_DYNAMIC_DRAW));
+
+    resource.value  = static_cast<uint32>(buffer.capacity);
+    resource.inited = true;
+
+    return SRX_OK;
+  }
+
+  Status GLRenderDevice::UpdateBufferData(const GLResource&   resource,
+                                          const GLBufferData& data) SRX_NOEXCEPT
+  {
+    if (resource.inited == false
+        || static_cast<GLsizei>(resource.value) < data.size)
+    {
+      SRX_NOENTRY("[GLRenderDevice] Invalid buffer state");
+      return SRX_STATUS(EStatusCode::Invalid_State);
+    }
+
+    SRX_OPENGL_CALL(
+      glBufferSubData(resource.target, 0, data.size, data.memptr));
+    return SRX_OK;
+  }
+
+  static GLenum ConvertVertexAttrib(EVertexAttribType attribType) SRX_NOEXCEPT
+  {
+    switch (attribType)
+    {
+    case EVertexAttribType::Float:
+      return GL_FLOAT;
+    case EVertexAttribType::Integer:
+      return GL_INT;
+
+    case EVertexAttribType::UByte:
+      return GL_UNSIGNED_BYTE;
+    default:
+      SRX_NOENTRY("Invalid vertex attribute type");
+      return GL_INT;
+    }
+  }
+
+  void GLRenderDevice::EnableVertexAttributes(const VertexLayout& vtxLayout)
+    SRX_NOEXCEPT
+  {
+    for (const VertexAttribute& attrib : vtxLayout)
+    {
+      const GLboolean bEnableNormalization =
+        attrib.normalization ? GL_TRUE : GL_FALSE;
+
+      // @TODO: Check pointer
+      const intptr_t offset = static_cast<intptr_t>(attrib.offset);
+      SRX_OPENGL_CALL(
+        glEnableVertexAttribArray(static_cast<GLuint>(attrib.index)));
+      SRX_OPENGL_CALL(
+        glVertexAttribPointer(static_cast<GLuint>(attrib.index),
+                              attrib.number,
+                              ConvertVertexAttrib(attrib.type),
+                              bEnableNormalization,
+                              static_cast<GLsizei>(vtxLayout.GetStride()),
+                              reinterpret_cast<const GLvoid*>(offset)));
+    }
   }
 }  // namespace
