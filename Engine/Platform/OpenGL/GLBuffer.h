@@ -169,9 +169,11 @@ public:
   template<typename ValueType>
   GLBufferData GLBuffer<ValueType>::GetData() const
   {
-    return GLBufferData{ mBuffer.size() * sizeof(ValueType),
-                         mBuffer.capacity() * sizeof(ValueType),
-                         reinterpret_cast<const GLbyte*>(mBuffer.data()) };
+    return GLBufferData{
+      static_cast<GLsizei>(mBuffer.size() * sizeof(ValueType)),
+      static_cast<GLsizei>(mBuffer.capacity() * sizeof(ValueType)),
+      reinterpret_cast<const GLbyte*>(mBuffer.data())
+    };
   }
 
   template<typename ValueType>

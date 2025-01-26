@@ -34,6 +34,8 @@
 #include <gtc/matrix_transform.hpp>
 #include <gtc/type_ptr.hpp>
 
+#include "GLPrimitiveRenderer.h"
+
 namespace
 {
   using namespace Sorex;
@@ -581,4 +583,15 @@ namespace Sorex::Graphics
                               reinterpret_cast<const GLvoid*>(offset)));
     }
   }
+
+  Renderer* GLRenderDevice::CreateRenderer(const RuntimeClass& cls,
+                                           ssize_t capacity) SRX_NOEXCEPT
+  {
+    // @TODO: Factory
+    if (cls.IsA(GetRuntimeType<Graphics::PrimitiveRenderer>()))
+      return new GLPrimitiveRenderer(this, capacity);
+
+    return nullptr;
+  }
+
 }  // namespace

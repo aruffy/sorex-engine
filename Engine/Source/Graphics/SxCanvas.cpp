@@ -25,75 +25,56 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#pragma once
+#include <Sorex/Graphics/SxCanvas.h>
 
-#include <Sorex/SxDirector.h>
-#include <Sorex/SxStream.h>
-
-#include "SxRenderer.h"
-#include "SxTextureBitmap.h"
-
-namespace Sorex::Graphics
+namespace Sorex
 {
-  class Texture2D;
-  class RenderDevice: public Director::Component
+  Canvas::Canvas(Graphics::RenderDevice& device) SRX_NOEXCEPT
+    : mRenderDevice(device)
+  {}
+
+  Status Canvas::Initialize() SRX_NOEXCEPT
   {
-    SRX_RTTI(Graphics::RenderDevice, Director::Component)
+    mPrimitiveRenderer =
+      mRenderDevice.CreateRenderer<Graphics::PrimitiveRenderer>();
 
-public:
-    RenderDevice()                   = default;
-    virtual ~RenderDevice() override = default;
-
-    // virtual void Cleanup() = 0;
-
-    template<typename T>
-      requires std::is_base_of_v<Renderer, T>
-    TUniquePointer<T> CreateRenderer(const ssize_t capacity = SRX_UNKNOWN_SIZE)
-      SRX_NOEXCEPT
+    if (mPrimitiveRenderer == nullptr)
     {
-      if (auto renderer = CreateRenderer(GetRuntimeType<T>(), capacity))
-      {
-        SRX_CHECK_MSG(renderer->template IsA<T>(), "invalid renderer type");
-        return TUniquePointer<T>(static_cast<T*>(renderer));
-      }
-
-      return nullptr;
+      return SRX_STATUS_MSG(EStatusCode::Not_Supported,
+                            "renderer creation failed");
     }
 
-    /**
-     * @brief Create new 2D texture that can be handled by the render device.
-     *
-     * @param name - name of the texture
-     * @return pointer to 2D texture;
-     */
-    // virtual TUniquePointer<Texture2D> CreateTexture2D(StringView name) = 0;
+    return SRX_OK;
+  }
 
-    /**
-     * @brief Retrieve supported texture pixel format.
-     *
-     * If the arg `format` is supported that it must be the result;
-     * Else should find similar supported pixel format for the `format` from
-     * args list; If it is inpossible, return pixel format that has bigger color
-     * component size (no need to compress color). For example: ARGB1555 ->
-     * RGBA5551.
-     *
-     * @param - source format;
-     * @return - supported pixel format.
-     */
-    // virtual EPixelFormat GetSupportedPixelFormat(EPixelFormat format) const =
-    // 0;
-
-protected:
-    virtual Renderer* CreateRenderer(const RuntimeClass& cls,
-                                     ssize_t capacity) SRX_NOEXCEPT = 0;
-  };
-
-  class IRenderDeviceResource
+  void Canvas::DrawLine(const Point& begin,
+                        const Point& end,
+                        const Color* color,
+                        size_t       colorNumber) SRX_NOEXCEPT
   {
-public:
-    virtual RenderDevice* GetRenderDevice() const = 0;
+    if (ActivateRenderer(mPrimitiveRenderer.get()))
+      mPrimitiveRenderer->DrawLine(begin, end, color, colorNumber);
+  }
 
-protected:
-    virtual ~IRenderDeviceResource() = default;
-  };
+  bool Canvas::ActivateRenderer(Graphics::Renderer* renderer) SRX_NOEXCEPT
+  {
+    if (mRenderer == renderer)
+      return renderer != nullptr;
+
+    if (mRenderer)
+      mRenderer->Flush();
+
+    mRenderer = renderer;
+    if (!mRenderer)
+      return false;
+
+    auto status = mRenderer->Activate();
+    if (!status.Ok())
+    {
+      SRX_WARN("[Canvas] Renderer activation failed: {}", status.ToString());
+      return false;
+    }
+
+    return true;
+  }
 }  // namespace

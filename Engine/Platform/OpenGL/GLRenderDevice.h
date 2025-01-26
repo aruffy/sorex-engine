@@ -84,12 +84,8 @@ public:
                         TVector<GLUniform>& uniforms) SRX_NOEXCEPT;
 
 protected:
-    virtual TUniquePointer<Renderer> CreateRenderer(const RuntimeClass& cls,
-                                                    ssize_t capacity)
-      SRX_NOEXCEPT override
-    {
-      return nullptr;
-    }
+    virtual Renderer* CreateRenderer(const RuntimeClass& cls,
+                                     ssize_t capacity) SRX_NOEXCEPT override;
 
 private:
     GLResource* GetResource(

@@ -76,15 +76,14 @@ namespace Sorex::Graphics
 
   void GLPrimitiveRenderer::Flush() SRX_NOEXCEPT
   {
-    if (IsEmpty())
-      return;
-
-    if (auto status = mRenderDevice->Draw(mVtxArray); !status.Ok())
+    if (!IsEmpty())
     {
-      SRX_WARN("[GLPrimitiveRenderer] Draw call failed: {}", status.ToString());
-    }
+      if (auto status = mRenderDevice->Draw(mVtxArray); !status.Ok())
+        SRX_WARN("[GLPrimitiveRenderer] Draw call failed: {}",
+                 status.ToString());
 
-    Reset();
+      Reset();
+    }
   }
 
   void GLPrimitiveRenderer::Reset() SRX_NOEXCEPT
