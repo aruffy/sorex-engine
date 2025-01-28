@@ -27,6 +27,7 @@
 
 #include <Sorex/SxDirector.h>
 #include <Sorex/SxTime.h>
+#include <Sorex/Graphics/SxCanvas.h>
 
 namespace Sorex
 {
@@ -36,6 +37,9 @@ namespace Sorex
     , mIsExitRequested(false)
   {}
 
+  Director::~Director()
+  {}
+
   int32 mFrameRate;
   float mDeltaTime;
   bool  mIsExitRequested;
@@ -43,6 +47,13 @@ namespace Sorex
   Status Director::Initialize()
   {
     SRX_CLSFUN_TRACE();
+
+    Graphics::RenderDevice* renderDevice =
+      GetComponent<Graphics::RenderDevice>();
+    if (renderDevice == nullptr)
+      SRX_STATUS_MSG(EStatusCode::Invalid_State,
+                     "[Director] Render device not found");
+
     Status status;
     for (auto& cmp : mComponents)
     {
@@ -59,7 +70,8 @@ namespace Sorex
       }
     }
 
-    return status;
+    mCanvas = MakeUnique<Canvas>(*renderDevice);
+    return mCanvas->Initialize();
   }
 
   void Director::Shutdown()
@@ -107,7 +119,7 @@ namespace Sorex
       if (mIsExitRequested)
         break;
 
-      // RenderScene();
+      RenderScene();
 
       // @TODO: call in reverse order
       for (IListener* listener : mListeners)
@@ -137,6 +149,14 @@ namespace Sorex
 
     for (IListener* listener : mListeners)
       listener->OnExit();
+  }
+
+  void Director::RenderScene()
+  {
+    SRX_CHECK(mCanvas);
+    OnDraw(*mCanvas);
+
+    mCanvas->Flush();
   }
 
   bool Director::RemoveComponent(const Component* component) SRX_NOEXCEPT

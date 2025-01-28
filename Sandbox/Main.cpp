@@ -7,13 +7,21 @@
 #include <Sorex/SxTime.h>
 #include <Sorex/SxLauncher.h>
 #include <Sorex/SxDirector.h>
+#include <Sorex/Graphics/SxCanvas.h>
 
 #include <Sorex/SxDesktopLauncher.h>
 
 using namespace Sorex;
 
 class MyDirector final: public Director
-{};
+{
+  public:
+  protected:
+  virtual void OnDraw(Canvas& canvas) override
+  {
+    canvas.DrawLine(Point(10, 10), Point(10, 200), Color::Purple);
+  }
+};
 
 int main(const int argc, const char* argv[])
 {

@@ -57,7 +57,10 @@ namespace Sorex::Graphics
                               OpenGL::Shader::kColorFragmentShaderSource,
                               status);
     if (mShaderProgram)
+    {
       mShaderProgram->SetRenderingMode(ERenderingMode::Lines);
+      mTechnique.program = mShaderProgram.get();
+    }
 
     return status;
   }

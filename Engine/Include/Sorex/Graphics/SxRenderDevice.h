@@ -36,7 +36,7 @@
 namespace Sorex::Graphics
 {
   class Texture2D;
-  class RenderDevice: public Director::Component
+  class RenderDevice: public Sorex::Director::Component
   {
     SRX_RTTI(Graphics::RenderDevice, Director::Component)
 

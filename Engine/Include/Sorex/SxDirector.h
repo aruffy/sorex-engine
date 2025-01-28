@@ -33,6 +33,7 @@
 
 namespace Sorex
 {
+  class Canvas;
   class SRX_API Director
   {
     SRX_RTTI_BASE(Director);
@@ -95,7 +96,7 @@ public:
 
 public:
     Director() SRX_NOEXCEPT;
-    virtual ~Director() = default;
+    virtual ~Director();
 
     virtual Status Initialize();
     virtual void   Shutdown();
@@ -173,9 +174,13 @@ public:
 protected:
     virtual Status OnLaunch() { return SRX_OK; }
     virtual void   OnUpdate(const float deltaTime) {}
+    virtual void   OnDraw(Canvas& canvas) {}
 
 protected:
     TListenerContainer<IListener> mListeners;
+
+private:
+    void RenderScene();
 
 private:
     TObjectContainer<Component> mComponents;
@@ -184,5 +189,7 @@ private:
     uint16 mFrameRate;
 
     bool mIsExitRequested;
+
+    TUniquePointer<Canvas> mCanvas;
   };
 }  // namespace

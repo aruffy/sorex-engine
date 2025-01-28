@@ -88,7 +88,6 @@ public:
                        const Point&                   pos);
 
          void        Clear();
-        SRX_INLINE void Flush() { ActivateRenderer(nullptr); }
 
          // State Contol
         SRX_INLINE void PushState() { _stateStack.push(_state); }
@@ -106,6 +105,9 @@ public:
 
          void SetBlendMode(Graphics::BlendMode mode);
       */
+
+    SRX_INLINE void Flush() { ActivateRenderer(nullptr); }
+
 private:
     bool ActivateRenderer(Graphics::Renderer* renderer) SRX_NOEXCEPT;
 

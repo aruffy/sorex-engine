@@ -33,7 +33,7 @@ namespace
 {
   // TODO: Z-Order
   const GLString __kColorVertexShaderSource = R"(
-        #version 300 core
+        #version 300 es
 
         in mediump vec2 a_position;
         in mediump vec4 a_color;
@@ -51,13 +51,16 @@ namespace
 
 
   const GLString __kColorFragmentShaderSource = R"(
-        #version 300 core
+        #version 300 es
+        precision mediump float;
 
         in mediump vec4 v_color;
 
+        layout(location = 0) out vec4 out_fragColor;
+
         void main()
         {
-            gl_FragColor = v_color;
+            out_fragColor = v_color;
         }
     )";
 }

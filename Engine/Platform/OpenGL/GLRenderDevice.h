@@ -37,12 +37,13 @@
 #include "GLUniform.h"
 #include "GLRenderContext.h"
 #include "GLVertexArray.h"
+#include "GLExtensions.h"
 
 namespace Sorex::Graphics
 {
   class GLRenderDevice final: public RenderDevice
   {
-    SRX_RTTI(Graphics::GLRenderDevice, Graphics::RenderDevice)
+    SRX_RTTI(Graphics::GLRenderDevice, Graphics::RenderDevice);
 
 public:
     GLRenderDevice() SRX_NOEXCEPT;
@@ -69,6 +70,8 @@ public:
      */
     void Deallocate(GLResourceReference* glResource) SRX_NOEXCEPT;
 
+    GLExtensions* GetExtensions() const { return mExtensions.get(); }
+
     template<typename VertexType, typename IndexType>
     Status Draw(const GLVertexArray<VertexType, IndexType>& vtxArray)
       SRX_NOEXCEPT;
@@ -80,14 +83,15 @@ public:
                               TVector<GLUniform>&    uniforms) SRX_NOEXCEPT;
     Status ApplyRenderTechnique(const GLRenderTechnique& technique)
       SRX_NOEXCEPT;
-    Status LoadUniforms(GLResource&         program,
-                        TVector<GLUniform>& uniforms) SRX_NOEXCEPT;
 
 protected:
     virtual Renderer* CreateRenderer(const RuntimeClass& cls,
                                      ssize_t capacity) SRX_NOEXCEPT override;
 
 private:
+    Status LoadUniforms(GLResource&         program,
+                        TVector<GLUniform>& uniforms) SRX_NOEXCEPT;
+
     GLResource* GetResource(
       const GLResourceReference* glResourceReference) const SRX_NOEXCEPT;
     bool IsValidResourceReference(const GLResourceReference* glResource) const
@@ -109,12 +113,18 @@ private:
                             const GLBufferData& data) SRX_NOEXCEPT;
     void   EnableVertexAttributes(const VertexLayout& vtxLayout) SRX_NOEXCEPT;
 
+#ifdef SOREX_OPENGL_DEBUG_OUTPUT
+    bool EnableDebugOutput(GLRenderDevice& glRenderDevice) SRX_NOEXCEPT;
+#endif
+
 private:
     TLinkedList<GLResource>       mResources;
     THashMap<hash_t, GLShaderPtr> mShaders;
 
     TUniquePointer<GLRenderContext> mRenderContext;
     GLShaderProgram*                mActiveShaderProgram;
+
+    TUniquePointer<GLExtensions> mExtensions;
   };
 
   template<typename IndexType>

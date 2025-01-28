@@ -25,54 +25,29 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#include <Sorex/Graphics/SxCanvas.h>
+#include "GLExtensions.h"
 
-namespace Sorex
+namespace Sorex::Graphics
 {
-  Canvas::Canvas(Graphics::RenderDevice& device) SRX_NOEXCEPT
-    : mRenderDevice(device)
-  {}
-
-  Status Canvas::Initialize() SRX_NOEXCEPT
+  GLExtensions::GLExtensions() SRX_NOEXCEPT
   {
-    mPrimitiveRenderer =
-      mRenderDevice.CreateRenderer<Graphics::PrimitiveRenderer>();
-
-    if (mPrimitiveRenderer == nullptr)
-      return SRX_STATUS_MSG(EStatusCode::Not_Supported,
-                            "renderer creation failed");
-
-    return mPrimitiveRenderer->Initialize();
-  }
-
-  void Canvas::DrawLine(const Point& begin,
-                        const Point& end,
-                        const Color* color,
-                        size_t       colorNumber) SRX_NOEXCEPT
-  {
-    if (ActivateRenderer(mPrimitiveRenderer.get()))
-      mPrimitiveRenderer->DrawLine(begin, end, color, colorNumber);
-  }
-
-  bool Canvas::ActivateRenderer(Graphics::Renderer* renderer) SRX_NOEXCEPT
-  {
-    if (mRenderer == renderer)
-      return renderer != nullptr;
-
-    if (mRenderer)
-      mRenderer->Flush();
-
-    mRenderer = renderer;
-    if (!mRenderer)
-      return false;
-
-    auto status = mRenderer->Activate();
-    if (!status.Ok())
+    GLint n;
+    SRX_OPENGL_CALL(glGetIntegerv(GL_NUM_EXTENSIONS, &n));
+    mExtensions.reserve(n);
+    for (GLint i = 0; i < n; i++)
     {
-      SRX_WARN("[Canvas] Renderer activation failed: {}", status.ToString());
-      return false;
+      if (const GLubyte* ext = glGetStringi(GL_EXTENSIONS, i))
+      {
+        StringView   extName = StringView(reinterpret_cast<const char*>(ext));
+        const hash_t hash    = Sorex::Utils::GetHash(extName);
+#ifdef SOREX_DEBUG_MEDIUM
+        mExtensions.emplace(hash, String(extName));
+#else
+        mExtensions.insert(hash);
+#endif
+      }
     }
 
-    return true;
+    SRX_TRACE("[GLExtensions] Extension loaded: {}", mExtensions.size());
   }
-}  // namespace
+}

@@ -32,6 +32,8 @@
 #include "SxDesktopInputSystem.h"
 #include "SxDesktopWindow.h"
 
+#include <GLRenderDevice.h>
+
 namespace Sorex::Platform
 {
   Status DesktopLauncher::OnStartup()
@@ -48,6 +50,7 @@ namespace Sorex::Platform
     director.AddComponent(DesktopInputSystem::Create(glfw));
     director.AddComponent<DesktopWindow>(glfw, L"Sorex", SizeInt{ 800, 640 });
     // director.AddComponent<RootFileSystem>();
+    director.AddComponent<Graphics::GLRenderDevice>();
 
     return SRX_OK;
   }

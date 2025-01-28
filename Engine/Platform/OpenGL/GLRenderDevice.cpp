@@ -72,11 +72,16 @@ namespace Sorex::Graphics
 
   Status GLRenderDevice::Initialize()
   {
-    // _extensions    = MakeUnique<GLExtensions>();
+    SRX_CLSFUN_TRACE();
+
+#ifndef SOREX_DEBUG_NONE
+    mExtensions = MakeUnique<GLExtensions>();
+#endif
+
     mRenderContext = MakeUnique<GLRenderContext>(*this);
 
 #ifdef SOREX_OPENGL_DEBUG_OUTPUT
-    // OpenGL::EnableDebugOutput(this);
+    SRX_VERIFY(EnableDebugOutput(*this));
 #endif
     return SRX_OK;
   }
@@ -85,7 +90,6 @@ namespace Sorex::Graphics
     SRX_NOEXCEPT
   {
     SRX_CHECK(Thread::IsMainThread());
-    SRX_DEBUG("[GLRenderDevice] Allocate '{}' resource", ToString(type));
 
     GLuint id     = 0;
     GLenum target = 0;
@@ -124,6 +128,8 @@ namespace Sorex::Graphics
       return nullptr;
     }
 
+    SRX_DEBUG("[GLRenderDevice] Allocate '{}' resource {}", ToString(type), id);
+
     mResources.emplace_front();
     GLResource& glResource = mResources.front();
     auto        token      = MakeUnique<GLResourceReference>(this, &glResource);
@@ -152,8 +158,9 @@ namespace Sorex::Graphics
   void GLRenderDevice::DeallocateResource(GLResource& resource) SRX_NOEXCEPT
   {
     SRX_CHECK(Thread::IsMainThread());
-    SRX_TRACE("[GLRenderDevice] Deallocate '{}' resource",
-              ToString(resource.type));
+    SRX_DEBUG("[GLRenderDevice] Deallocate '{}' resource {}",
+              ToString(resource.type),
+              resource.id);
 
     if (resource.id == GLResource::kInvalidResourceId)
       return;
@@ -393,6 +400,11 @@ namespace Sorex::Graphics
     if (number <= 0)
       return SRX_OK;
 
+    SRX_DEBUG("[GLRenderDevice] {} <{}> loads uniforms num={}",
+              ToString(program.type),
+              program.id,
+              number);
+
     SRX_CHECK(maxLength);
     GLString buffer(maxLength + 1, GLchar(0));
 
@@ -436,7 +448,7 @@ namespace Sorex::Graphics
   Status GLRenderDevice::ApplyRenderTechnique(
     const GLRenderTechnique& technique) SRX_NOEXCEPT
   {
-    SRX_CHECK(mRenderContext);
+    // SRX_CHECK(mRenderContext);
 
     if (!technique.program)
       return SRX_STATUS_MSG(EStatusCode::Invalid_Argument,
@@ -587,6 +599,9 @@ namespace Sorex::Graphics
   Renderer* GLRenderDevice::CreateRenderer(const RuntimeClass& cls,
                                            ssize_t capacity) SRX_NOEXCEPT
   {
+    if (capacity == SRX_UNKNOWN_SIZE)
+      capacity = 2048;  // @TODO: Magic constant
+
     // @TODO: Factory
     if (cls.IsA(GetRuntimeType<Graphics::PrimitiveRenderer>()))
       return new GLPrimitiveRenderer(this, capacity);

@@ -25,54 +25,30 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#include <Sorex/Graphics/SxCanvas.h>
+#pragma once
 
-namespace Sorex
+#include <Sorex/SxCoreMinimal.h>
+#include <Sorex/Utils/SxString.h>
+
+#include "GLTypes.h"
+
+namespace Sorex::Graphics
 {
-  Canvas::Canvas(Graphics::RenderDevice& device) SRX_NOEXCEPT
-    : mRenderDevice(device)
-  {}
-
-  Status Canvas::Initialize() SRX_NOEXCEPT
+  class GLExtensions final
   {
-    mPrimitiveRenderer =
-      mRenderDevice.CreateRenderer<Graphics::PrimitiveRenderer>();
+public:
+    explicit GLExtensions() SRX_NOEXCEPT;
 
-    if (mPrimitiveRenderer == nullptr)
-      return SRX_STATUS_MSG(EStatusCode::Not_Supported,
-                            "renderer creation failed");
-
-    return mPrimitiveRenderer->Initialize();
-  }
-
-  void Canvas::DrawLine(const Point& begin,
-                        const Point& end,
-                        const Color* color,
-                        size_t       colorNumber) SRX_NOEXCEPT
-  {
-    if (ActivateRenderer(mPrimitiveRenderer.get()))
-      mPrimitiveRenderer->DrawLine(begin, end, color, colorNumber);
-  }
-
-  bool Canvas::ActivateRenderer(Graphics::Renderer* renderer) SRX_NOEXCEPT
-  {
-    if (mRenderer == renderer)
-      return renderer != nullptr;
-
-    if (mRenderer)
-      mRenderer->Flush();
-
-    mRenderer = renderer;
-    if (!mRenderer)
-      return false;
-
-    auto status = mRenderer->Activate();
-    if (!status.Ok())
+    inline bool HasExtension(StringView extension) const
     {
-      SRX_WARN("[Canvas] Renderer activation failed: {}", status.ToString());
-      return false;
+      return mExtensions.count(Sorex::Utils::GetHash(extension));
     }
 
-    return true;
-  }
-}  // namespace
+private:
+#ifdef SOREX_DEBUG_MEDIUM
+    THashMap<hash_t, String> mExtensions;
+#else
+    THashSet<hash_t> mExtensions;
+#endif
+  };
+}
