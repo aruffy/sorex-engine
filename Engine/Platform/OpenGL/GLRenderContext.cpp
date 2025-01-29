@@ -105,7 +105,7 @@ namespace Sorex::Graphics
   GLRenderContext::GLRenderContext(const GLRenderDevice& renderDevice)
     SRX_NOEXCEPT
     // : mDevice(renderDevice)
-    : mColor(Color::Gray)
+    : mColor(Color(0x1D, 0x18, 0x1D))
   {
     GLint maxTextureUnits = 0;
     SRX_OPENGL_CALL(
@@ -122,7 +122,7 @@ namespace Sorex::Graphics
                  TextureSample{ nullptr, kDefaultTextureSampler, true });
     */
 
-    Vec4 color = mColor.ToVector();
+    const Vec4 color = mColor.ToVector();
     glClearColor(color.x, color.y, color.z, color.w);
 
     // Blend
@@ -149,6 +149,7 @@ namespace Sorex::Graphics
 
   void GLRenderContext::Clear() SRX_NOEXCEPT
   {
+    // TODO: clear other
     glClear(GL_COLOR_BUFFER_BIT);
   }
 

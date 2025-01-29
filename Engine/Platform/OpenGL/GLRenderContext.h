@@ -54,7 +54,7 @@ public:
     void Reset() SRX_NOEXCEPT;
     void Clear() SRX_NOEXCEPT;  // cppcheck-suppress functionStatic
 
-    void SetClearColor(const Color value) { mColor = value; }
+    void SetColor(const Color value) { mColor = value; }
 
     // error_t SetTexture(size_t slot, const GLTexture2D* texture);
     // error_t SetTextureSampler(size_t slot, const TextureSampler& sampler);

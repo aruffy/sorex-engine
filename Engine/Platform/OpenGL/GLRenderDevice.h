@@ -55,6 +55,9 @@ public:
     // Interface Director::Component
     virtual Status Initialize() override;
 
+    // Interface RenderDevice
+    virtual void Cleanup() override;
+
     /**
      * @brief Allocate new OpenGL resource.
      *

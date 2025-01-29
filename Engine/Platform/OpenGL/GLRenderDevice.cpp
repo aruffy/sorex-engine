@@ -128,7 +128,7 @@ namespace Sorex::Graphics
       return nullptr;
     }
 
-    SRX_DEBUG("[GLRenderDevice] Allocate '{}' resource {}", ToString(type), id);
+    SRX_TRACE("[GLRenderDevice] Allocate '{}' resource {}", ToString(type), id);
 
     mResources.emplace_front();
     GLResource& glResource = mResources.front();
@@ -158,7 +158,7 @@ namespace Sorex::Graphics
   void GLRenderDevice::DeallocateResource(GLResource& resource) SRX_NOEXCEPT
   {
     SRX_CHECK(Thread::IsMainThread());
-    SRX_DEBUG("[GLRenderDevice] Deallocate '{}' resource {}",
+    SRX_TRACE("[GLRenderDevice] Deallocate '{}' resource {}",
               ToString(resource.type),
               resource.id);
 
@@ -400,7 +400,7 @@ namespace Sorex::Graphics
     if (number <= 0)
       return SRX_OK;
 
-    SRX_DEBUG("[GLRenderDevice] {} <{}> loads uniforms num={}",
+    SRX_DEBUG("[GLRenderDevice] {} {} loads {} uniforms",
               ToString(program.type),
               program.id,
               number);
@@ -438,17 +438,13 @@ namespace Sorex::Graphics
       uniforms.emplace_back(uniform);
     }
 
-    SRX_DEBUG("[GLRenderDevice] Load program {} uniforms {}",
-              program.id,
-              uniforms.size());
-
     return SRX_OK;
   }
 
   Status GLRenderDevice::ApplyRenderTechnique(
     const GLRenderTechnique& technique) SRX_NOEXCEPT
   {
-    // SRX_CHECK(mRenderContext);
+    SRX_CHECK(mRenderContext);
 
     if (!technique.program)
       return SRX_STATUS_MSG(EStatusCode::Invalid_Argument,
@@ -493,14 +489,13 @@ namespace Sorex::Graphics
         glGetUniformLocation(program->id, uniform->GetName().c_str()));
       RFY_ASSERT(loc >= 0 && uniform->GetLocation() == loc);
 #endif
-      // @fixme: add camera
+      // @FIXME: add camera
       if (uniform.GetType() == GL_FLOAT_MAT4)
       {
-        // @FIXME:
-        // const glm::mat4 camera = glm::ortho(0.f, 800.f, 600.f, 0.f,
-        // -1.f, 1.f); RFY_VERIFY(uniform.SetMatrix(glm::value_ptr(camera), 4,
-        // 4)
-        // == Error::Ok);
+        // @FIXME: SxCamera
+        const glm::mat4 camera = glm::ortho(0.f, 800.f, 600.f, 0.f, -1.f, 1.f);
+        SRX_VERIFY(uniform.SetMatrix(glm::value_ptr(camera), 4, 4)
+                   == EStatusCode::Ok);
       }
 
       if (auto rc = uniform.Apply(); rc != EStatusCode::Ok)
@@ -609,4 +604,9 @@ namespace Sorex::Graphics
     return nullptr;
   }
 
+  void GLRenderDevice::Cleanup()
+  {
+    if (mRenderContext)
+      mRenderContext->Clear();
+  }
 }  // namespace

@@ -154,8 +154,8 @@ namespace Sorex
   void Director::RenderScene()
   {
     SRX_CHECK(mCanvas);
+    mCanvas->Clear();
     OnDraw(*mCanvas);
-
     mCanvas->Flush();
   }
 

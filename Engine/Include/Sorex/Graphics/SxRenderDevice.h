@@ -44,7 +44,7 @@ public:
     RenderDevice()                   = default;
     virtual ~RenderDevice() override = default;
 
-    // virtual void Cleanup() = 0;
+    virtual void Cleanup() = 0;
 
     template<typename T>
       requires std::is_base_of_v<Renderer, T>

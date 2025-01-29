@@ -48,6 +48,6 @@ namespace Sorex::Graphics
       }
     }
 
-    SRX_TRACE("[GLExtensions] Extension loaded: {}", mExtensions.size());
+    SRX_DEBUG("[GLExtensions] Extensions loaded: {}", mExtensions.size());
   }
 }

@@ -106,6 +106,7 @@ public:
          void SetBlendMode(Graphics::BlendMode mode);
       */
 
+    void            Clear() SRX_NOEXCEPT;
     SRX_INLINE void Flush() { ActivateRenderer(nullptr); }
 
 private:

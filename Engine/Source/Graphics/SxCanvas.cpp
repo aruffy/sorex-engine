@@ -75,4 +75,12 @@ namespace Sorex
 
     return true;
   }
+
+  void Canvas::Clear() SRX_NOEXCEPT
+  {
+    if (mRenderer)
+      mRenderer->Reset();
+
+    mRenderDevice.Cleanup();
+  }
 }  // namespace
