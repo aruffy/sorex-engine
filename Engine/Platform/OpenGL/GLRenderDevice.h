@@ -54,6 +54,7 @@ public:
 
     // Interface Director::Component
     virtual Status Initialize() override;
+    virtual void   Shutdown() override;
 
     // Interface RenderDevice
     virtual void Cleanup() override;

@@ -60,14 +60,7 @@ namespace Sorex::Graphics
 
   GLRenderDevice::~GLRenderDevice()
   {
-    mActiveShaderProgram = nullptr;
-    for (auto res : mResources)
-    {
-      if (res.reference)
-        res.reference->MakeExpired();
-
-      DeallocateResource(res);
-    }
+    SRX_CHECK(mResources.empty());
   }
 
   Status GLRenderDevice::Initialize()
@@ -84,6 +77,24 @@ namespace Sorex::Graphics
     SRX_VERIFY(EnableDebugOutput(*this));
 #endif
     return SRX_OK;
+  }
+
+  void GLRenderDevice::Shutdown()
+  {
+    SRX_CLSFUN_TRACE();
+
+    mActiveShaderProgram = nullptr;
+    for (auto res : mResources)
+    {
+      if (res.reference)
+        res.reference->MakeExpired();
+
+      DeallocateResource(res);
+    }
+
+    mRenderContext.reset();
+    mResources.clear();
+    mShaders.clear();
   }
 
   SRX_TYPENAME GLResourceToken GLRenderDevice::Allocate(GLResourceType type)
