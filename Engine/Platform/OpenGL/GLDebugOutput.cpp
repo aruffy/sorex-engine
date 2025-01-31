@@ -28,7 +28,8 @@
 #include "GLRenderDevice.h"
 
 using namespace Sorex::Graphics;
-#if defined(GL_DEBUG_OUTPUT)
+#ifdef SOREX_OPENGL_DEBUG_OUTPUT
+#  if defined(GL_DEBUG_OUTPUT)
 namespace
 {
   Sorex::ELogLevel GetLogLevel(const GLenum type) SRX_NOEXCEPT
@@ -186,10 +187,11 @@ bool GLRenderDevice::EnableDebugOutput(GLRenderDevice& glRenderDevice)
   return true;
 }
 
-#else
+#  else
 bool GLRenderDevice::EnableDebugOutput(GLRenderDevice& glRenderDevice)
   SRX_NOEXCEPT
 {
   return false;
 }
-#endif
+#  endif  // GL_DEBUG_OUTPUT
+#endif    // SOREX_OPENGL_DEBUG_OUTPUT

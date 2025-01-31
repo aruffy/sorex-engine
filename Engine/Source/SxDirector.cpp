@@ -51,8 +51,8 @@ namespace Sorex
     Graphics::RenderDevice* renderDevice =
       GetComponent<Graphics::RenderDevice>();
     if (renderDevice == nullptr)
-      SRX_STATUS_MSG(EStatusCode::Invalid_State,
-                     "[Director] Render device not found");
+      return SRX_STATUS_MSG(EStatusCode::Invalid_State,
+                            "[Director] Render device not found");
 
     Status status;
     for (auto& cmp : mComponents)
