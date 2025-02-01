@@ -27,29 +27,73 @@
 
 #pragma once
 
-#include <Sorex/SxCoreMinimal.h>
+#include <Sorex/SxDirector.h>
+#include <Sorex/SxStream.h>
 
-#include "SxFileSystem.h"
+#include "SxRenderer.h"
+#include "SxTextureBitmap.h"
 
-namespace Sorex::FileSystem
+namespace Sorex::Graphics
 {
-  class Directory: public IFileSystem
+  class Texture2D;
+  class RenderDevice: public Sorex::Director::Component
+  {
+    SRX_RTTI(Graphics::RenderDevice, Director::Component)
+
+public:
+    RenderDevice()                   = default;
+    virtual ~RenderDevice() override = default;
+
+    virtual void Cleanup() = 0;
+
+    template<typename T>
+      requires std::is_base_of_v<Renderer, T>
+    TUniquePointer<T> CreateRenderer(const ssize_t capacity = SRX_UNKNOWN_SIZE)
+      SRX_NOEXCEPT
+    {
+      if (auto renderer = CreateRenderer(GetRuntimeType<T>(), capacity))
+      {
+        SRX_CHECK_MSG(renderer->template IsA<T>(), "invalid renderer type");
+        return TUniquePointer<T>(static_cast<T*>(renderer));
+      }
+
+      return nullptr;
+    }
+
+    /**
+     * @brief Create new 2D texture that can be handled by the render device.
+     *
+     * @param name - name of the texture
+     * @return pointer to 2D texture;
+     */
+    // virtual TUniquePointer<Texture2D> CreateTexture2D(StringView name) = 0;
+
+    /**
+     * @brief Retrieve supported texture pixel format.
+     *
+     * If the arg `format` is supported that it must be the result;
+     * Else should find similar supported pixel format for the `format` from
+     * args list; If it is inpossible, return pixel format that has bigger color
+     * component size (no need to compress color). For example: ARGB1555 ->
+     * RGBA5551.
+     *
+     * @param - source format;
+     * @return - supported pixel format.
+     */
+    // virtual EPixelFormat GetSupportedPixelFormat(EPixelFormat format) const =
+    // 0;
+
+protected:
+    virtual Renderer* CreateRenderer(const RuntimeClass& cls,
+                                     ssize_t capacity) SRX_NOEXCEPT = 0;
+  };
+
+  class IRenderDeviceResource
   {
 public:
-    explicit Directory(Path path) SRX_NOEXCEPT;
-    virtual ~Directory() override {}
-
-    virtual const Path& GetSystemPath() const SRX_NOEXCEPT override;
-    virtual Status      Mount(const Path&    path,
-                              PathStringView alias = {}) SRX_NOEXCEPT override;
+    virtual RenderDevice* GetRenderDevice() const = 0;
 
 protected:
-    SRX_INLINE const Path& GetPath() const SRX_NOEXCEPT { return mSystemPath; }
-
-protected:
-    TVector<TPair<Path, PathString>> mMountedPaths;
-
-private:
-    Path mSystemPath;
+    virtual ~IRenderDeviceResource() = default;
   };
 }  // namespace

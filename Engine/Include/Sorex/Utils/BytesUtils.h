@@ -27,29 +27,48 @@
 
 #pragma once
 
-#include <Sorex/SxCoreMinimal.h>
+#include <Sorex/CoreMinimal.h>
 
-#include "SxFileSystem.h"
-
-namespace Sorex::FileSystem
+namespace Sorex::Utils
 {
-  class Directory: public IFileSystem
+  SRX_API SRX_INLINE bool IsLittleEndian() SRX_NOEXCEPT
   {
-public:
-    explicit Directory(Path path) SRX_NOEXCEPT;
-    virtual ~Directory() override {}
+    const uint16      x = 0x0001;
+    static const bool endian =
+      static_cast<bool>(*(reinterpret_cast<const uint8*>(&x)));
+    return endian;
+  }
 
-    virtual const Path& GetSystemPath() const SRX_NOEXCEPT override;
-    virtual Status      Mount(const Path&    path,
-                              PathStringView alias = {}) SRX_NOEXCEPT override;
+  template<std::integral T>
+  SRX_API T SwapBits(T val) SRX_NOEXCEPT
+  {
+    T                result = T{ 0 };
+    constexpr size_t bits   = 8 * sizeof(val);
+    for (size_t i = 0; i < bits; ++i)
+    {
+      result = (result << 1) | (val & 1);
+      val >>= 1;
+    }
 
-protected:
-    SRX_INLINE const Path& GetPath() const SRX_NOEXCEPT { return mSystemPath; }
+    return result;
+  }
 
-protected:
-    TVector<TPair<Path, PathString>> mMountedPaths;
+  template<std::integral T>
+  SRX_API T SwapBytes(T val) SRX_NOEXCEPT
+  {
+    if constexpr (sizeof(T) == 1)
+      return val;
 
-private:
-    Path mSystemPath;
-  };
+    if constexpr (sizeof(T) == 2 && std::is_unsigned_v<T>)
+      return static_cast<T>((val >> 8) | (val << 8));
+
+    auto*            b    = reinterpret_cast<byte*>(&val);
+    constexpr size_t half = sizeof(T) / 2;
+    constexpr size_t last = sizeof(T) - 1;
+
+    for (size_t i = 0; i < half; ++i)
+      std::swap(b[i], b[last - i]);
+
+    return val;
+  }
 }  // namespace

@@ -1,9 +1,14 @@
 # common
 missingInclude
 funcArgNamesDifferent
+duplInheritedMember
 
 # third-party code
 *:Engine/ThirdParty/*
 
 # file specific
 useStlAlgorithm:Engine/Include/Sorex/RuntimeClass.h
+passedByValue:Engine/Include/Sorex/Math/SxMatrix3x3.h
+passedByValue:Engine/Include/Sorex/Math/SxVector2.h
+functionStatic:Engine/Platform/OpenGL/GLRenderContext.h
+functionConst:Engine/Platform/OpenGL/GLRenderContext.h

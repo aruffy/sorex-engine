@@ -27,29 +27,83 @@
 
 #pragma once
 
-#include <Sorex/SxCoreMinimal.h>
+#include "GLTypes.h"
 
-#include "SxFileSystem.h"
-
-namespace Sorex::FileSystem
+namespace Sorex::Graphics
 {
-  class Directory: public IFileSystem
+  enum class GLResourceType
   {
+    Idle,
+    Texture2D,
+    VertexArray,
+    VertexBuffer,
+    IndexBuffer,
+    ShaderProgram,
+    VertexShader,
+    FragmentShader
+  };
+
+  String ToString(const GLResourceType type) SRX_NOEXCEPT;
+
+  class GLResourceReference;
+  struct GLResource
+  {
+    static constexpr GLuint kInvalidResourceId =
+      std::numeric_limits<GLuint>::max();
+
+    GLResourceType type = GLResourceType::Idle;
+
+    GLuint id     = kInvalidResourceId;
+    GLenum target = 0;
+    GLuint value  = 0;
+
+    bool                 inited = false;
+    GLResourceReference* reference;
+
+    SRX_INLINE bool operator==(const GLResource& other) const SRX_NOEXCEPT
+    {
+      return type == other.type && target == other.target && id == other.id;
+    }
+    SRX_INLINE bool operator!=(const GLResource& other) const SRX_NOEXCEPT
+    {
+      return !(*this == other);
+    }
+  };
+
+  class GLRenderDevice;
+  class GLResourceReference final
+  {
+    friend class GLRenderDevice;
+
 public:
-    explicit Directory(Path path) SRX_NOEXCEPT;
-    virtual ~Directory() override {}
+    GLResourceReference(GLRenderDevice* glDevice,
+                        GLResource*     glResource) SRX_NOEXCEPT;
 
-    virtual const Path& GetSystemPath() const SRX_NOEXCEPT override;
-    virtual Status      Mount(const Path&    path,
-                              PathStringView alias = {}) SRX_NOEXCEPT override;
+    GLResourceReference(const GLResourceReference& other)            = delete;
+    GLResourceReference& operator=(const GLResourceReference& other) = delete;
 
-protected:
-    SRX_INLINE const Path& GetPath() const SRX_NOEXCEPT { return mSystemPath; }
+    ~GLResourceReference();
 
-protected:
-    TVector<TPair<Path, PathString>> mMountedPaths;
+    SRX_INLINE GLRenderDevice*       GetRenderDevice() { return mRenderDevice; }
+    SRX_INLINE const GLRenderDevice* GetRenderDevice() const
+    {
+      return mRenderDevice;
+    }
+
+    SRX_INLINE bool IsValid() const { return mResource && mRenderDevice; }
 
 private:
-    Path mSystemPath;
+    void        MakeExpired() SRX_NOEXCEPT;
+    GLResource* GetDeviceResource() const SRX_NOEXCEPT { return mResource; }
+
+private:
+    GLRenderDevice* mRenderDevice;
+    GLResource*     mResource;
   };
-}  // namespace
+
+  using GLResourceToken = TUniquePointer<GLResourceReference>;
+
+  SRX_NODISCARD GLResourceToken AllocateResource(GLRenderDevice* glRenderDevice,
+                                                 GLResourceType  type)
+    SRX_NOEXCEPT;
+}

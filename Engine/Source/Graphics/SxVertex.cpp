@@ -25,31 +25,53 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#pragma once
+#include <Sorex/Graphics/SxVertex.h>
 
-#include <Sorex/SxCoreMinimal.h>
-
-#include "SxFileSystem.h"
-
-namespace Sorex::FileSystem
+namespace Sorex::Graphics
 {
-  class Directory: public IFileSystem
+  VertexLayout::VertexLayout(TVector<VertexAttribute>&& vtxAttributes,
+                             uint32                     layoutSize) SRX_NOEXCEPT
+    : mAttribs(std::move(vtxAttributes))
+    , mStride(layoutSize)
+  {}
+
+  namespace Vertex
   {
-public:
-    explicit Directory(Path path) SRX_NOEXCEPT;
-    virtual ~Directory() override {}
+    const VertexLayout& V2F_C4B::GetLayout()
+    {
+      static const VertexLayout kLayout(
+        { { EVertexAttrib::Position, EVertexAttribType::Float, 2, 0, false },
+          { EVertexAttrib::Color,
+            EVertexAttribType::UByte,
+            4,
+            sizeof(float) * 2,
+            true } },
+        sizeof(V2F_C4B));
 
-    virtual const Path& GetSystemPath() const SRX_NOEXCEPT override;
-    virtual Status      Mount(const Path&    path,
-                              PathStringView alias = {}) SRX_NOEXCEPT override;
+      return kLayout;
+    }
 
-protected:
-    SRX_INLINE const Path& GetPath() const SRX_NOEXCEPT { return mSystemPath; }
+    const VertexLayout& V2F_C4B_TC2F::GetLayout()
+    {
+      constexpr int32 kColorAttribOffset = 2 * sizeof(float);
+      constexpr int32 kTexCoordAttribOffset =
+        kColorAttribOffset + (4 * sizeof(byte));
 
-protected:
-    TVector<TPair<Path, PathString>> mMountedPaths;
+      static const VertexLayout kLayout(
+        { { EVertexAttrib::Position, EVertexAttribType::Float, 2, 0, false },
+          { EVertexAttrib::Color,
+            EVertexAttribType::UByte,
+            4,
+            kColorAttribOffset,
+            true },
+          { EVertexAttrib::TexCoord,
+            EVertexAttribType::Float,
+            2,
+            kTexCoordAttribOffset,
+            false } },
+        sizeof(V2F_C4B_TC2F));
 
-private:
-    Path mSystemPath;
-  };
-}  // namespace
+      return kLayout;
+    }
+  }
+}

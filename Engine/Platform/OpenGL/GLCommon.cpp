@@ -25,31 +25,25 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#pragma once
+#include "GLTypes.h"
 
-#include <Sorex/SxCoreMinimal.h>
-
-#include "SxFileSystem.h"
-
-namespace Sorex::FileSystem
+namespace Sorex::Graphics::OpenGL
 {
-  class Directory: public IFileSystem
+  bool CheckErrors(const char* func, const char* file, int line)
   {
-public:
-    explicit Directory(Path path) SRX_NOEXCEPT;
-    virtual ~Directory() override {}
+    bool   bError = false;
+    GLenum error  = glGetError();
+    while (error != GL_NO_ERROR)
+    {
+      bError = true;
+      SRX_ERROR("[OpenGL] Error code={} func `{}` \n\t in {}:{}",
+                error,
+                func,
+                file,
+                line);
+      error = glGetError();
+    }
 
-    virtual const Path& GetSystemPath() const SRX_NOEXCEPT override;
-    virtual Status      Mount(const Path&    path,
-                              PathStringView alias = {}) SRX_NOEXCEPT override;
-
-protected:
-    SRX_INLINE const Path& GetPath() const SRX_NOEXCEPT { return mSystemPath; }
-
-protected:
-    TVector<TPair<Path, PathString>> mMountedPaths;
-
-private:
-    Path mSystemPath;
-  };
-}  // namespace
+    return bError;
+  }
+}

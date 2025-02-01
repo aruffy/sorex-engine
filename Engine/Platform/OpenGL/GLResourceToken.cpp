@@ -25,31 +25,68 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#pragma once
+#include "GLResourceToken.h"
 
-#include <Sorex/SxCoreMinimal.h>
+#include "GLRenderDevice.h"
 
-#include "SxFileSystem.h"
-
-namespace Sorex::FileSystem
+namespace Sorex::Graphics
 {
-  class Directory: public IFileSystem
+  String ToString(const GLResourceType type) SRX_NOEXCEPT
   {
-public:
-    explicit Directory(Path path) SRX_NOEXCEPT;
-    virtual ~Directory() override {}
+    switch (type)
+    {
+    case GLResourceType::Idle:
+      return "Idle";
+    case GLResourceType::Texture2D:
+      return "Texture 2D";
+    case GLResourceType::VertexArray:
+      return "Vertex Array";
+    case GLResourceType::VertexBuffer:
+      return "Vertex Buffer";
+    case GLResourceType::IndexBuffer:
+      return "Index Buffer";
+    case GLResourceType::ShaderProgram:
+      return "Shader Program";
+    case GLResourceType::VertexShader:
+      return "Vertex Shader";
+    case GLResourceType::FragmentShader:
+      return "Fragment Shader";
+    default:
+      return "Unknown";
+    }
+  }
 
-    virtual const Path& GetSystemPath() const SRX_NOEXCEPT override;
-    virtual Status      Mount(const Path&    path,
-                              PathStringView alias = {}) SRX_NOEXCEPT override;
+  GLResourceReference::GLResourceReference(GLRenderDevice* glDevice,
+                                           GLResource* glResource) SRX_NOEXCEPT
+    : mRenderDevice(glDevice)
+    , mResource(glResource)
+  {
+    if (glResource)
+    {
+      SRX_CHECK(!glResource->reference);
+      glResource->reference = this;
+    }
+  }
 
-protected:
-    SRX_INLINE const Path& GetPath() const SRX_NOEXCEPT { return mSystemPath; }
 
-protected:
-    TVector<TPair<Path, PathString>> mMountedPaths;
+  void GLResourceReference::MakeExpired() SRX_NOEXCEPT
+  {
+    mResource     = nullptr;
+    mRenderDevice = nullptr;
+  }
 
-private:
-    Path mSystemPath;
-  };
+  GLResourceReference::~GLResourceReference()
+  {
+    if (IsValid())
+      mRenderDevice->Deallocate(this);
+  }
+
+  SRX_NODISCARD GLResourceToken AllocateResource(GLRenderDevice* glRenderDevice,
+                                                 GLResourceType  type)
+    SRX_NOEXCEPT
+  {
+    auto token = glRenderDevice ? glRenderDevice->Allocate(type) : nullptr;
+    SRX_CHECK_MSG(token, "GLResource allocation failed");
+    return token;
+  }
 }  // namespace

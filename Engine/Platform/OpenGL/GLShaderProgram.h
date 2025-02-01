@@ -27,29 +27,73 @@
 
 #pragma once
 
-#include <Sorex/SxCoreMinimal.h>
+#include "GLResourceToken.h"
+#include "GLShader.h"
+#include "GLUniform.h"
 
-#include "SxFileSystem.h"
+// #include "GLTexture2D.h"
 
-namespace Sorex::FileSystem
+namespace Sorex::Graphics
 {
-  class Directory: public IFileSystem
+  // @note: used as array index
+  enum class ERenderingMode : uint32
+  {
+    None = 0u,
+    Points,
+    Lines,
+    Triangles,
+    TriangleStrip
+  };
+
+  class GLRenderDevice;
+  class GLShaderProgram final
   {
 public:
-    explicit Directory(Path path) SRX_NOEXCEPT;
-    virtual ~Directory() override {}
+    static TUniquePointer<GLShaderProgram> Create(
+      GLRenderDevice&       glRenderDevice,
+      const GLShaderSource& vert,
+      const GLShaderSource& frag,
+      Status&               status) SRX_NOEXCEPT;
 
-    virtual const Path& GetSystemPath() const SRX_NOEXCEPT override;
-    virtual Status      Mount(const Path&    path,
-                              PathStringView alias = {}) SRX_NOEXCEPT override;
+    GLShaderProgram(GLRenderDevice* glRenderDevice,
+                    GLShaderPtr     vert,
+                    GLShaderPtr     frag) SRX_NOEXCEPT;
 
-protected:
-    SRX_INLINE const Path& GetPath() const SRX_NOEXCEPT { return mSystemPath; }
+    GLShaderProgram(const GLShaderProgram& other)      = delete;
+    GLShaderProgram& operator=(GLShaderProgram& other) = delete;
 
-protected:
-    TVector<TPair<Path, PathString>> mMountedPaths;
+    Status Initialize() SRX_NOEXCEPT;
+
+    const GLResourceReference* GetResourceToken() const { return mToken.get(); }
+    SRX_INLINE GLRenderDevice* GetRenderDevice();
+
+    ERenderingMode GetRenderingMode() const { return mMode; }
+    void SetRenderingMode(const ERenderingMode value) { mMode = value; }
+
+    TSpan<const GLShaderPtr> GetShaders() const { return mShaders; }
+    GLShaderPtr              GetShader(EShaderType shaderType) SRX_NOEXCEPT;
+
+    TSpan<const GLUniform> GetUniforms() const { return mUniforms; }
+    // cppcheck-suppress functionConst
+    TSpan<GLUniform> GetUniforms() { return mUniforms; }
+
+    // const GLUniform* GetShaderParam(const String& name) const;
+    // GLUniform*       GetShaderParam(const String& name);
 
 private:
-    Path mSystemPath;
+    // GLUniform* FindUniform(const hash_t hash) const;
+
+private:
+    GLResourceToken mToken;
+
+    ERenderingMode       mMode;
+    TVector<GLShaderPtr> mShaders;
+
+    TVector<GLUniform> mUniforms;
   };
+
+  SRX_INLINE GLRenderDevice* GLShaderProgram::GetRenderDevice()
+  {
+    return mToken ? mToken->GetRenderDevice() : nullptr;
+  }
 }  // namespace

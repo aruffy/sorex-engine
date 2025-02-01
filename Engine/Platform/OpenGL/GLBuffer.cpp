@@ -25,31 +25,21 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#pragma once
+#include "GLBuffer.h"
 
-#include <Sorex/SxCoreMinimal.h>
+#include "GLRenderDevice.h"
 
-#include "SxFileSystem.h"
-
-namespace Sorex::FileSystem
+namespace Sorex::Graphics
 {
-  class Directory: public IFileSystem
+  namespace OpenGL
   {
-public:
-    explicit Directory(Path path) SRX_NOEXCEPT;
-    virtual ~Directory() override {}
-
-    virtual const Path& GetSystemPath() const SRX_NOEXCEPT override;
-    virtual Status      Mount(const Path&    path,
-                              PathStringView alias = {}) SRX_NOEXCEPT override;
-
-protected:
-    SRX_INLINE const Path& GetPath() const SRX_NOEXCEPT { return mSystemPath; }
-
-protected:
-    TVector<TPair<Path, PathString>> mMountedPaths;
-
-private:
-    Path mSystemPath;
+    Buffer::Buffer(GLRenderDevice* glDevice, GLResourceType type) SRX_NOEXCEPT
+      : mType(type)
+    {
+      SRX_CHECK(type == GLResourceType::VertexBuffer
+                || type == GLResourceType::IndexBuffer);
+      mGlToken = glDevice ? glDevice->Allocate(type) : nullptr;
+      SRX_CHECK_MSG(mGlToken, "allocation buffer failed");
+    }
   };
-}  // namespace
+}

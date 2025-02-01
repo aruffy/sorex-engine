@@ -29,27 +29,80 @@
 
 #include <Sorex/SxCoreMinimal.h>
 
-#include "SxFileSystem.h"
+#include "SxTextureBitmap.h"
 
-namespace Sorex::FileSystem
+namespace Sorex::Graphics
 {
-  class Directory: public IFileSystem
+  class Texture2D
   {
 public:
-    explicit Directory(Path path) SRX_NOEXCEPT;
-    virtual ~Directory() override {}
+    explicit Texture2D(StringView name);
+    // virtual ~Texture2D() override = default;
 
-    virtual const Path& GetSystemPath() const SRX_NOEXCEPT override;
-    virtual Status      Mount(const Path&    path,
-                              PathStringView alias = {}) SRX_NOEXCEPT override;
+    /**
+     * @brief Initialize texture with certain bitmap.
+     *
+     * @param bitmap - texture bitmap
+     * @param error - error description
+     * @return - True if initialization was successful, else False.
+     */
+    // virtual bool Initialize(const TextureBitmap* bitmap, Error* error) = 0;
 
-protected:
-    SRX_INLINE const Path& GetPath() const SRX_NOEXCEPT { return mSystemPath; }
+    /**
+     * @brief Initialize texture with certain bitmap.
+     *
+     * @param bitmap - texture bitmap
+     * @param error - error description
+     * @return - True if initialization was successful, else False.
+     */
+    virtual Status Initialize(TUniquePointer<TextureBitmap> bitmap) = 0;
 
-protected:
-    TVector<TPair<Path, PathString>> mMountedPaths;
+    /**
+     * @brief Retrieve scale of texture.
+     *
+     * @return value of texture scale.
+     */
+    virtual float GetScale() const { return 1.f; }
 
-private:
-    Path mSystemPath;
+    /**
+     * @brief Retrieve size of texture.
+     *
+     * Width and height values of size are always power of two.
+     *
+     * @return size of texture;
+     */
+    virtual SizeInt GetSize() const = 0;
+
+    /**
+     * @brief Retrive size of raw texture.
+     *
+     * Raw texture (TextureBitmap) can have any size, but the size of texture
+     * class could be expanded to power of two. This method must return real
+     * location and size of the raw texture content.
+     *
+     * @return rectangle of the texture;
+     */
+    virtual Rectangle GetContentRect() const = 0;
+
+    /**
+     * @brief Retrieve texture format.
+     *
+     * @return format of the texture.
+     */
+    virtual ETextureFormat GetFormat() const = 0;
+
+    /**
+     * @brief Retrieve texture sampler.
+     *
+     */
+    // virtual const TextureSampler* GetSampler() const = 0;
+
+    /**
+     * @brief Set texture sampler.
+     *
+     */
+    // virtual void SetSampler(const TextureSampler* sampler) = 0;
   };
 }  // namespace
+
+using SxTexture = Sorex::Graphics::Texture2D;

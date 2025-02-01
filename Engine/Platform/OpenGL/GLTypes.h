@@ -29,27 +29,50 @@
 
 #include <Sorex/SxCoreMinimal.h>
 
-#include "SxFileSystem.h"
+#include <glad/glad.h>
 
-namespace Sorex::FileSystem
+// #define SOREX_OPENGL_TEXTURE_NUMBER (8)
+
+#ifdef SOREX_DEBUG_HIGH
+#  define SOREX_OPENGL_DEBUG_OUTPUT (1)
+#endif
+
+#if defined(SOREX_OPENGL_DEBUG_OUTPUT) && defined(GL_DEBUG_OUTPUT)
+#  define SRX_OPENGL_CALL(expr) expr
+
+#elif defined(SOREX_DEBUG_MEDIUM)
+#  define SRX_OPENGL_CALL(expr)                                         \
+    (expr);                                                             \
+    SRX_ASSERT_MSG(                                                     \
+      !Sorex::Graphics::OpenGL::CheckErrors(#expr, __FILE__, __LINE__), \
+      #expr)
+
+#else
+#  define SRX_OPENGL_CALL(expr) expr
+#endif
+
+
+namespace Sorex::Graphics
 {
-  class Directory: public IFileSystem
+  using GLString     = Sorex::BasicString<GLchar>;
+  using GLStringView = Sorex::BasicStringView<GLchar>;
+
+  namespace OpenGL
   {
-public:
-    explicit Directory(Path path) SRX_NOEXCEPT;
-    virtual ~Directory() override {}
+    namespace Concept
+    {
+      template<typename T>
+      concept GLBuiltin =
+        std::is_same_v<T, GLbyte> || std::is_same_v<T, GLubyte>
+        || std::is_same_v<T, GLushort> || std::is_same_v<T, GLshort>
+        || std::is_same_v<T, GLuint> || std::is_same_v<T, GLint>
+        || std::is_same_v<T, GLfloat> || std::is_same_v<T, GLdouble>;
 
-    virtual const Path& GetSystemPath() const SRX_NOEXCEPT override;
-    virtual Status      Mount(const Path&    path,
-                              PathStringView alias = {}) SRX_NOEXCEPT override;
+      template<typename T>
+      concept GLFloatingPoint =
+        std::is_same_v<T, GLfloat> || std::is_same_v<T, GLdouble>;
+    }
 
-protected:
-    SRX_INLINE const Path& GetPath() const SRX_NOEXCEPT { return mSystemPath; }
-
-protected:
-    TVector<TPair<Path, PathString>> mMountedPaths;
-
-private:
-    Path mSystemPath;
-  };
-}  // namespace
+    bool GLAPIENTRY CheckErrors(const char* func, const char* file, int line);
+  }
+}

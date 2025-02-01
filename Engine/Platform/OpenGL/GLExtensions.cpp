@@ -25,31 +25,29 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#pragma once
+#include "GLExtensions.h"
 
-#include <Sorex/SxCoreMinimal.h>
-
-#include "SxFileSystem.h"
-
-namespace Sorex::FileSystem
+namespace Sorex::Graphics
 {
-  class Directory: public IFileSystem
+  GLExtensions::GLExtensions() SRX_NOEXCEPT
   {
-public:
-    explicit Directory(Path path) SRX_NOEXCEPT;
-    virtual ~Directory() override {}
+    GLint n;
+    SRX_OPENGL_CALL(glGetIntegerv(GL_NUM_EXTENSIONS, &n));
+    mExtensions.reserve(n);
+    for (GLint i = 0; i < n; i++)
+    {
+      if (const GLubyte* ext = glGetStringi(GL_EXTENSIONS, i))
+      {
+        StringView   extName = StringView(reinterpret_cast<const char*>(ext));
+        const hash_t hash    = Sorex::Utils::GetHash(extName);
+#ifdef SOREX_DEBUG_MEDIUM
+        mExtensions.emplace(hash, String(extName));
+#else
+        mExtensions.insert(hash);
+#endif
+      }
+    }
 
-    virtual const Path& GetSystemPath() const SRX_NOEXCEPT override;
-    virtual Status      Mount(const Path&    path,
-                              PathStringView alias = {}) SRX_NOEXCEPT override;
-
-protected:
-    SRX_INLINE const Path& GetPath() const SRX_NOEXCEPT { return mSystemPath; }
-
-protected:
-    TVector<TPair<Path, PathString>> mMountedPaths;
-
-private:
-    Path mSystemPath;
-  };
-}  // namespace
+    SRX_DEBUG("[GLExtensions] Extensions loaded: {}", mExtensions.size());
+  }
+}

@@ -26,3 +26,29 @@
 /**************************************************************************/
 
 #pragma once
+
+#include <Sorex/SxCoreMinimal.h>
+#include <Sorex/Utils/SxString.h>
+
+#include "GLTypes.h"
+
+namespace Sorex::Graphics
+{
+  class GLExtensions final
+  {
+public:
+    explicit GLExtensions() SRX_NOEXCEPT;
+
+    inline bool HasExtension(StringView extension) const
+    {
+      return mExtensions.count(Sorex::Utils::GetHash(extension));
+    }
+
+private:
+#ifdef SOREX_DEBUG_MEDIUM
+    THashMap<hash_t, String> mExtensions;
+#else
+    THashSet<hash_t> mExtensions;
+#endif
+  };
+}

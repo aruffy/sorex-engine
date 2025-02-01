@@ -29,27 +29,83 @@
 
 #include <Sorex/SxCoreMinimal.h>
 
-#include "SxFileSystem.h"
-
-namespace Sorex::FileSystem
+namespace Sorex::Graphics
 {
-  class Directory: public IFileSystem
+  enum class EVertexAttrib
+  {
+    Position   = 0,
+    Color      = 1,
+    Color_0    = Color,
+    Color_1    = 2,
+    TexCoord   = 3,
+    TexCoord_0 = TexCoord,
+    TexCoord_1 = 4,
+  };
+
+  enum class EVertexAttribType
+  {
+    Float,
+    Integer,
+    UByte
+  };
+
+  struct VertexAttribute
+  {
+    EVertexAttrib     index;
+    EVertexAttribType type;
+    int32             number;
+    int32             offset;
+    bool              normalization;
+  };
+
+  class VertexLayout
   {
 public:
-    explicit Directory(Path path) SRX_NOEXCEPT;
-    virtual ~Directory() override {}
+    using Iterator = TVector<VertexAttribute>::const_iterator;
+    using Pointer  = TVector<VertexAttribute>::const_pointer;
 
-    virtual const Path& GetSystemPath() const SRX_NOEXCEPT override;
-    virtual Status      Mount(const Path&    path,
-                              PathStringView alias = {}) SRX_NOEXCEPT override;
+public:
+    VertexLayout(TVector<VertexAttribute>&& vtxAttributes,
+                 uint32                     layoutSize) SRX_NOEXCEPT;
 
-protected:
-    SRX_INLINE const Path& GetPath() const SRX_NOEXCEPT { return mSystemPath; }
+    SRX_INLINE Iterator begin() const { return mAttribs.cbegin(); }
+    SRX_INLINE Iterator end() const { return mAttribs.cend(); }
 
-protected:
-    TVector<TPair<Path, PathString>> mMountedPaths;
+    SRX_INLINE Pointer GetAttribute(const size_t index) const;
+
+    SRX_INLINE uint32 GetStride() const { return mStride; }
+    SRX_INLINE bool   IsValid() const { return (mStride && !mAttribs.empty()); }
 
 private:
-    Path mSystemPath;
+    TVector<VertexAttribute> mAttribs;
+    uint32                   mStride = 0;
   };
+
+  namespace Vertex
+  {
+    struct V2F_C4B
+    {
+      float  position[2];
+      uint32 color;
+
+      static const VertexLayout& GetLayout();
+    };
+
+    struct V2F_C4B_TC2F
+    {
+      float  position[2];
+      uint32 color;
+      float  texCoord[2];
+
+      static const VertexLayout& GetLayout();
+    };
+  }  // namespace
+
+  SRX_INLINE VertexLayout::Pointer VertexLayout::GetAttribute(
+    const size_t index) const
+  {
+    return (index < mAttribs.size())
+             ? std::addressof<const VertexAttribute>(mAttribs[index])
+             : nullptr;
+  }
 }  // namespace

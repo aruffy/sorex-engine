@@ -33,20 +33,22 @@ get_target_property(
 # ##############################################################################
 # GLM library
 # ##############################################################################
-# set(GLM_SUBDIR "glm") message(CHECK_START "[${GLM_SUBDIR}] subdir build")
-#
-# set(GLM_ENABLE_CXX_20 CACHE BOOL "[${GLM_SUBDIR}] Enable C++ 20" ON)
-#
-# add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/${GLM_SUBDIR}")
-# set_target_properties( glm PROPERTIES FOLDER
-# "${THIRD_PARTY_FOLDER}/${GLM_SUBDIR}" )
-#
-# set(GLM_INCLUDE_DIR "${CMAKE_CURRENT_LIST_DIR}/${GLM_SUBDIR}/glm")
-#
-# list(APPEND THIRD_PARTY_LIBRARIES glm::glm) list(APPEND
-# THIRD_PARTY_INCLUDE_DIRECTORIES "${GLM_INCLUDE_DIR}")
-#
-# message(CHECK_PASS "done")
+set(GLM_SUBDIR "glm")
+message(CHECK_START "[${GLM_SUBDIR}] subdir build")
+
+set(GLM_ENABLE_CXX_20 CACHE BOOL "[${GLM_SUBDIR}] Enable C++ 20" ON)
+
+add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/${GLM_SUBDIR}")
+set_target_properties(
+  glm PROPERTIES FOLDER "${THIRD_PARTY_FOLDER}/${GLM_SUBDIR}"
+)
+
+set(GLM_INCLUDE_DIR "${CMAKE_CURRENT_LIST_DIR}/${GLM_SUBDIR}/glm")
+
+list(APPEND THIRD_PARTY_LIBRARIES glm::glm)
+target_include_directories(${ENGINE_TARGET} PRIVATE "${GLM_INCLUDE_DIR}")
+
+message(CHECK_PASS "done")
 
 # ##############################################################################
 # GLAD library

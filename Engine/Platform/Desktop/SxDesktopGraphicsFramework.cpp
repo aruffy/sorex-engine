@@ -236,7 +236,7 @@ namespace Sorex::Platform
                 "functions.");
 
       // cppcheck-suppress cstyleCast
-      if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
+      if (!gladLoadGLES2Loader((GLADloadproc)glfwGetProcAddress))
       {
         const char* desc;
         glfwGetError(&desc);

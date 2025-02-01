@@ -7,27 +7,33 @@
 #include <Sorex/SxTime.h>
 #include <Sorex/SxLauncher.h>
 #include <Sorex/SxDirector.h>
+#include <Sorex/Graphics/SxCanvas.h>
 
 #include <Sorex/SxDesktopLauncher.h>
 
 using namespace Sorex;
 
 class MyDirector final: public Director
-{};
+{
+  public:
+  protected:
+  virtual void OnDraw(Canvas& canvas) override
+  {
+    static float f = 0.f;
+    f += 5.f;
+    if (f >= 400.f)
+      f = 0.f;
+
+    canvas.DrawLine(Point(f, 200.f), Point(f + 200.f, 200.f), Color::Purple);
+    canvas.DrawRect(Rect(Point(f, 325.f), Size(64.f, 64.f)), Color::Green);
+    canvas.DrawRect(Rect(Point(200.f, 400.f), Size(64.f, 128.f)),
+                    Color::Yellow);
+    canvas.DrawCircle(Point(300.f, 400.f), 64.f, 32, Color::Red);
+  }
+};
 
 int main(const int argc, const char* argv[])
 {
-  Thread::SetMainThread();
-
-  Status status =
-    SRX_STATUS_MSG(Sorex::EStatusCode::Busy, "Status Busy {}", argc);
-  std::cout << status.ToString() << std::endl;
-
-  // FIXME: Assert
-  /* SRX_ASSERT(JournalManager::GetInstance()
-               .RegisterLogger<JournalManager::kEngineLogger>("Engine", true)
-               .Ok()); */
-
   if (!(JournalManager::GetInstance()
           .RegisterLogger<JournalManager::kEngineLogger>("MyEngine", true)
           .Ok()))
@@ -42,21 +48,6 @@ int main(const int argc, const char* argv[])
                                            400,
                                            "BAD_REQUEST");
 
-  SRX_INFO("Hello, from main thread (MACRO)");
-
   Platform::DesktopLauncher().Run<MyDirector>();
-
-  SystemTime stm;
-  Time::GetLocalTime(stm);
-  std::cout << "Time: " << stm << std::endl;
-
-  Sorex::Thread thr;
-  thr.Execute([]() {
-    std::stringstream ss;
-    ss << std::this_thread::get_id();
-    SRX_DEBUG("Debug message from a thread {} num {}", ss.str(), 124);
-  });
-
-  std::cout << "[Sorex] Sandbox::Main Start." << std::endl;
   return 0;
 }

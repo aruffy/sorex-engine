@@ -25,31 +25,51 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#pragma once
+#include <GLShader.h>
 
-#include <Sorex/SxCoreMinimal.h>
+using namespace Sorex::Graphics;
 
-#include "SxFileSystem.h"
-
-namespace Sorex::FileSystem
+namespace
 {
-  class Directory: public IFileSystem
-  {
-public:
-    explicit Directory(Path path) SRX_NOEXCEPT;
-    virtual ~Directory() override {}
+  // TODO: Z-Order
+  const GLString __kColorVertexShaderSource = R"(
+        #version 300 es
 
-    virtual const Path& GetSystemPath() const SRX_NOEXCEPT override;
-    virtual Status      Mount(const Path&    path,
-                              PathStringView alias = {}) SRX_NOEXCEPT override;
+        in mediump vec2 a_position;
+        in mediump vec4 a_color;
 
-protected:
-    SRX_INLINE const Path& GetPath() const SRX_NOEXCEPT { return mSystemPath; }
+        uniform mediump mat4 u_mvp;
 
-protected:
-    TVector<TPair<Path, PathString>> mMountedPaths;
+        out mediump vec4 v_color;
 
-private:
-    Path mSystemPath;
-  };
+        void main()
+        {
+            gl_Position = u_mvp * vec4(a_position.x, a_position.y, 0.f, 1.f);
+            v_color = a_color;
+        }
+    )";
+
+
+  const GLString __kColorFragmentShaderSource = R"(
+        #version 300 es
+        precision mediump float;
+
+        in mediump vec4 v_color;
+
+        layout(location = 0) out vec4 out_fragColor;
+
+        void main()
+        {
+            out_fragColor = v_color;
+        }
+    )";
+}
+
+namespace Sorex::Graphics::OpenGL
+{
+  const GLShaderSource Shader::kColorVertexShaderSource =
+    GLShaderSource(EShaderType::Vertex, __kColorVertexShaderSource);
+
+  const GLShaderSource Shader::kColorFragmentShaderSource =
+    GLShaderSource(EShaderType::Fragment, __kColorFragmentShaderSource);
 }  // namespace

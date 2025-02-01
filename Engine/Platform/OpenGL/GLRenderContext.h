@@ -28,28 +28,59 @@
 #pragma once
 
 #include <Sorex/SxCoreMinimal.h>
+// #include <Ruffy/Graphics/Rendering/BlendMode.h>
+// #include <Ruffy/Graphics/Rendering/TextureSampler.h>
 
-#include "SxFileSystem.h"
+#include "GLTypes.h"
+#include "GLRenderTechnique.h"
 
-namespace Sorex::FileSystem
+namespace Sorex::Graphics
 {
-  class Directory: public IFileSystem
+  class GLRenderDevice;
+  class GLRenderContext
   {
 public:
-    explicit Directory(Path path) SRX_NOEXCEPT;
-    virtual ~Directory() override {}
+    struct Blend
+    {
+      // BlendMode mode;
+      // Color     color;
+    };
 
-    virtual const Path& GetSystemPath() const SRX_NOEXCEPT override;
-    virtual Status      Mount(const Path&    path,
-                              PathStringView alias = {}) SRX_NOEXCEPT override;
+public:
+    explicit GLRenderContext(const GLRenderDevice& renderDevice) SRX_NOEXCEPT;
 
-protected:
-    SRX_INLINE const Path& GetPath() const SRX_NOEXCEPT { return mSystemPath; }
+    void Apply(const GLRenderTechnique& technique) SRX_NOEXCEPT;
 
-protected:
-    TVector<TPair<Path, PathString>> mMountedPaths;
+    void Reset() SRX_NOEXCEPT;
+    void Clear() SRX_NOEXCEPT;  // cppcheck-suppress functionStatic
+
+    void SetColor(const Color value) { mColor = value; }
+
+    // error_t SetTexture(size_t slot, const GLTexture2D* texture);
+    // error_t SetTextureSampler(size_t slot, const TextureSampler& sampler);
+
+    // bool ActivateTexture(GLenum slot, Error* error);
 
 private:
-    Path mSystemPath;
+    // void ApplyBlendMode(BlendMode mode);
+    /* void ApplyTextureSampler(GLenum                target,
+                             const TextureSampler& sampler,
+                             bool                  bMipmaps = false);
+*/
+private:
+    // const GLRenderDevice& mDevice;
+
+    Color mColor;
+    // Blend mBlend;
+
+    /*     struct TextureSample
+        {
+          const GLTexture2D* texture = nullptr;
+
+          TextureSampler sampler;
+          bool           bUpdateSampler = true;
+        };
+
+        TVector<TextureSample> _textures; */
   };
-}  // namespace
+}

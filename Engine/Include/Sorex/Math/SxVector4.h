@@ -88,7 +88,9 @@ namespace Sorex::Math
     SRX_INLINE TVector4& operator+=(const TVector4& v) SRX_NOEXCEPT;
     SRX_INLINE TVector4& operator-=(const TVector4& v) SRX_NOEXCEPT;
     SRX_INLINE TVector4& operator*=(const TVector4& v) SRX_NOEXCEPT;
+    // cppcheck-suppress passedByValue
     SRX_INLINE TVector4& operator*=(const value_type factor) SRX_NOEXCEPT;
+    // cppcheck-suppress passedByValue
     SRX_INLINE TVector4& operator/=(const value_type divisor) SRX_NOEXCEPT;
   };
 
