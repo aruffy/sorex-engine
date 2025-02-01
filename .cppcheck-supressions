@@ -1,6 +1,7 @@
 # common
 missingInclude
 funcArgNamesDifferent
+duplInheritedMember
 
 # third-party code
 *:Engine/ThirdParty/*
