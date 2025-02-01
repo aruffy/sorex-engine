@@ -7,3 +7,4 @@ funcArgNamesDifferent
 
 # file specific
 useStlAlgorithm:Engine/Include/Sorex/RuntimeClass.h
+passedByValue:Engine/Include/Sorex/Math/SxMatrix3x3.h

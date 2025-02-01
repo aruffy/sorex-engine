@@ -111,11 +111,12 @@ private:
 
     Status ActivateShaderProgram(GLenum& mode) SRX_NOEXCEPT;
 
-    Status InitializeBuffer(GLResource&         resource,
-                            const GLBufferData& buffer) SRX_NOEXCEPT;
-    Status UpdateBufferData(const GLResource&   resource,
-                            const GLBufferData& data) SRX_NOEXCEPT;
-    void   EnableVertexAttributes(const VertexLayout& vtxLayout) SRX_NOEXCEPT;
+    static Status InitializeBuffer(GLResource&         resource,
+                                   const GLBufferData& buffer) SRX_NOEXCEPT;
+    static Status UpdateBufferData(const GLResource&   resource,
+                                   const GLBufferData& data) SRX_NOEXCEPT;
+    static void   EnableVertexAttributes(const VertexLayout& vtxLayout)
+      SRX_NOEXCEPT;
 
 #ifdef SOREX_OPENGL_DEBUG_OUTPUT
     bool EnableDebugOutput(GLRenderDevice& glRenderDevice) SRX_NOEXCEPT;

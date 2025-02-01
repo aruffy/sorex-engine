@@ -25,6 +25,10 @@ class MyDirector final: public Director
       f = 0.f;
 
     canvas.DrawLine(Point(f, 200.f), Point(f + 200.f, 200.f), Color::Purple);
+    canvas.DrawRect(Rect(Point(f, 325.f), Size(64.f, 64.f)), Color::Green);
+    canvas.DrawRect(Rect(Point(200.f, 400.f), Size(64.f, 128.f)),
+                    Color::Yellow);
+    canvas.DrawCircle(Point(300.f, 400.f), 64.f, 32, Color::Red);
   }
 };
 

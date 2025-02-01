@@ -47,64 +47,65 @@ public:
     SRX_INLINE void DrawLine(const Point&            begin,
                              const Point&            end,
                              const TArray<Color, 2>& colors) SRX_NOEXCEPT;
-    /* void            DrawCircle(const Point& center,
-                                float        radius,
-                                int32        segments,
-                                Color        color);
+    SRX_INLINE void DrawRect(const Rectangle&        rectangle,
+                             const TArray<Color, 4>& colors,
+                             bool bFilled = false) SRX_NOEXCEPT;
+    SRX_INLINE void DrawRect(const Rectangle& rectangle,
+                             const Color&     color   = Color::White,
+                             bool             bFilled = false) SRX_NOEXCEPT;
 
-     SRX_INLINE void DrawRectangle(const Rectangle&        rectangle,
-                                   const TArray<Color, 4>& colors,
-                                   bool                    bFilled = false);
-     SRX_INLINE void DrawRectangle(const Rectangle& rectangle,
-                                   const Color&     color   = Color::White,
-                                   bool             bFilled = false);
+    void DrawCircle(const Point& center,
+                    float        radius,
+                    int32        segments,
+                    Color        color) SRX_NOEXCEPT;
+    /*
+               void DrawSprite(const Graphics::Sprite& sprite);
+            void DrawTexture(const Graphics::Texture2D* texture,
+                             const Point&               location,
+                             Color                      color);
+            void DrawTexture(const Graphics::Texture2D* texture,
+                             const Point&               location,
+                             float                      rotation = 0.f,
+                             const Vector2              scale    = Vec2::One(),
+                             const Color&               color    =
+       Color::White);
 
-         void DrawSprite(const Graphics::Sprite& sprite);
-         void DrawTexture(const Graphics::Texture2D* texture,
-                          const Point&               location,
-                          Color                      color);
-         void DrawTexture(const Graphics::Texture2D* texture,
-                          const Point&               location,
-                          float                      rotation = 0.f,
-                          const Vector2              scale    = Vec2::One(),
-                          const Color&               color    = Color::White);
+            void DrawText(const Graphics::Font& font,
+                          StringView            text,
+                          const Point&          pos,
+                          Color                 color = Color::White,
+                          float                 scale = 1.f);
+            void DrawText(const Graphics::Font& font,
+                          WStringView           text,
+                          const Point&          pos,
+                          Color                 color = Color::White,
+                          float                 scale = 1.f);
 
-         void DrawText(const Graphics::Font& font,
-                       StringView            text,
-                       const Point&          pos,
-                       Color                 color = Color::White,
-                       float                 scale = 1.f);
-         void DrawText(const Graphics::Font& font,
-                       WStringView           text,
-                       const Point&          pos,
-                       Color                 color = Color::White,
-                       float                 scale = 1.f);
+            void DrawText(const Graphics::FontDecorator& decorator,
+                          StringView                     text,
+                          const Point&                   pos);
+            void DrawText(const Graphics::FontDecorator& decorator,
+                          WStringView                    wtext,
+                          const Point&                   pos);
 
-         void DrawText(const Graphics::FontDecorator& decorator,
-                       StringView                     text,
-                       const Point&                   pos);
-         void DrawText(const Graphics::FontDecorator& decorator,
-                       WStringView                    wtext,
-                       const Point&                   pos);
+            void        Clear();
 
-         void        Clear();
+            // State Contol
+           SRX_INLINE void PushState() { _stateStack.push(_state); }
+            void        PopState();
 
-         // State Contol
-        SRX_INLINE void PushState() { _stateStack.push(_state); }
-         void        PopState();
+            void Rotate(float rotation);
+            void Rotate(float rotation, const Point& anchor);  // @todo:
+           EAnchorPoint ?
 
-         void Rotate(float rotation);
-         void Rotate(float rotation, const Point& anchor);  // @todo:
-        EAnchorPoint ?
+            void        Translate(float x, float y);
+           SRX_INLINE void Translate(const Vector2& v) { Translate(v.x, v.y); }
 
-         void        Translate(float x, float y);
-        SRX_INLINE void Translate(const Vector2& v) { Translate(v.x, v.y); }
+            void        Scale(float sx, float sy);
+           SRX_INLINE void Scale(const Vector2& v) { Scale(v.x, v.y); }
 
-         void        Scale(float sx, float sy);
-        SRX_INLINE void Scale(const Vector2& v) { Scale(v.x, v.y); }
-
-         void SetBlendMode(Graphics::BlendMode mode);
-      */
+            void SetBlendMode(Graphics::BlendMode mode);
+         */
 
     void            Clear() SRX_NOEXCEPT;
     SRX_INLINE void Flush() { ActivateRenderer(nullptr); }
@@ -116,13 +117,10 @@ private:
                   const Point& end,
                   const Color* color,
                   size_t       colorNumber) SRX_NOEXCEPT;
-
-    /*
-  void DrawRectangle(const Rect&  rect,
-                          const Color* color,
-                          size_t       colorNumber,
-                          bool         bFilled = false);
-    */
+    void DrawRectangle(const Rect&  rect,
+                       const Color* color,
+                       size_t       colorNumber,
+                       bool         bFilled = false) SRX_NOEXCEPT;
 
 private:
     Graphics::RenderDevice& mRenderDevice;
@@ -151,5 +149,18 @@ private:
     DrawLine(begin, end, colors.data(), colors.size());
   }
 
+  SRX_INLINE void Canvas::DrawRect(const Rect&             rect,
+                                   const TArray<Color, 4>& colors,
+                                   bool bFilled /* = false */) SRX_NOEXCEPT
+  {
+    DrawRectangle(rect, colors.data(), colors.size(), bFilled);
+  }
+
+  SRX_INLINE void Canvas::DrawRect(const Rect&  rect,
+                                   const Color& color /* = Color::White */,
+                                   bool bFilled /* = false */) SRX_NOEXCEPT
+  {
+    DrawRectangle(rect, &color, 1, bFilled);
+  }
 
 }  // namespace

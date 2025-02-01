@@ -54,6 +54,20 @@ namespace Sorex
       mPrimitiveRenderer->DrawLine(begin, end, color, colorNumber);
   }
 
+  void Canvas::DrawRectangle(const Rect&  rect,
+                             const Color* colors,
+                             size_t       colorNumber,
+                             bool         bFilled) SRX_NOEXCEPT
+  {
+    if (!ActivateRenderer(mPrimitiveRenderer.get()))
+      return;
+
+    if (bFilled)
+      mPrimitiveRenderer->DrawRectangle(rect, colors, colorNumber);
+    else
+      mPrimitiveRenderer->DrawBorder(rect, colors, colorNumber);
+  }
+
   bool Canvas::ActivateRenderer(Graphics::Renderer* renderer) SRX_NOEXCEPT
   {
     if (mRenderer == renderer)
@@ -75,6 +89,16 @@ namespace Sorex
 
     return true;
   }
+
+  void Canvas::DrawCircle(const Point& center,
+                          float        radius,
+                          int32        segments,
+                          Color        color) SRX_NOEXCEPT
+  {
+    if (ActivateRenderer(mPrimitiveRenderer.get()))
+      mPrimitiveRenderer->DrawCircle(center, radius, segments, color);
+  }
+
 
   void Canvas::Clear() SRX_NOEXCEPT
   {
