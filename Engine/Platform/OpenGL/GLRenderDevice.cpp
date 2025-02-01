@@ -197,7 +197,7 @@ namespace Sorex::Graphics
 
       if (mActiveShaderProgram)
       {
-        GLResource* program =
+        const GLResource* const program =
           GetResource(mActiveShaderProgram->GetResourceToken());
 
         if (program && program->id == resource.id)
@@ -248,13 +248,9 @@ namespace Sorex::Graphics
     if (auto it = mShaders.find(key); it != mShaders.end())
       return it->second;
 
-    if (GLShaderPtr shader = std::make_shared<GLShader>(this, shaderSource))
-    {
-      mShaders[key] = shader;
-      return shader;
-    }
-
-    return nullptr;
+    GLShaderPtr shader = std::make_shared<GLShader>(this, shaderSource);
+    mShaders[key]      = shader;
+    return shader;
   }
 
   Status GLRenderDevice::BuildShaderProgram(
@@ -341,12 +337,12 @@ namespace Sorex::Graphics
   }
 
   Status GLRenderDevice::CompileShader(const GLShaderPtr& shader,
-                                       GLuint&            shaderId) SRX_NOEXCEPT
+                                       GLuint& shaderId) const SRX_NOEXCEPT
   {
     SRX_CHECK(Thread::IsMainThread());
 
     GLResourceReference* token = shader ? shader->GetResourceToken() : nullptr;
-    GLResource*          resource = GetResource(token);
+    GLResource* const    resource = GetResource(token);
 
     if (resource == nullptr)
       return SRX_STATUS_MSG(EStatusCode::Invalid_Argument,

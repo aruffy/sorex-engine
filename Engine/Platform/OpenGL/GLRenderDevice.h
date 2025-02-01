@@ -103,11 +103,11 @@ private:
     void DeallocateResource(GLResource& resource) SRX_NOEXCEPT;
 
     Status CompileShader(const GLShaderPtr& shader,
-                         GLuint&            shaderId) SRX_NOEXCEPT;
+                         GLuint&            shaderId) const SRX_NOEXCEPT;
 
     template<typename VertexType, typename IndexType>
-    Status BindVertexArray(const GLVertexArray<VertexType, IndexType>& vtxArray)
-      SRX_NOEXCEPT;
+    Status BindVertexArray(
+      const GLVertexArray<VertexType, IndexType>& vtxArray) const SRX_NOEXCEPT;
 
     Status ActivateShaderProgram(GLenum& mode) SRX_NOEXCEPT;
 
@@ -119,7 +119,7 @@ private:
       SRX_NOEXCEPT;
 
 #ifdef SOREX_OPENGL_DEBUG_OUTPUT
-    bool EnableDebugOutput(GLRenderDevice& glRenderDevice) SRX_NOEXCEPT;
+    static bool EnableDebugOutput(GLRenderDevice& glRenderDevice) SRX_NOEXCEPT;
 #endif
 
 private:
@@ -185,7 +185,7 @@ private:
 
   template<typename VertexType, typename IndexType>
   Status GLRenderDevice::BindVertexArray(
-    const GLVertexArray<VertexType, IndexType>& vtxArray) SRX_NOEXCEPT
+    const GLVertexArray<VertexType, IndexType>& vtxArray) const SRX_NOEXCEPT
   {
     GLResource* vao = GetResource(vtxArray.GetResourceToken());
     const GLVertexBuffer<VertexType>* vtxBuffer = vtxArray.GetVertexBuffer();
