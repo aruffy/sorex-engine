@@ -166,5 +166,12 @@ namespace Sorex
   template<typename T>
   using TMutexLock = std::lock_guard<T>;
   using MutexLock  = TMutexLock<Mutex>;
+}  // namespace
 
-}
+namespace std
+{
+  template<typename T, typename... Ts>
+  struct is_variant_memeber<T, std::variant<Ts...>>
+    : bool_constant<(std::is_same_v<T, Ts> || ...)>
+  {};
+}  // namespace std
