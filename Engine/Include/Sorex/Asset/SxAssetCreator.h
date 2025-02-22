@@ -27,65 +27,60 @@
 
 #pragma once
 
-// #include <Sorex/SxCoreMinimal.h>
+#include <Sorex/SxCoreMinimal.h>
 
-// #include "SxAsset.h"
-// #include "SxAssetLoader.h"
-// #include "Dependence.h"
+#include "SxAsset.h"
+#include "SxAssetLoader.h"
 #include "SxAssetOptions.h"
 #include "SxAssetRegistry.h"
-#include "SxAssetStorage.h"
 
-/**
-namespace Ruffy::Resource
+namespace Sorex::Resource
 {
-class AssetCreator: public Object
-{
-RFY_RTTI(Resource::AssetCreator, Object)
-
+  class AssetCreator
+  {
 public:
-virtual ~AssetCreator() override = default;
+    /**
+     * @brief Create asset object instance that will be used by loader.
+     *
+     * @param name - name of the asset;
+     * @param registry - asset registry;
+     * @param options - asset creation/loading options
+     * @param error - error description;
+     * @return Pointer to the asset or null if error occured.
+     */
+    virtual TUniquePointer<Asset> CreateAssetInstance(
+      StringView          name,
+      AssetRegistry*      registry,
+      const AssetOptions* options,
+      Status*             status) = 0;
 
- * @brief Create asset object instance that will be used by loader.
- *
- * @param registry - asset registry;
- * @param name - name of the asset;
- * @param options - asset creation/loading options
- * @param error - error description;
- * @return Pointer to the asset or null if error occured.
-virtual TRef<Asset> CreateAssetInstance(Registry*      registry,
-                                        StringView     name,
-                                        const Options* options,
-                                        Error*         error) = 0;
- */
-
-/**
- * @brief Create loader for the asset instance.
- *
- * @param asset - loadable asset;
- * @param options - asset creation/loading options
- * @param error - description of an error
- * @return Pointer to the load task or null if error occured.
-virtual TUniquePointer<AssetLoader> CreateAssetLoader(
-  const TRef<Asset>& asset,
-  Error*             error) = 0;
+    /**
+     * @brief Create loader for the asset instance.
+     *
+     * @param asset - loadable asset;
+     * @param options - asset creation/loading options
+     * @param error - description of an error
+     * @return Pointer to the load task or null if error occured.
+     */
+    virtual TUniquePointer<AssetLoader> CreateAssetLoader(
+      const TRef<Asset>& asset,
+      Status*            status) = 0;
 
 protected:
-template<typename T>
-static bool IsLoadableReference(const TRef<Asset>& asset) noexcept;
-};
+    template<typename T>
+    static bool IsLoadableReference(const Asset* asset) SRX_NOEXCEPT;
+  };
 
-template<typename T>
-bool AssetCreator::IsLoadableReference(const TRef<Asset>& asset) noexcept
-{
-if (!asset)
-  return false;
+  template<typename T>
+  bool AssetCreator::IsLoadableReference(const Asset* asset) SRX_NOEXCEPT
+  {
+    if (!asset)
+      return false;
 
-const EAssetState state = asset->GetState();
-if (state != EAssetState::Unloaded)
-  return false;
+    const EAssetState state = asset->GetState();
+    if (state != EAssetState::Unloaded)
+      return false;
 
-return asset->template IsA<T>();
-}
-}
- */
+    return asset->template IsA<T>();
+  }
+}  // namespace
