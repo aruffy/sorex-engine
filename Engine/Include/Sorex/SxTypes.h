@@ -170,8 +170,11 @@ namespace Sorex
 
 namespace std
 {
+  template<typename T, typename U>
+  struct is_variant_memeber;
+
   template<typename T, typename... Ts>
-  struct is_variant_memeber<T, std::variant<Ts...>>
-    : bool_constant<(std::is_same_v<T, Ts> || ...)>
+  struct is_variant_memeber<T, variant<Ts...>>
+    : bool_constant<(is_same_v<T, Ts> || ...)>
   {};
 }  // namespace std
