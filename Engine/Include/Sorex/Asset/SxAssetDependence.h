@@ -83,19 +83,20 @@ private:
     TSharedPointer<Asset> mAsset;
   };
 
-  class Dependencies final
+  class AssetDependencies final
   {
 public:
-    bool   IsEmpty() const { return _resources.empty(); }
-    size_t GetSize() const { return _size; }
+    bool   IsEmpty() const { return mResources.empty(); }
+    size_t GetSize() const { return mSize; }
 
     template<typename T>
+      requires std::is_base_of_v<Asset, T>
     bool Push(const String& name)
     {
-      const RuntimeType* rt = GetRuntimeType<T>();
-      if (_resources[rt].emplace(name, Dependence(*rt, name)).second)
+      const RuntimeClass* const rt = GetRuntimeType<T>();
+      if (mResources[rt].emplace(name, AssetDependence(*rt, name)).second)
       {
-        _size++;
+        mSize++;
         return true;
       }
 
@@ -103,68 +104,62 @@ public:
     }
 
     template<typename T>
-    TRef<T> GetAsset(const String& name) const
+      requires std::is_base_of_v<Asset, T>
+    TUniquePointer<T> GetAsset(const String& name) const
     {
-      const RuntimeType* rt     = GetRuntimeType<T>();
-      auto               dictIt = _resources.find(rt);
-      if (dictIt == _resources.end())
+      const RuntimeClass* rt     = GetRuntimeType<T>();
+      auto                dictIt = mResources.find(rt);
+
+      if (dictIt == mResources.end())
         return nullptr;
 
       if (auto it = dictIt->second.find(name); it != dictIt->second.end())
       {
-        TRef<Asset> asset = it->second.GetAsset();
-        if (asset == nullptr)
-          return nullptr;
-
-        return std::static_pointer_cast<T>(asset);
+        if (TSharedPointer<Asset> asset = it->second.GetAsset())
+        {
+          SRX_CHECK_MSG(asset->IsA<T>(), "invalid type");
+          return std::static_pointer_cast<T>(asset);
+        }
       }
 
       return nullptr;
     }
 
     template<typename T>
+      requires std::is_base_of_v<Asset, T>
     void GetAssets(TVector<T>& assets) const
     {
       assets.clear();
-      const RuntimeType* rt = GetRuntimeType<T>();
-      auto               it = _resources.find(rt);
+      const RuntimeClass* rt = GetRuntimeType<T>();
+      auto                it = mResources.find(rt);
 
-      if (it == _resources.end())
+      if (it == mResources.end())
         return;
 
       assets.reserve(it->second.size());
       for (const auto& [_, dep] : it->second)
       {
-        TRef<Asset> asset = dep.GetAsset();
-        if (!asset)
-          continue;
-
-        return assets.push_back(std::move(std::static_pointer_cast<T>(asset)));
+        if (TSharedPointer<Asset> asset = dep.GetAsset())
+          assets.push_back(std::move(std::static_pointer_cast<T>(asset)));
       }
     }
 
-    void GetAll(TVector<Dependence*>& deps) RFY_NOEXCEPT
+    void GetAll(TVector<AssetDependence*>& deps)
     {
       deps.clear();
-      deps.reserve(_size);
-      for (auto& [_, rmap] : _resources)
+      deps.reserve(mSize);
+      for (auto& [_rt, rmap] : mResources)
       {
-        for (auto& [name, rd] : rmap)
+        for (auto& [_name, rd] : rmap)
           deps.push_back(&rd);
       }
     }
 
-    inline void Clear() { _resources.clear(); }
+    SRX_INLINE void Clear() { mResources.clear(); }
 
 private:
-    template<typename T>
-    static const RuntimeType* GetRuntimeType() noexcept
-    {
-      return std::addressof<const RuntimeType>(TypeId<T>());
-    }
-
-private:
-    size_t                                                     _size = 0;
-    THashMap<const RuntimeType*, THashMap<String, Dependence>> _resources;
+    size_t mSize = 0;
+    // TODO: Flat-Map boost
+    THashMap<const RuntimeClass*, THashMap<String, AssetDependence>> mResources;
   };
 }  // namespace
