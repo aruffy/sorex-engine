@@ -39,6 +39,8 @@ namespace Sorex::Resource
   class AssetCreator
   {
 public:
+    virtual ~AssetCreator() = default;
+
     /**
      * @brief Create asset object instance that will be used by loader.
      *
@@ -63,8 +65,8 @@ public:
      * @return Pointer to the load task or null if error occured.
      */
     virtual TUniquePointer<AssetLoader> CreateAssetLoader(
-      const TRef<Asset>& asset,
-      Status*            status) = 0;
+      const TSharedPointer<Asset>& asset,
+      Status*                      status) = 0;
 
 protected:
     template<typename T>

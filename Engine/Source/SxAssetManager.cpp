@@ -25,61 +25,38 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#include <Sorex/Asset/SxAsset.h>
+#include <Sorex/Asset/SxAssetManager.h>
 
 namespace Sorex::Resource
 {
-  String ToString(const EAssetState state) SRX_NOEXCEPT
-  {
-    switch (state)
-    {
-    case EAssetState::Unloaded:
-      return "Unloaded";
-    case EAssetState::Deferred:
-      return "Deferred";
-    case EAssetState::Loading:
-      return "Loading";
-    case EAssetState::Loaded:
-      return "Loaded";
-    case EAssetState::Invalid:
-      return "Invalid";
-    default:
-      return "Unknown";
-    }
-  }
 
-  Asset::Asset(StringView name) SRX_NOEXCEPT
-    : std::enable_shared_from_this<Asset>()
-    , mName(name)
-    , mState(EAssetState::Unloaded)
+  AssetManager::AssetManager(AssetStorage&                 storage,
+                             TUniquePointer<AssetRegistry> registry)
+    : mAssetStorage(storage)
+    , mAssetRegistry(std::move(registry))
   {}
 
-  bool Asset::IsReady() const
+  Status AssetManager::Initialize()
   {
-    const EAssetState st = GetState();
-    if (st == EAssetState::Loaded)
-      return true;
+    return SRX_OK;
+  }
 
-    if (st == EAssetState::Deferred && mActivator)
+  void AssetManager::Shutdown()
+  {}
+
+  void AssetManager::Update(const float deltaTime)
+  {
+    /* if (_worker->HasCompletedTask())
     {
-      if (const auto status = mActivator->Activate(this); !status.Ok())
+      if (auto task = _worker->Pop())
       {
-        SRX_NOENTRY(status.ToString().c_str());
-        // FIXME:
-        // SetState(EAssetState::Invalid);
+        if (!task->Finalize())
+          task->Shutdown();
       }
-
-      mActivator.reset();
     }
-
-    return false;
+*/
+    if (mAssetRegistry)
+      mAssetRegistry->Update(deltaTime);
   }
-  void Asset::Defer(TSharedPointer<IAssetActivator> activator) SRX_NOEXCEPT
-  {
-    SRX_CHECK(GetState() == EAssetState::Unloaded);
-    SRX_CHECK_MSG(activator, "asset will never wake up");
 
-    mActivator = std::move(activator);
-    SetState(EAssetState::Deferred);
-  }
 }  // namespace

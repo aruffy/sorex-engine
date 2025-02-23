@@ -31,54 +31,11 @@
 
 #include <Sorex/SxTypes.h>
 #include <Sorex/SxPlatform.h>
-#include <Sorex/SxRuntimeClass.h>
 
 namespace Sorex
 {
-  enum class ETaskAction
-  {
-    Await,
-    Continue,
-    Cancel
-  };
-
-  enum class ETaskPriority
-  {
-    None = 0,
-    Low,
-    Medium,
-    High,
-    Critical
-  };
-
   class Thread
   {
-public:
-    class Task
-    {
-      SRX_RTTI_BASE(Thread::Task);
-
-  public:
-      virtual ~Task() = default;
-
-      virtual ETaskAction Execute()  = 0;
-      virtual ETaskAction Resume()   = 0;
-      virtual void        Shutdown() = 0;
-      virtual Status      Finalize() = 0;
-
-      ETaskPriority GetPriority() const { return mPriority; }
-
-      /* std::strong_ordering operator<=>(const Task& other) const
-      {
-        return mPriority == other.mPriority  ? std::strong_ordering::equal
-               : mPriority > other.mPriority ? std::strong_ordering::greater
-                                             : std::strong_ordering::less;
-      } */
-
-  private:
-      ETaskPriority mPriority = ETaskPriority::Medium;
-    };
-
 public:
     /**
      * @brief Check that thread where this function was invoked is the main

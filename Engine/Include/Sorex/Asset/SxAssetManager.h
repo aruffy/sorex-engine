@@ -60,12 +60,12 @@ public:
      * @param name - asset name (path) to seek in the storage
      * @param handler - asset handler that handle loding stages
      * @param options - options to pass into loader
-     * @return TRef<T> - pointer to the asset
+     * @return TSharedPointer<T> - pointer to the asset
      */
     template<typename T>
-    TRef<T> Load(StringView            name,
-                 IAssetLoadingHandler* handler = nullptr,
-                 const AssetOptions*   options = nullptr)
+    TSharedPointer<T> Load(StringView            name,
+                           IAssetLoadingHandler* handler = nullptr,
+                           const AssetOptions*   options = nullptr)
     {
       return LoadAsset<T>(ELoadingMode::Sync, name, handler, options);
     }
@@ -78,7 +78,7 @@ public:
      * @param name - asset name (path) to seek in the storage
      * @param handler - asset handler that handle loding stages
      * @param options - options to pass into loader
-     * @return TRef<T> - pointer to the asset
+     * @return TSharedPointer<T> - pointer to the asset
      */
     template<typename T>
       requires std::is_base_of_v<Asset, T>
@@ -89,27 +89,6 @@ public:
       return LoadAsset<T>(ELoadingMode::Async, name, handler, options);
     }
 
-    /**
-     * @brief Lazy loading of an asset.
-     *
-     * @tparam T - asset type
-     * @param name - asset name (path) to seek in the storage
-     * @param handler - asset handler that handle loding stages
-     * @param options - options to pass into loader
-     * @return TRef<T> - pointer to the asset
-     */
-    template<typename T>
-      requires std::is_base_of_v<Asset, T>
-    TRef<T> LoadLazy(StringView            name,
-                     IAssetLoadingHandler* handler = nullptr,
-                     const AssetOptions*   options = nullptr)
-    {
-      return LoadAsset<T>(ELoadingMode::Deferred, name, handler, options);
-    }
-
-    /**
-     * @brief Set loader for the certain asset type.
-     */
     template<typename T>
       requires std::is_base_of_v<Asset, T>
     SRX_INLINE void Register(TUniquePointer<AssetCreator> loader);

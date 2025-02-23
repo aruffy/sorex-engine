@@ -3,7 +3,7 @@
 /*                                SOREX                                   */
 /*                 Simple OpenGL Rendering Engine eXtended                */
 /**************************************************************************/
-/* Copyright (c) 2022 Aleksandr Ershov (Ruffy).                           */
+/* Copyright (c) 2022-2024 Aleksandr Ershov (Ruffy).                      */
 /*                                                                        */
 /* Permission is hereby granted, free of charge, to any person obtaining  */
 /* a copy of this software and associated documentation files (the        */
@@ -25,61 +25,57 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#include <Sorex/Asset/SxAsset.h>
+#pragma once
 
-namespace Sorex::Resource
+#include "SxCoreMinimal.h"
+
+namespace Sorex
 {
-  String ToString(const EAssetState state) SRX_NOEXCEPT
+  enum class ETaskAction
   {
-    switch (state)
+    Await,
+    Continue,
+    Cancel
+  };
+
+  enum class ETaskPriority
+  {
+    None = 0,
+    Low,
+    Medium,
+    High,
+    Critical
+  };
+
+  class Task
+  {
+    SRX_RTTI_BASE(Task);
+
+public:
+    Task() = default;
+    SRX_INLINE explicit Task(ETaskPriority priority) SRX_NOEXCEPT
+      : mPriority(priority)
+    {}
+
+    virtual ~Task() = default;
+
+    virtual ETaskAction Execute()  = 0;
+    virtual ETaskAction Resume()   = 0;
+    virtual void        Shutdown() = 0;
+    virtual Status      Finalize() = 0;
+
+    ETaskPriority GetPriority() const { return mPriority; }
+
+    std::strong_ordering operator<=>(const Task& other) const
     {
-    case EAssetState::Unloaded:
-      return "Unloaded";
-    case EAssetState::Deferred:
-      return "Deferred";
-    case EAssetState::Loading:
-      return "Loading";
-    case EAssetState::Loaded:
-      return "Loaded";
-    case EAssetState::Invalid:
-      return "Invalid";
-    default:
-      return "Unknown";
-    }
-  }
-
-  Asset::Asset(StringView name) SRX_NOEXCEPT
-    : std::enable_shared_from_this<Asset>()
-    , mName(name)
-    , mState(EAssetState::Unloaded)
-  {}
-
-  bool Asset::IsReady() const
-  {
-    const EAssetState st = GetState();
-    if (st == EAssetState::Loaded)
-      return true;
-
-    if (st == EAssetState::Deferred && mActivator)
-    {
-      if (const auto status = mActivator->Activate(this); !status.Ok())
-      {
-        SRX_NOENTRY(status.ToString().c_str());
-        // FIXME:
-        // SetState(EAssetState::Invalid);
-      }
-
-      mActivator.reset();
+      return mPriority == other.mPriority  ? std::strong_ordering::equal
+             : mPriority > other.mPriority ? std::strong_ordering::greater
+                                           : std::strong_ordering::less;
     }
 
-    return false;
-  }
-  void Asset::Defer(TSharedPointer<IAssetActivator> activator) SRX_NOEXCEPT
-  {
-    SRX_CHECK(GetState() == EAssetState::Unloaded);
-    SRX_CHECK_MSG(activator, "asset will never wake up");
-
-    mActivator = std::move(activator);
-    SetState(EAssetState::Deferred);
-  }
+private:
+    ETaskPriority mPriority = ETaskPriority::Medium;
+  };
 }  // namespace
+
+using SxTask = Sorex::Task;

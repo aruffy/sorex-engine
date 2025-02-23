@@ -93,8 +93,8 @@ public:
 protected:
     virtual TSharedPointer<Asset> GetAsset(const RuntimeClass& type,
                                            StringView          name) = 0;
-    virtual Status                RegisterAsset(const RuntimeClass& type,
-                                                TRef<Asset>         asset,
-                                                int                 cache)  = 0;
+    virtual Status                RegisterAsset(const RuntimeClass&   type,
+                                                TSharedPointer<Asset> asset,
+                                                int                   cache)  = 0;
   };
 }  // namespace

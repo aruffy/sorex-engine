@@ -40,6 +40,8 @@ namespace Sorex::Resource
     Invalid,   ///< Loading process failed
   };
 
+  String ToString(const EAssetState state) SRX_NOEXCEPT;
+
   // @class IAssetActivator - activate step to load a deferred asset
   class Asset;
   class IAssetActivator
@@ -89,6 +91,10 @@ public:
     }
     void SetState(EAssetState state) SRX_NOEXCEPT
     {
+      SRX_TRACE("Asset '{}' state changed: {} -> {}",
+                mName,
+                ToString(GetState()),
+                ToString(state));
       SRX_ATOMIC_STORE(mState, state);
     }
 

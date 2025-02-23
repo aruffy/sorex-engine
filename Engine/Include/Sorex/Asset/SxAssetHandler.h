@@ -28,7 +28,7 @@
 #pragma once
 
 #include <Sorex/SxCoreMinimal.h>
-#include <Sorex/SxThread.h>
+#include <Sorex/SxTask.h>
 
 #include "SxAsset.h"
 #include "SxAssetStorage.h"
