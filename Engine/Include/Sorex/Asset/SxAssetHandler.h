@@ -52,10 +52,10 @@ public:
    * could be called from different threads, but not in the race condition.
    *
    */
-  class IAssetHandler
+  class IAssetLoadingHandler
   {
 public:
-    virtual ~IAssetHandler() = default;
+    virtual ~IAssetLoadingHandler() = default;
 
     /**
      * @brief OnLoadingFailed is called when asset loading was failed.
@@ -68,7 +68,9 @@ public:
      * asset or null);
      * @param reason - error description.
      */
-    virtual void OnLoadingFailed(StringView name, Asset* asset, Status& reason)
+    virtual void OnAssetLoadingFailed(StringView name,
+                                      Asset*     asset,
+                                      Status&    reason)
     {}
 
     /**
@@ -78,15 +80,15 @@ public:
      * @param registry - resource registry;
      * @param asset - loaded asset.
      */
-    virtual void OnLoadingFinished(AssetRegistry* registry, Asset* asset) {}
+    virtual void OnAssetLoaded(AssetRegistry* registry, Asset* asset) {}
 
     /**
      * @brief Invoked when a loadable resource hasn't found needed file to load.
      *
      * Return pair with action:
-     *  Break - loading inpossible,
+     *  Cancel - loading inpossible,
      *  Continue - ready to continue loading,
-     *  Await - need to postpone task and wait; Need to provide the
+     *  Await - need to postpone task and wait; Must provide the
      * ILoadingAwaiter in this case.
      *
      * @param storage - asset storage;

@@ -42,27 +42,23 @@ namespace Sorex
     Cancel
   };
 
+  enum class ETaskPriority
+  {
+    None = 0,
+    Low,
+    Medium,
+    High,
+    Critical
+  };
+
   class Thread
   {
+public:
     class Task
     {
       SRX_RTTI_BASE(Thread::Task);
 
   public:
-      enum class EPriority
-      {
-        None = 0,
-        Low,
-        Medium,
-        High,
-        Critical
-      };
-
-  public:
-      SRX_INLINE Task(const EPriority priority = EPriority::Medium) SRX_NOEXCEPT
-        : mPriority(priority)
-      {}
-
       virtual ~Task() = default;
 
       virtual ETaskAction Execute()  = 0;
@@ -70,17 +66,17 @@ namespace Sorex
       virtual void        Shutdown() = 0;
       virtual Status      Finalize() = 0;
 
-      EPriority GetPriority() const { return mPriority; }
+      ETaskPriority GetPriority() const { return mPriority; }
 
-      std::strong_ordering operator<=>(const Task& other) const
+      /* std::strong_ordering operator<=>(const Task& other) const
       {
         return mPriority == other.mPriority  ? std::strong_ordering::equal
                : mPriority > other.mPriority ? std::strong_ordering::greater
                                              : std::strong_ordering::less;
-      }
+      } */
 
   private:
-      EPriority mPriority;
+      ETaskPriority mPriority = ETaskPriority::Medium;
     };
 
 public:
