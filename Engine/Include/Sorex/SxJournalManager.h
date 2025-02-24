@@ -33,7 +33,6 @@
 #include "SxTypes.h"
 #include "SxPlatform.h"
 #include "SxStatus.h"
-#include "SxThread.h"
 
 #ifndef SOREX_LOG_THREAD_NUM
 #  define SOREX_LOG_THREAD_NUM (2)
@@ -140,6 +139,8 @@ public:
                                ELogLevel  level,
                                StringView message) const;
 
+    static ELogger GetEngineLogger() SRX_NOEXCEPT;
+
 private:
     JournalManager() SRX_NOEXCEPT;
 
@@ -244,9 +245,7 @@ private:
   SRX_USER_LOG(Sorex::ELogLevel::Trace, format, ##__VA_ARGS__)
 
 #define SRX_ENGINE_LOG(level, format, ...)                       \
-  SOREX_JOURNAL_RECORD((Sorex::Thread::IsMainThread()            \
-                          ? Sorex::JournalManager::kEngineLogger \
-                          : Sorex::JournalManager::kTaskLogger), \
+  SOREX_JOURNAL_RECORD(Sorex::JournalManager::GetEngineLogger(), \
                        level,                                    \
                        format,                                   \
                        ##__VA_ARGS__)

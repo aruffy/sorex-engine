@@ -164,8 +164,8 @@ namespace Sorex
   using SharedLock  = TSharedLock<ShMutex>;
 
   template<typename T>
-  using TMutexLock = std::lock_guard<T>;
-  using MutexLock  = TMutexLock<Mutex>;
+  using TLockGuard = std::lock_guard<T>;
+  using MutexLock  = TLockGuard<Mutex>;
 }  // namespace
 
 namespace std

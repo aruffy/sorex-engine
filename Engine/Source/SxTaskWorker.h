@@ -25,106 +25,62 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
+#pragma once
+
+#include <Sorex/SxCoreMinimal.h>
 #include <Sorex/SxThread.h>
-
-#include <Sorex/Utils/SxString.h>
-
-namespace
-{
-#ifndef SOREX_DEBUG_NONE
-  uint64_t s_GetThreadId()
-  {
-    std::stringstream ssconv;
-    ssconv << Sorex::Thread::GetId();
-    uint64_t tid;
-    SRX_VERIFY(Sorex::Utils::ToInteger(ssconv.str(), tid)
-               == Sorex::EStatusCode::Ok);
-
-    return tid;
-  }
-#endif
-}  // namespace
+#include <Sorex/SxTask.h>
 
 namespace Sorex
 {
-  bool Thread::IsMainThread() SRX_NOEXCEPT
+  class TaskWorker final: public LoopingThread
   {
-    return std::this_thread::get_id() == GetMainThreadId();
-  }
+public:
+    explicit TaskWorker(StringView name, uint32 sleepTime = 125U);
+    virtual ~TaskWorker() override;
 
-  void Thread::SetMainThread() SRX_NOEXCEPT
-  {
-    GetMainThreadId() = std::this_thread::get_id();
-  }
+    /**
+     * @brief Push the loading request to the queue.
+     *  Request will be prossecced by loading callback.
+     *
+     * @param request - asset loading request
+     */
+    void Push(TUniquePointer<Task> task);
 
-  std::thread::id& Thread::GetMainThreadId()
-  {
-    static std::thread::id id;
-    return id;
-  }
+    /**
+     * @brief Try to get completed loading request.
+     *
+     * @return request pointer or null if no completed request available.
+     */
+    SRX_NODISCARD TUniquePointer<Task> Pop();
 
-  void Thread::Sleep(const int64 milliseconds)
-  {
-    std::this_thread::sleep_for(std::chrono::milliseconds(milliseconds));
-  }
+    bool HasCompletedTask() const
+    {
+      return SRX_ATOMIC_LOAD(mCompletedTaskNumber);
+    }
 
-  Thread::~Thread()
-  {
-    Join();
-  }
+protected:
+    virtual ETaskAction ThreadFunction(uint32& sleep) override;
 
-  void Thread::Join()
-  {
-    if (mThreadObject.joinable())
-      mThreadObject.join();
-  }
+private:
+    Task* PullTask();
+    void  PushCompleted(Task* task);
 
-  LoopingThread::LoopingThread(StringView name)
-    : mName(name)
-    , mIsRunning(false)
-    , mIsQuitRequested(false)
-  {}
+    void Shutdown(Task* task);
 
-  EStatusCode LoopingThread::Start()
-  {
-    if (SRX_ATOMIC_LOAD(mIsRunning))
-      return EStatusCode::Busy;
+    bool HandleTask();
+    bool HandleDeferredTask();
 
-    SRX_ATOMIC_STORE(mIsRunning, true);
-    SRX_ATOMIC_STORE(mIsQuitRequested, false);
+private:
+    Mutex  mMtx;
+    uint32 mSleepTime;
 
-    Thread::Execute([this]() {
+    TPriorityQueue<Task*>       mQueue;
+    TList<TUniquePointer<Task>> mStorage;
 
-#ifndef SOREX_DEBUG_NONE
-      const uint64_t tid = s_GetThreadId();
-      SRX_INFO("Thread {} <{}> start", mName, tid);
-#endif
+    TQueue<TUniquePointer<Task>> mCompleted;
+    TQueue<Task*>                mDeferred;
 
-      uint32 milliseconds = 0;
-      while (!SRX_ATOMIC_LOAD(mIsQuitRequested))
-      {
-        const ETaskAction action = ThreadFunction(milliseconds);
-
-        if (action == ETaskAction::Cancel)
-          break;
-
-        if (action == ETaskAction::Await && milliseconds > 10U)
-          Thread::Sleep(milliseconds);
-      }
-
-      SRX_ATOMIC_STORE(mIsRunning, false);
-
-#ifndef SOREX_DEBUG_NONE
-      SRX_INFO("Thread <{}> stop", tid);
-#endif
-    });
-
-    return EStatusCode::Ok;
-  }
-
-  void LoopingThread::Stop()
-  {
-    SRX_ATOMIC_STORE(mIsQuitRequested, true);
-  }
-
+    TAtomic<int> mCompletedTaskNumber;
+  };
 }  // namespace

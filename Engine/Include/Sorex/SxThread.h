@@ -27,10 +27,8 @@
 
 #pragma once
 
-#include <compare>
-
-#include <Sorex/SxTypes.h>
-#include <Sorex/SxPlatform.h>
+#include "SxCoreMinimal.h"
+#include "SxTask.h"
 
 namespace Sorex
 {
@@ -87,4 +85,59 @@ private:
     mThreadObject =
       std::thread{ std::forward<Func>(func), std::forward<Args>(args)... };
   }
-}
+
+
+  /**
+   * @class LoopingThread - Execute function into the loop in new thread.
+   */
+  class LoopingThread: protected Thread
+  {
+public:
+    explicit LoopingThread(StringView name);
+    virtual ~LoopingThread() override { Join(); }
+
+    /**
+     * @brief Run the new thread with loop.
+     *
+     * @return success code (0) if thread was successfully run else an error
+     * code.
+     */
+    EStatusCode Start();
+
+    /**
+     * @brief Request to break the loop and stop thread.
+     *
+     * Real stop of thread depends on client ThreadFunction implementation
+     * and may stop after return from this function.
+     *
+     */
+    void Stop();
+
+    /**
+     * @brief Check if the tread are exec.
+     *
+     * @return True if thread is active.
+     */
+    bool IsRunning() const { return mIsRunning; }
+    void Join() { Thread::Join(); }
+
+protected:
+    /**
+     * @brief Executes the main logic of the thread loop.
+     *
+     * @param sleep [out] Reference to an integer representing the sleep
+     * duration in milliseconds.
+     *
+     * @return ETaskAction indicating the next action:
+     *         - ETaskAction::Continue to keep looping (ignore sleep),
+     *         - ETaskAction::Await to sleep for the specified duration,
+     *         - ETaskAction::Cancel to terminate the loop and stop thread.
+     */
+    virtual ETaskAction ThreadFunction(uint32& sleep) = 0;
+
+private:
+    const String     mName;
+    std::atomic_bool mIsRunning;
+    std::atomic_bool mIsQuitRequested;
+  };
+}  // namespace
