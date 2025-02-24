@@ -147,6 +147,9 @@ namespace Sorex::Resource
 
   bool AssetLoadingTask::FinilizeRecursive(Context& ctx)
   {
+    SRX_CHECK(ctx.stage == Context::ELoadingStage::Loading);
+    // @TODO: Check the ELoadingStage::Loaded state, if any other return error
+
     ctx.stage = Context::ELoadingStage::Finalization;
     if (ctx.loader)
     {
@@ -166,6 +169,8 @@ namespace Sorex::Resource
 
   Status AssetLoadingTask::Finalize()
   {
+    // Check if any loading was failed (Canceled)
+
     if (FinilizeRecursive(mContext))
       Context::Complete(mContext);
 
@@ -231,6 +236,7 @@ namespace Sorex::Resource
       if (!status.Ok())
         return ETaskAction::Cancel;
 
+      ctx.stage = Context::ELoadingStage::Preload;
       if (!missingFiles.empty())
       {
         if (ctx.stage == Context::ELoadingStage::Waiting)
@@ -273,9 +279,6 @@ namespace Sorex::Resource
           return ETaskAction::Cancel;
         }
       }
-
-      // @FIXME: Should it be on the top
-      ctx.stage = Context::ELoadingStage::Preload;
     }
 
     ctx.stage = Context::ELoadingStage::Loading;
@@ -299,18 +302,20 @@ namespace Sorex::Resource
                                      dependence->GetType(),
                                      dependence->GetName());
 
-        auto& depctx = ctx.subcontexts.back();
-        dependence->SetAsset(depctx.loader->GetAsset());
-
+        auto&             depctx = ctx.subcontexts.back();
         const ETaskAction result = Load(depctx);
 
+        if (result == ETaskAction::Continue)
+          return ETaskAction::Cancel;
+
+        SRX_CHECK(depctx.loader);
+        dependence->SetAsset(depctx.loader->GetAsset());
         if (result == ETaskAction::Await)
           bAwait = true;
-        else if (result == ETaskAction::Cancel)
-          return ETaskAction::Cancel;
       }
     }
 
+    // TODO: if !bAwait then ctx.stage = Context::EloadingState::Loaded
     return bAwait ? ETaskAction::Await : ETaskAction::Continue;
   }
 
