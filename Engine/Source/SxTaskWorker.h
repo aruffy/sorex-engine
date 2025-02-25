@@ -31,7 +31,7 @@
 #include <Sorex/SxThread.h>
 #include <Sorex/SxTask.h>
 
-namespace Sorex
+namespace Sorex::Resource
 {
   class TaskWorker final: public LoopingThread
   {

@@ -27,9 +27,43 @@
 
 #include <Sorex/Asset/SxAssetManager.h>
 
+#include <SxTaskWorker.h>
+
+namespace
+{
+  using namespace Sorex;
+  Status LoadAssetSync(TUniquePointer<Task> task)
+  {
+    if (!task)
+      return SRX_STATUS(EStatusCode::Invalid_Argument);
+
+    Status            status;
+    const ETaskAction action = task->Execute();
+
+    if (action == ETaskAction::Await || action == ETaskAction::Cancel)
+    {
+      // TODO: Add while looping to wait for the task to complete
+      if (action == ETaskAction::Await)
+        status =
+          SRX_STATUS_MSG(EStatusCode::Not_Supported,
+                         "asset sync loading mode doesn't support awaiting");
+      else
+        status = SRX_STATUS_MSG(EStatusCode::Canceled, "asset loading failed");
+
+      task->Shutdown();
+      return status;
+    }
+
+    status = task->Finalize();
+    if (!status.Ok())
+      task->Shutdown();
+
+    return status;
+  }
+}  // namespace
+
 namespace Sorex::Resource
 {
-
   AssetManager::AssetManager(AssetStorage&                 storage,
                              TUniquePointer<AssetRegistry> registry)
     : mAssetStorage(storage)
@@ -38,25 +72,83 @@ namespace Sorex::Resource
 
   Status AssetManager::Initialize()
   {
-    return SRX_OK;
+    mWorker = std::make_unique<TaskWorker>("AssetLoadingThread");
+    return SRX_STATUS(mWorker->Start());
   }
 
   void AssetManager::Shutdown()
-  {}
+  {
+    if (mWorker)
+    {
+      mWorker->Stop();
+      mWorker.reset();
+    }
+  }
 
   void AssetManager::Update(const float deltaTime)
   {
-    /* if (_worker->HasCompletedTask())
+    SRX_CHECK(mWorker);
+
+    if (mWorker->HasCompletedTask())
     {
-      if (auto task = _worker->Pop())
+      if (auto task = mWorker->Pop())
       {
         if (!task->Finalize())
           task->Shutdown();
       }
     }
-*/
+
     if (mAssetRegistry)
       mAssetRegistry->Update(deltaTime);
   }
+
+  TUniquePointer<Asset> AssetManager::LoadAsset(const RuntimeClass&   type,
+                                                StringView            name,
+                                                ELoadingMode          mode,
+                                                IAssetLoadingHandler* handler,
+                                                const AssetOptions*   options)
+  {
+    LoadingTask::Parameters params;
+    params.name     = name;
+    params.type     = &type;
+    params.handler  = handler;
+    params.options  = options;
+    params.storage  = &_storage;
+    params.registry = _registry.get();
+
+    TUniquePointer<LoadingTask> task = LoadingTask::Create(
+      params,
+      [this, options](const RuntimeType& type, StringView name, Error* error) {
+        return CreateAssetLoader(type, name, options, error);
+      });
+
+    TRef<Asset> asset = task ? task->GetAsset() : nullptr;
+    if (!asset)
+    {
+      RFY_NOENTRY("task creation failed");
+      return nullptr;
+    }
+
+    switch (mode)
+    {
+    case ELoadingMode::Sync:
+      // The sync loading should provide loaded resource or null
+      return s_LoadSync(std::move(task)) ? asset : nullptr;
+
+    case ELoadingMode::Async:
+      _worker->Push(std::move(task));
+      return asset;
+
+    case ELoadingMode::Deferred:
+      asset->Defer(
+        MakeUnique<DeferredAssetActivator>(_worker.get(), std::move(task)));
+      return asset;
+
+    default:
+      RFY_NOENTRY("invalid loading mode");
+      return nullptr;
+    }
+  }
+
 
 }  // namespace

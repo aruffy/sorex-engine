@@ -26,7 +26,8 @@
 /**************************************************************************/
 
 #include "SxTaskWorker.h"
-namespace Sorex
+
+namespace Sorex::Resource
 {
   TaskWorker::TaskWorker(StringView name, uint32 sleepTime)
     : LoopingThread(name)

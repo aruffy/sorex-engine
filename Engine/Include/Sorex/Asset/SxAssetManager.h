@@ -39,6 +39,7 @@
 
 namespace Sorex::Resource
 {
+  class TaskWorker;
   class AssetManager final: public Director::Component
   {
     SRX_RTTI(Resource::AssetManager, Director::Component)
@@ -121,8 +122,10 @@ private:
     AssetStorage&                 mAssetStorage;
     TUniquePointer<AssetRegistry> mAssetRegistry;
 
-    // TUniquePointer<Worker>                                     _worker;
     THashMap<const RuntimeClass*, TUniquePointer<AssetCreator>> mAssetFactory;
+
+    // @TODO: add resource thread pool
+    TUniquePointer<TaskWorker> mWorker;
   };
 
   template<typename T>
