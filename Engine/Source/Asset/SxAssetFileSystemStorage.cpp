@@ -25,64 +25,28 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#pragma once
-
-#include <Sorex/SxCoreMinimal.h>
-
-#include "SxAsset.h"
-#include "SxAssetLoader.h"
-#include "SxAssetOptions.h"
-#include "SxAssetRegistry.h"
+#include <Sorex/Asset/SxAssetFileSystemStorage.h>
 
 namespace Sorex::Resource
 {
-  class AssetCreator
+  AssetFileSystemStorage::AssetFileSystemStorage(FileSystem::IFileSystem& fs)
+    : mFileSystem(fs)
+  {}
+
+  bool AssetFileSystemStorage::Contains(StringView name) const
   {
-public:
-    virtual ~AssetCreator() = default;
+    return mFileSystem.IsFileExists(name);
+  }
 
-    /**
-     * @brief Create asset object instance that will be used by loader.
-     *
-     * @param name - name of the asset;
-     * @param registry - asset registry;
-     * @param options - asset creation/loading options
-     * @param error - error description;
-     * @return Pointer to the asset or null if error occured.
-     */
-    virtual TSharedPointer<Asset> CreateAssetInstance(
-      StringView          name,
-      AssetRegistry*      registry,
-      const AssetOptions* options,
-      Status*             status) = 0;
-
-    /**
-     * @brief Create loader for the asset instance.
-     *
-     * @param asset - loadable asset;
-     * @param options - asset creation/loading options
-     * @param error - description of an error
-     * @return Pointer to the load task or null if error occured.
-     */
-    virtual TUniquePointer<AssetLoader> CreateAssetLoader(
-      const TSharedPointer<Asset>& asset,
-      Status*                      status) = 0;
-
-protected:
-    template<typename T>
-    static bool IsLoadableReference(const Asset* asset) SRX_NOEXCEPT;
-  };
-
-  template<typename T>
-  bool AssetCreator::IsLoadableReference(const Asset* asset) SRX_NOEXCEPT
+  void AssetFileSystemStorage::GetAll(StringView name, TVector<String>& paths)
   {
-    if (!asset)
-      return false;
+    // mFileSystem.GetFiles(name, paths);
+  }
 
-    const EAssetState state = asset->GetState();
-    if (state != EAssetState::Unloaded)
-      return false;
-
-    return asset->template IsA<T>();
+  TUniquePointer<Stream> AssetFileSystemStorage::Read(StringView name,
+                                                      Status*    status)
+  {
+    SRX_CHECK(Contains(name));
+    return mFileSystem.OpenFile(name, EAccessMode::Read, status);
   }
 }  // namespace

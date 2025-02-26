@@ -49,7 +49,7 @@ namespace Sorex::Resource
     task->mCommonCtx.registry = params.registry;
     task->mCommonCtx.handler  = params.handler;
     task->mCommonCtx.options  = params.options;
-    tast->mCommonCtx.status   = SRX_OK;
+    task->mCommonCtx.status   = SRX_OK;
 
     task->mContext.name   = params.name;
     task->mContext.type   = params.type;

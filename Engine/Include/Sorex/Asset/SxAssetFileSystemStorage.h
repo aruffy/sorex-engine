@@ -27,62 +27,29 @@
 
 #pragma once
 
-#include <Sorex/SxCoreMinimal.h>
+#include <Sorex/SxStream.h>
+#include <Sorex/FileSystem/SxFileSystem.h>
 
-#include "SxAsset.h"
-#include "SxAssetLoader.h"
-#include "SxAssetOptions.h"
-#include "SxAssetRegistry.h"
+#include "SxAssetStorage.h"
 
 namespace Sorex::Resource
 {
-  class AssetCreator
+  class AssetFileSystemStorage final: public AssetStorage
   {
+    SRX_RTTI(Resource::AssetFileSystemStorage, Resource::AssetStorage);
+
 public:
-    virtual ~AssetCreator() = default;
+    explicit AssetFileSystemStorage(FileSystem::IFileSystem& fs);
 
-    /**
-     * @brief Create asset object instance that will be used by loader.
-     *
-     * @param name - name of the asset;
-     * @param registry - asset registry;
-     * @param options - asset creation/loading options
-     * @param error - error description;
-     * @return Pointer to the asset or null if error occured.
-     */
-    virtual TSharedPointer<Asset> CreateAssetInstance(
-      StringView          name,
-      AssetRegistry*      registry,
-      const AssetOptions* options,
-      Status*             status) = 0;
+    AssetFileSystemStorage(const AssetFileSystemStorage&)            = delete;
+    AssetFileSystemStorage& operator=(const AssetFileSystemStorage&) = delete;
 
-    /**
-     * @brief Create loader for the asset instance.
-     *
-     * @param asset - loadable asset;
-     * @param options - asset creation/loading options
-     * @param error - description of an error
-     * @return Pointer to the load task or null if error occured.
-     */
-    virtual TUniquePointer<AssetLoader> CreateAssetLoader(
-      const TSharedPointer<Asset>& asset,
-      Status*                      status) = 0;
+    virtual bool Contains(StringView name) const override;
+    virtual void GetAll(StringView name, TVector<String>& paths) override;
+    virtual TUniquePointer<Stream> Read(StringView name,
+                                        Status*    status) override;
 
-protected:
-    template<typename T>
-    static bool IsLoadableReference(const Asset* asset) SRX_NOEXCEPT;
+private:
+    FileSystem::IFileSystem& mFileSystem;
   };
-
-  template<typename T>
-  bool AssetCreator::IsLoadableReference(const Asset* asset) SRX_NOEXCEPT
-  {
-    if (!asset)
-      return false;
-
-    const EAssetState state = asset->GetState();
-    if (state != EAssetState::Unloaded)
-      return false;
-
-    return asset->template IsA<T>();
-  }
 }  // namespace

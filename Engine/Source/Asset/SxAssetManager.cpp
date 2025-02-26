@@ -28,6 +28,7 @@
 #include <Sorex/Asset/SxAssetManager.h>
 
 #include <SxTaskWorker.h>
+#include <Asset/SxAssetLoadingTask.h>
 
 namespace
 {
@@ -102,53 +103,98 @@ namespace Sorex::Resource
       mAssetRegistry->Update(deltaTime);
   }
 
-  TUniquePointer<Asset> AssetManager::LoadAsset(const RuntimeClass&   type,
+  TSharedPointer<Asset> AssetManager::LoadAsset(const RuntimeClass&   type,
                                                 StringView            name,
                                                 ELoadingMode          mode,
                                                 IAssetLoadingHandler* handler,
                                                 const AssetOptions*   options)
   {
-    LoadingTask::Parameters params;
+    AssetLoadingTask::Parameters params;
     params.name     = name;
     params.type     = &type;
     params.handler  = handler;
     params.options  = options;
-    params.storage  = &_storage;
-    params.registry = _registry.get();
+    params.storage  = &mAssetStorage;
+    params.registry = mAssetRegistry.get();
 
-    TUniquePointer<LoadingTask> task = LoadingTask::Create(
-      params,
-      [this, options](const RuntimeType& type, StringView name, Error* error) {
-        return CreateAssetLoader(type, name, options, error);
-      });
+    auto createLoaderCallback = [this, options](const RuntimeClass& type,
+                                                StringView          name,
+                                                Status*             status) {
+      return this->CreateAssetLoader(type, name, options, status);
+    };
 
-    TRef<Asset> asset = task ? task->GetAsset() : nullptr;
+    TUniquePointer<AssetLoadingTask> task =
+      AssetLoadingTask::Create(params, createLoaderCallback);
+
+    TSharedPointer<Asset> asset = task ? task->GetAsset() : nullptr;
     if (!asset)
     {
-      RFY_NOENTRY("task creation failed");
+      SRX_WARN("[AssetManager] Failed to load {} asset '{}'",
+               type.GetName(),
+               name);
       return nullptr;
     }
 
     switch (mode)
     {
     case ELoadingMode::Sync:
-      // The sync loading should provide loaded resource or null
-      return s_LoadSync(std::move(task)) ? asset : nullptr;
+      [[unlikely]] return LoadAssetSync(std::move(task)) ? asset : nullptr;
 
     case ELoadingMode::Async:
-      _worker->Push(std::move(task));
-      return asset;
-
-    case ELoadingMode::Deferred:
-      asset->Defer(
-        MakeUnique<DeferredAssetActivator>(_worker.get(), std::move(task)));
+      [[likely]] mWorker->Push(std::move(task));
       return asset;
 
     default:
-      RFY_NOENTRY("invalid loading mode");
+      SRX_NOEXCEPT("invalid loading mode");
       return nullptr;
     }
   }
 
+  TUniquePointer<AssetLoader> AssetManager::CreateAssetLoader(
+    const RuntimeClass& type,
+    StringView          name,
+    const AssetOptions* options,
+    Status*             status) const
+  {
+    SharedLock    lock(mMutex);
+    AssetCreator* creator = FindAssetCreator(type);
 
+    if (creator == nullptr)
+    {
+      if (status)
+        *status = SRX_STATUS_MSG(EStatusCode::Not_Found,
+                                 "asset creator for the type '{}' not found",
+                                 type.GetName());
+      return nullptr;
+    }
+
+    if (TSharedPointer<Asset> asset =
+          creator->CreateAssetInstance(name,
+                                       mAssetRegistry.get(),
+                                       options,
+                                       status))
+    {
+      return creator->CreateAssetLoader(asset, status);
+    }
+
+    return nullptr;
+  }
+
+  void AssetManager::Register(const RuntimeClass&          type,
+                              TUniquePointer<AssetCreator> loader)
+  {
+    SRX_DEBUG("[AssetManager] Register asset creator for '{}' type",
+              type.GetName());
+
+    mMutex.lock();
+    mAssetFactory[std::addressof<const RuntimeClass>(type)] = std::move(loader);
+    mMutex.unlock();
+  }
+
+  AssetCreator* AssetManager::FindAssetCreator(
+    const RuntimeClass& assetType) const
+  {
+    auto it = mAssetFactory.find(&assetType);
+    return it != mAssetFactory.end() ? it->second.get() : nullptr;
+  }
 }  // namespace

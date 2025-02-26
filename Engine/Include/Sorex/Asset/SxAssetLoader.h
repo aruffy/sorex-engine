@@ -40,9 +40,8 @@ namespace Sorex::Resource
 {
   enum class ELoadingMode
   {
-    Sync,     ///< Synchronous (block) loading
-    Async,    ///< Async laoding in resouce thread pool
-    Deferred  ///< Resource will be loading on demand with the async mode
+    Sync,   ///< Synchronous (block) loading
+    Async,  ///< Async laoding in resouce thread pool
   };
 
   class AssetLoader
