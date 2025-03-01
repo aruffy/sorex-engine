@@ -47,6 +47,7 @@ namespace Sorex::Resource
 public:
     explicit AssetManager(AssetStorage&                 storage,
                           TUniquePointer<AssetRegistry> registry = nullptr);
+    virtual ~AssetManager() override;
 
     // Iterface Director::Component
     virtual Status Initialize() override;
@@ -151,3 +152,5 @@ private:
     Register(GetRuntimeClass<T>(), std::move(loader));
   }
 }  // namespace
+
+using SxAssetManager = Sorex::Resource::AssetManager;

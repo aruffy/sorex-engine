@@ -57,7 +57,12 @@ public:
     virtual void   Shutdown() override;
 
     // Interface RenderDevice
-    virtual void Cleanup() override;
+    virtual void                      Cleanup() override;
+    virtual TUniquePointer<Texture2D> CreateTexture2D(StringView name) override
+    {
+      SRX_NOENTRY("Not implemented");
+      return nullptr;
+    }
 
     /**
      * @brief Allocate new OpenGL resource.

@@ -7,7 +7,12 @@
 #include <Sorex/SxTime.h>
 #include <Sorex/SxLauncher.h>
 #include <Sorex/SxDirector.h>
+#include <Sorex/FileSystem/SxDirectorFileSystem.h>
 #include <Sorex/Graphics/SxCanvas.h>
+
+#include <Sorex/Asset/SxAsset.h>
+#include <Sorex/Asset/SxAssetManager.h>
+#include <Sorex/Asset/SxAssetFileSystemStorage.h>
 
 #include <Sorex/SxDesktopLauncher.h>
 
@@ -16,6 +21,18 @@ using namespace Sorex;
 class MyDirector final: public Director
 {
   public:
+  virtual Status Initialize() override
+  {
+    auto filesystem = AddComponent<DirectorFileSystem>();
+    SRX_ASSERT(filesystem);
+    mAssetStorage = MakeUnique<Resource::AssetFileSystemStorage>(*filesystem);
+    // TODO: Add asset registry
+    mAssetManager =
+      AddComponent<Resource::AssetManager>(*mAssetStorage, nullptr);
+
+    return Director::Initialize();
+  }
+
   protected:
   virtual void OnDraw(Canvas& canvas) override
   {
@@ -30,6 +47,10 @@ class MyDirector final: public Director
                     Color::Yellow);
     canvas.DrawCircle(Point(300.f, 400.f), 64.f, 32, Color::Red);
   }
+
+  private:
+  TUniquePointer<Resource::AssetStorage> mAssetStorage;
+  SxAssetManager*                        mAssetManager = nullptr;
 };
 
 int main(const int argc, const char* argv[])

@@ -50,11 +50,9 @@ public:
      * @param error - error description;
      * @return Pointer to the asset or null if error occured.
      */
-    virtual TSharedPointer<Asset> CreateAssetInstance(
-      StringView          name,
-      AssetRegistry*      registry,
-      const AssetOptions* options,
-      Status*             status) = 0;
+    virtual TSharedPointer<Asset> CreateAssetInstance(StringView     name,
+                                                      AssetRegistry* registry,
+                                                      Status* status) = 0;
 
     /**
      * @brief Create loader for the asset instance.

@@ -28,13 +28,16 @@
 #pragma once
 
 #include <Sorex/SxCoreMinimal.h>
+#include <Sorex/Asset/SxAsset.h>
 
 #include "SxTextureBitmap.h"
 
 namespace Sorex::Graphics
 {
-  class Texture2D
+  class Texture2D: public Sorex::Resource::Asset
   {
+    SRX_RTTI(Graphics::Texture2D, Resource::Asset);
+
 public:
     explicit Texture2D(StringView name);
     // virtual ~Texture2D() override = default;

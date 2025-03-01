@@ -71,19 +71,23 @@ namespace Sorex::Resource
     , mAssetRegistry(std::move(registry))
   {}
 
+  AssetManager::~AssetManager()
+  {}
+
   Status AssetManager::Initialize()
   {
-    mWorker = std::make_unique<TaskWorker>("AssetLoadingThread");
+    SRX_CLSFUN_TRACE();
+
+    mWorker = MakeUnique<TaskWorker>("AssetLoadingThread");
     return SRX_STATUS(mWorker->Start());
   }
 
   void AssetManager::Shutdown()
   {
+    SRX_CLSFUN_TRACE();
+
     if (mWorker)
-    {
       mWorker->Stop();
-      mWorker.reset();
-    }
   }
 
   void AssetManager::Update(const float deltaTime)
@@ -169,11 +173,11 @@ namespace Sorex::Resource
     }
 
     if (TSharedPointer<Asset> asset =
-          creator->CreateAssetInstance(name,
-                                       mAssetRegistry.get(),
-                                       options,
-                                       status))
+          creator->CreateAssetInstance(name, mAssetRegistry.get(), status))
     {
+      // @FIXME: Why we create an instance and then loader with RTTI casting?
+      // Why we cannot create both at once? auto [asset, loader] =
+      // creator->CreateAssetInstance();
       return creator->CreateAssetLoader(asset, status);
     }
 

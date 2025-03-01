@@ -48,7 +48,6 @@ private:
   class TObjectFactory final
   {
 public:
-    static_assert(TIsBaseOf_Value<Object, T>, "invalid object type");
     using Creator = TObjectCreator<T>;
 
 public:
@@ -122,136 +121,6 @@ private:
   template<typename T, typename Key>
   void TObjectFactory<T, Key>::GetCreatorList(TVector<Key>& keys) const
   {
-    size_t indx = 0;
-    keys.resize(_creators.size());
-    for (const auto& [uid, _] : _creators)
-      keys[indx++] = uid;
-  }
-
-  template<typename T, typename Key>
-  TUniquePointer<T> TObjectFactory<T, Key>::Create(const Key& uid) const
-  {
-    if (auto it = _creators.find(uid); it != _creators.end())
-      return it->second->Create();
-
-    return nullptr;
-  }
-
-  template<typename T, typename Key>
-  TSharedPointer<T> TObjectFactory<T, Key>::GetOrCreate(const Key& uid)
-  {
-    if (auto it = _creators.find(uid); it != _creators.end())
-      return it->second->GetOrCreate();
-
-    return nullptr;
-  }
-
-}  // namespace once
-
-#include <Ruffy/Core/CoreMinimal.h>
-#include <Ruffy/Core/TypeTraits.h>
-
-namespace Ruffy
-{
-  template<typename T>
-  class TObjectCreator: public Object
-  {
-    RFY_RTTI(TObjectCreator, Object)
-
-public:
-    virtual ~TObjectCreator() override = default;
-
-    virtual TUniquePointer<T> Create() const = 0;
-    TSharedPointer<T>         GetOrCreate();
-
-private:
-    TSharedPointer<T> _object;
-  };
-
-  template<typename T, typename Key = String>
-  class TObjectFactory final
-  {
-public:
-    static_assert(TIsBaseOf_Value<Object, T>, "invalid object type");
-    using Creator = TObjectCreator<T>;
-
-public:
-    TObjectFactory() = default;
-
-    TObjectFactory(const TObjectFactory& other)            = delete;
-    TObjectFactory& operator=(const TObjectFactory& other) = delete;
-
-    void RegisterCreator(const Key&              uid,
-                         TUniquePointer<Creator> creator) RFY_NOEXCEPT;
-
-    template<typename Type, typename... Args>
-    void RegisterCreator(const Key& uid, Args&&... args) RFY_NOEXCEPT;
-
-    RFY_NODISCARD bool HasCreator(const Key& uid) const RFY_NOEXCEPT;
-
-    bool RemoveCreator(const String& uid) RFY_NOEXCEPT;
-
-    void GetCreatorList(TVector<Key>& keys) const RFY_NOEXCEPT;
-
-    TUniquePointer<T> Create(const Key& uid) const;
-    TSharedPointer<T> GetOrCreate(const Key& uid);
-
-private:
-    THashMap<Key, TUniquePointer<Creator>> _creators;
-  };
-
-  template<typename T>
-  TSharedPointer<T> TObjectCreator<T>::GetOrCreate()
-  {
-    if (!_object)
-      _object = Create();
-
-    return _object;
-  }
-
-  template<typename T, typename Key>
-  void TObjectFactory<T, Key>::RegisterCreator(const Key&              uid,
-                                               TUniquePointer<Creator> creator)
-    RFY_NOEXCEPT
-  {
-    if (!creator)
-      return;
-
-    _creators[uid] = std::move(creator);
-  }
-
-  template<typename T, typename Key>
-  template<typename Type, typename... Args>
-  void TObjectFactory<T, Key>::RegisterCreator(const Key& uid,
-                                               Args&&... args) RFY_NOEXCEPT
-  {
-    static_assert(TIsBaseOf_Value<Creator, Type>, "invalid creator type");
-
-    _creators[uid] = MakeUnique<Type>(std::forward<Args>(args)...);
-  }
-
-  template<typename T, typename Key>
-  bool TObjectFactory<T, Key>::RemoveCreator(const String& uid) RFY_NOEXCEPT
-  {
-    if (auto it = _creators.find(uid); it != _creators.end())
-    {
-      const bool bDeleted = (it->second != nullptr);
-      _creators.erase(it);
-      return bDeleted;
-    }
-
-    return false;
-  }
-
-  template<typename T, typename Key>
-  RFY_NODISCARD bool TObjectFactory<T, Key>::HasCreator(const Key& uid) const
-  {
-    return _creators.count(uid);
-  }
-
-  template<typename T, typename Key>
-  void TObjectFactory<T, Key>::GetCreatorList(TVector<Key>& keys) const
-  {
     keys.resize(mCreators.size());
     std::transform(mCreators.begin(),
                    mCreators.end(),
@@ -276,5 +145,4 @@ private:
 
     return nullptr;
   }
-
 }  // namespace

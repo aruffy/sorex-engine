@@ -100,6 +100,8 @@ public:
       return defaultValue;
     }
 
+    /*
+   //  FIXME: Should be implemented in the AssetRegistry class
     void SetDefaultRegistryCache(const AssetRegistry::Cache cache)
     {
       mDefaultRegistryCache = cache;
@@ -119,7 +121,7 @@ public:
     void SetAssetRegistryCache(const AssetRegistry::Cache cache)
     {
       mRegistryCache[&GetRuntimeClass<T>()] = cache;
-    }
+    } */
 
 public:
     TObjectContainer<AssetOption> mParameters;
@@ -127,7 +129,7 @@ public:
 private:
     THashMap<String, Option>                            mOptions;
     THashMap<const RuntimeClass*, AssetRegistry::Cache> mRegistryCache;
-    AssetRegistry::Cache                                mDefaultRegistryCache =
-      AssetRegistry::Cache::kDefaultCache;
+    // AssetRegistry::Cache                                mDefaultRegistryCache
+    // = AssetRegistry::Cache::kDefaultCache;
   };
 }
