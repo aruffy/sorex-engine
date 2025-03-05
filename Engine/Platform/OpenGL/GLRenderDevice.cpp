@@ -66,10 +66,15 @@ namespace Sorex::Graphics
   Status GLRenderDevice::Initialize()
   {
     SRX_CLSFUN_TRACE();
+    SRX_DEBUG("[GLRenderDevice] OpenGL version: {}",
+              reinterpret_cast<const char*>(glGetString(GL_VERSION)));
+    SRX_DEBUG("[GLRenderDevice] OpenGL renderer: {}",
+              reinterpret_cast<const char*>(glGetString(GL_RENDERER)));
 
 #ifndef SOREX_DEBUG_NONE
     mExtensions = MakeUnique<GLExtensions>();
 #endif
+
 
     mRenderContext = MakeUnique<GLRenderContext>(*this);
 
