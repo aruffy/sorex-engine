@@ -13,6 +13,7 @@
 #include <Sorex/Asset/SxAsset.h>
 #include <Sorex/Asset/SxAssetManager.h>
 #include <Sorex/Asset/SxAssetFileSystemStorage.h>
+#include <Sorex/Asset/SxTextureLoader.h>
 
 #include <Sorex/SxDesktopLauncher.h>
 
@@ -30,7 +31,23 @@ class MyDirector final: public Director
     mAssetManager =
       AddComponent<Resource::AssetManager>(*mAssetStorage, nullptr);
 
-    return Director::Initialize();
+    Status status;
+    status = Director::Initialize();
+    if (!status.Ok())
+      return status;
+
+    auto glRenderDevice = GetComponent<Graphics::RenderDevice>();
+    SRX_ASSERT(glRenderDevice);
+
+    mAssetManager->Register<Graphics::Texture2D>(
+      MakeUnique<Resource::TextureCreator>(*glRenderDevice));
+
+    status = filesystem->Mount("Textures", "/Textures");
+
+    auto asset = mAssetManager->Load<Graphics::Texture2D>("/Textures/1.tga",
+                                                          nullptr,
+                                                          nullptr);
+    return status;
   }
 
   protected:

@@ -59,7 +59,8 @@ public:
     virtual void   Shutdown() override;
 
     // IFileSystem Interface
-    Status Mount(const Path& path, PathStringView alias) SRX_NOEXCEPT override;
+    Status         Mount(const Path&    path,
+                         PathStringView alias = PathStringView()) SRX_NOEXCEPT override;
     virtual Status IndexFiles() SRX_NOEXCEPT override;
 
     virtual void GetFiles(const Path&         path,

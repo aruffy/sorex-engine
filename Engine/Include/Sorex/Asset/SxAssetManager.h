@@ -142,14 +142,14 @@ private:
     return asset
              ? asset
              : std::static_pointer_cast<T>(
-                 LoadAsset(GetRuntimeClass<T>(), name, mode, handler, options));
+                 LoadAsset(GetRuntimeType<T>(), name, mode, handler, options));
   }
 
   template<typename T>
     requires std::is_base_of_v<Asset, T>
   SRX_INLINE void AssetManager::Register(TUniquePointer<AssetCreator> loader)
   {
-    Register(GetRuntimeClass<T>(), std::move(loader));
+    Register(GetRuntimeType<T>(), std::move(loader));
   }
 }  // namespace
 

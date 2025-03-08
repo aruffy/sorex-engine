@@ -40,7 +40,7 @@ namespace Sorex::Graphics
 
 public:
     explicit Texture2D(StringView name);
-    // virtual ~Texture2D() override = default;
+    virtual ~Texture2D() override = default;
 
     /**
      * @brief Initialize texture with certain bitmap.
@@ -108,4 +108,4 @@ public:
   };
 }  // namespace
 
-using SxTexture = Sorex::Graphics::Texture2D;
+using SxTex2D = Sorex::Graphics::Texture2D;

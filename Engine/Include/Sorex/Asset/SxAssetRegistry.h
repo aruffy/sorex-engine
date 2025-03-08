@@ -85,7 +85,7 @@ public:
 
     template<typename T>
       requires std::is_base_of_v<Asset, T>
-    SRX_INLINE TSharedPointer<T> Get(StringView name) const
+    SRX_INLINE TSharedPointer<T> Get(StringView name)
     {
       return std::static_pointer_cast<T>(GetAsset(GetRuntimeType<T>(), name));
     }
