@@ -186,6 +186,7 @@ public:
 
     SRX_INLINE void Reset() SRX_NOEXCEPT;
     SRX_INLINE void Shrink() { mData.shrink_to_fit(); }
+    SRX_INLINE void Swap(TextureBitmap& other) SRX_NOEXCEPT;
 
 private:
     EPixelFormat mFormat = EPixelFormat::None;
@@ -237,5 +238,10 @@ private:
     return mSize.width * Utils::GetPixelDepth(mFormat);
   }
 
-
-}
+  SRX_INLINE void TextureBitmap::Swap(TextureBitmap& other) SRX_NOEXCEPT
+  {
+    mData.swap(other.mData);
+    std::swap(mFormat, other.mFormat);
+    std::swap(mSize, other.mSize);
+  }
+}  // namespace
