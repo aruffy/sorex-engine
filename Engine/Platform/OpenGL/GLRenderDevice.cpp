@@ -35,6 +35,8 @@
 #include <gtc/type_ptr.hpp>
 
 #include "GLPrimitiveRenderer.h"
+#include "GLTexture2D.h"
+#include "GLTypes.h"
 
 namespace
 {
@@ -256,6 +258,69 @@ namespace Sorex::Graphics
     GLShaderPtr shader = std::make_shared<GLShader>(this, shaderSource);
     mShaders[key]      = shader;
     return shader;
+  }
+
+  TUniquePointer<Texture2D> GLRenderDevice::CreateTexture2D(StringView name)
+  {
+    return MakeUnique<GLTexture2D>(name, *this, false);
+  }
+
+  Status GLRenderDevice::InitializeTexture(const GLTexture2D& texture,
+                                           bool               bMinmaps)
+  {
+    SRX_CHECK(Thread::IsMainThread());
+    SRX_CHECK(glGetError() == GL_NO_ERROR);
+
+    if (!texture.IsValid())
+      return SRX_STATUS_MSG(EStatusCode::Invalid_Argument, "invalid texture");
+
+    GLResource* tex = GetResource(texture.GetResourceToken());
+    if (tex == nullptr || tex->inited)
+      return SRX_STATUS_MSG(EStatusCode::Invalid_State,
+                            "GLTexture2D invalid token or state");
+
+    SRX_OPENGL_CALL(glActiveTexture(GL_TEXTURE0));
+    SRX_OPENGL_CALL(glBindTexture(tex->target, tex->id));
+
+    SRX_OPENGL_CALL(glTexParameteri(tex->target, GL_TEXTURE_WRAP_S, GL_REPEAT));
+    SRX_OPENGL_CALL(glTexParameteri(tex->target, GL_TEXTURE_WRAP_T, GL_REPEAT));
+
+    SRX_OPENGL_CALL(
+      glTexParameteri(tex->target, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
+    SRX_OPENGL_CALL(
+      glTexParameteri(tex->target, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
+
+    auto [data, alignment] = texture.GetTexImageData();
+    GLint currentUnpackAlignment;
+    glGetIntegerv(GL_UNPACK_ALIGNMENT, &currentUnpackAlignment);
+    if (currentUnpackAlignment != alignment)
+      SRX_OPENGL_CALL(glPixelStorei(GL_UNPACK_ALIGNMENT, alignment));
+
+    GLint  internalFormat;
+    GLenum format, type;
+    texture.GetTexImageFormat(internalFormat, format, type);
+    const SizeInt size = texture.GetSize();
+    SRX_OPENGL_CALL(glTexImage2D(tex->target,
+                                 0,
+                                 internalFormat,
+                                 size.width,
+                                 size.height,
+                                 0,
+                                 format,
+                                 type,
+                                 data));
+
+    // @TODO: Generate with level if ES 2.0
+    if (bMinmaps)
+      SRX_OPENGL_CALL(glGenerateMipmap(tex->target));
+
+    if (GLenum errc = glGetError(); errc != GL_NO_ERROR)
+      return SRX_STATUS_MSG(EStatusCode::Not_Available,
+                            "OpenGL texture call error: {}",
+                            errc);
+
+    tex->inited = true;
+    return SRX_OK;
   }
 
   Status GLRenderDevice::BuildShaderProgram(

@@ -95,7 +95,7 @@ namespace Sorex::Resource
 
   void AssetLoadingTask::Shutdown()
   {
-    if (!mCommonCtx.status.Ok())
+    if (mCommonCtx.status.Ok())
       mCommonCtx.status = SRX_STATUS_MSG(EStatusCode::Not_Available,
                                          "laoding task wasn't completed");
 

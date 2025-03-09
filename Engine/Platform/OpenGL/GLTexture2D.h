@@ -43,17 +43,6 @@ namespace Sorex::Graphics
 public:
     struct Params
     {
-      GLint level = 0;
-
-      GLsizei width  = 0;
-      GLsizei height = 0;
-
-      GLint  internalFormat = GL_NONE;
-      GLenum format         = GL_NONE;
-      GLenum dataType       = GL_NONE;
-
-      GLint aligment = 0;
-
       bool            IsValid() const SRX_NOEXCEPT;
       SRX_INLINE void Reset() SRX_NOEXCEPT { *this = Params(); }
     };
@@ -62,7 +51,7 @@ public:
     GLTexture2D(StringView      name,
                 GLRenderDevice& glDevice,
                 bool            bMipmaps = false);
-    virtual ~GLTexture2D() override = default;
+    virtual ~GLTexture2D() override;
 
     GLTexture2D(const GLTexture2D& other)            = delete;
     GLTexture2D& operator=(const GLTexture2D& other) = delete;
@@ -76,47 +65,61 @@ public:
     virtual Status  Initialize(TUniquePointer<TextureBitmap> bitmap) override;
     virtual SizeInt GetSize() const override
     {
-      return SizeInt(static_cast<int>(mTexParams.width),
-                     static_cast<int>(mTexParams.height));
+      return SizeInt(static_cast<SizeInt::ValueType>(mWidth),
+                     static_cast<SizeInt::ValueType>(mHeight));
     }
+
     virtual Rectangle GetContentRect() const override { return mContentRect; }
     virtual ETextureFormat GetFormat() const override;
 
-    // } virtual void      SetSampler(const TextureSampler* sampler) override;
-    /* virtual const TextureSampler* GetSampler() const override
+    bool            IsValid() const;
+    SRX_INLINE void GetTexImageFormat(GLint&  internalFormat,
+                                      GLenum& format,
+                                      GLenum& type) const;
+    SRX_INLINE TPair<const GLvoid*, GLint> GetTexImageData() const
     {
-      return _sampler.get();
-    } */
-
-    /* SRX_INLINE const GLTextureParams& GetParameters() const
-    {
-      return mTexParams;
-    } */
-    /* SRX_INLINE const uint8* GetData() const
-    {
-      return mBitmap ? mBitmap->GetData() : nullptr;
-    } */
-
-    // SRX_INLINE bool HasMipmaps() const { return (_options & Option_Mipmaps);
-    // }
+      return std::make_pair(static_cast<const GLvoid*>(mData), mAligment);
+    }
 
 protected:
     virtual Status OnUnload() override { return SRX_OK; }
 
 private:
-    static bool GetTextureParameters(const TextureBitmap& bitmap,
-                                     Params&              params) SRX_NOEXCEPT;
+    bool            ApplyTexImageParams(const TextureBitmap& bitmap);
+    SRX_INLINE void ResetTexImageParams();
 
 private:
     GLResourceToken mToken;
 
-    Params    mTexParams;
+    GLsizei mWidth;
+    GLsizei mHeight;
+
+    GLint  mInternalFormat;
+    GLenum mFormat;
+    GLenum mDataType;
+
+    GLint          mAligment;
+    const GLubyte* mData;
+
     Rectangle mContentRect;
 
-    // TUniquePointer<TextureBitmap> mBitmap;
-    // TUniquePointer<TextureSampler> _sampler;
-    // bool      mIsUploaded;
-
-    // bool mMipmaps;
+    bool mMipmaps;
   };
+
+  SRX_INLINE void GLTexture2D::GetTexImageFormat(GLint&  internalFormat,
+                                                 GLenum& format,
+                                                 GLenum& type) const
+  {
+    internalFormat = mInternalFormat;
+    format         = mFormat;
+    type           = mDataType;
+  }
+
+  SRX_INLINE void GLTexture2D::ResetTexImageParams()
+  {
+    mWidth = mHeight = 0;
+    mFormat          = GL_NONE;
+    mInternalFormat = mDataType = GL_NONE;
+    mData                       = nullptr;
+  }
 }  // namespace

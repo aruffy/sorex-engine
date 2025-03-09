@@ -31,6 +31,8 @@
 
 namespace
 {
+  constexpr Sorex::int32 kDefaultDataAligment = 4;
+
   SRX_INLINE bool IsPowerOfTwo(const Sorex::int32 x) SRX_NOEXCEPT
   {
     return (x > 0 && ((x & (x - 1)) == 0));
@@ -52,7 +54,17 @@ namespace Sorex::Graphics
                            bool            bMipmaps)
     : Texture2D(name)
     , mToken(AllocateResource(&glDevice, GLResourceType::Texture2D))
-  // , mMipmaps(bMipmaps)
+    , mWidth(0)
+    , mHeight(0)
+    , mInternalFormat(GL_NONE)
+    , mFormat(GL_NONE)
+    , mDataType(GL_NONE)
+    , mAligment(4)
+    , mData(nullptr)
+    , mMipmaps(bMipmaps)
+  {}
+
+  GLTexture2D::~GLTexture2D()
   {}
 
   Status GLTexture2D::Initialize(TUniquePointer<TextureBitmap> bitmap)
@@ -62,7 +74,7 @@ namespace Sorex::Graphics
       return SRX_STATUS_MSG(EStatusCode::Invalid_State,
                             "invalid render device token");
 
-    if (mTexParams.format != GL_NONE)
+    if (mFormat != GL_NONE)
       return SRX_STATUS_MSG(EStatusCode::Not_Permitted,
                             "texture uploaded to the OpenGL");
 
@@ -70,21 +82,17 @@ namespace Sorex::Graphics
       return SRX_STATUS_MSG(EStatusCode::Invalid_Argument,
                             "invalid texture bitmap");
 
-    if (GetTextureParameters(*bitmap, mTexParams) == false)
+    if (!ApplyTexImageParams(*bitmap))
       return SRX_STATUS_MSG(EStatusCode::Invalid_Format,
                             "texture format: not supported or invalid");
 
     const SizeInt& origSize = bitmap->GetSize();
-    if (mTexParams.width != origSize.width
-        || mTexParams.height != origSize.height)
+    if (mWidth != origSize.width || mHeight != origSize.height)
     {
-      SRX_CHECK(mTexParams.width > origSize.width
-                && mTexParams.height > origSize.height);
+      SRX_CHECK(mWidth > origSize.width && mHeight > origSize.height);
 
       // @NOTE: make texture size power of two
-      TextureBitmap tmpBitmap{ mTexParams.width,
-                               mTexParams.height,
-                               bitmap->GetPixelFormat() };
+      TextureBitmap tmpBitmap{ mWidth, mHeight, bitmap->GetPixelFormat() };
       tmpBitmap.Fill(0xff);
       for (int32 scanline = 0; scanline < origSize.height; ++scanline)
       {
@@ -92,28 +100,30 @@ namespace Sorex::Graphics
                     bitmap->GetBytesPerLine(),
                     tmpBitmap.GetScanLine(scanline).data());
       }
-
       bitmap->Swap(tmpBitmap);
     }
 
     SRX_DEBUG("[GLTexture2D] Initialize '{}' size {}x{} format {}.",
               GetName(),
-              mTexParams.width,
-              mTexParams.height,
-              (int)mTexParams.format);
+              mWidth,
+              mHeight,
+              mFormat);
 
     mContentRect = Rect(Point(0.f, 0.f),
                         Size(static_cast<float>(origSize.width),
                              static_cast<float>(origSize.height)));
 
-    // mIsUploaded = glDevice->InitializeTexture2D(this, error);
+    Status status = glDevice->InitializeTexture(*this, mMipmaps);
+    if (!status.Ok())
+      ResetTexImageParams();
 
-    return SRX_OK;
+    mData = nullptr;
+    return status;
   }
 
   ETextureFormat GLTexture2D::GetFormat() const
   {
-    switch (mTexParams.format)
+    switch (mFormat)
     {
     case GL_RGBA:
       return ETextureFormat::RGBA8;
@@ -134,90 +144,76 @@ namespace Sorex::Graphics
 
   static GLint GetDataAlignment(const TextureBitmap& bitmap)
   {
-    constexpr int32 kDefaultAligment = 4;
     switch (bitmap.GetBytesPerLine() % 4)
     {
     case 1:
     case 3:
       return 1;
-
     case 2:
       return 2;
-
     default:
-      return kDefaultAligment;
+      return kDefaultDataAligment;
     }
   }
 
-  bool GLTexture2D::GetTextureParameters(const TextureBitmap& bitmap,
-                                         GLTexture2D::Params& params)
-    SRX_NOEXCEPT
+  bool GLTexture2D::ApplyTexImageParams(const TextureBitmap& bitmap)
   {
     switch (bitmap.GetPixelFormat())
     {
+      // TODO: Add supported ext formats
+      // TODO: Add ES3.0 formats
     case EPixelFormat::RGBA8:
-      params.internalFormat = GL_RGBA;
-      params.dataType       = GL_UNSIGNED_BYTE;
+      mInternalFormat = GL_RGBA;
+      mDataType       = GL_UNSIGNED_BYTE;
       break;
-
-// TODO: Add supported ext formats
-#ifdef GLAD_GL_EXT_texture_format_BGRA8888
-    case EPixelFormat::ARGB8888:
-      params.internalFormat = GL_BGRA;
-      params.dataType       = GL_UNSIGNED_BYTE;
-      break;
-#endif
-
     case EPixelFormat::RGB8:
     case EPixelFormat::BGR8:
-      params.internalFormat = GL_RGB;
-      params.dataType       = GL_UNSIGNED_BYTE;
+      mInternalFormat = GL_RGB;
+      mDataType       = GL_UNSIGNED_BYTE;
       break;
 
     case EPixelFormat::RGB565:
-      params.internalFormat = GL_RGB;
-      params.dataType       = GL_UNSIGNED_SHORT_5_6_5;
+      mInternalFormat = GL_RGB;
+      mDataType       = GL_UNSIGNED_SHORT_5_6_5;
       break;
 
     case EPixelFormat::RGBA4:
-      params.internalFormat = GL_RGBA;
-      params.dataType       = GL_UNSIGNED_SHORT_4_4_4_4;
+      mInternalFormat = GL_RGBA;
+      mDataType       = GL_UNSIGNED_SHORT_4_4_4_4;
       break;
 
     case EPixelFormat::RGBA5551:
-      params.internalFormat = GL_RGBA;
-      params.dataType       = GL_UNSIGNED_SHORT_5_5_5_1;
+      mInternalFormat = GL_RGBA;
+      mDataType       = GL_UNSIGNED_SHORT_5_5_5_1;
       break;
 
     case EPixelFormat::A8:
-      params.internalFormat = GL_RED;
-      params.dataType       = GL_UNSIGNED_BYTE;
+      mInternalFormat = GL_RED;
+      mDataType       = GL_UNSIGNED_BYTE;
       break;
 
     default:
       return false;
     }
 
-    params.format = params.internalFormat;
-    params.level  = 0;
+    mFormat = mInternalFormat;  // @FIXME:
 
-    const SizeInt& size = bitmap.GetSize();
     // TODO: Check OpenGL es 3.0 for power of two
-    params.width =
-      IsPowerOfTwo(size.width) ? size.width : GetPowerOfTwo(size.width);
-    params.height =
+    const SizeInt& size = bitmap.GetSize();
+    mWidth = IsPowerOfTwo(size.width) ? size.width : GetPowerOfTwo(size.width);
+    mHeight =
       IsPowerOfTwo(size.height) ? size.height : GetPowerOfTwo(size.height);
-
-    params.aligment = GetDataAlignment(bitmap);
+    mAligment = GetDataAlignment(bitmap);
+    mData     = reinterpret_cast<const GLubyte*>(bitmap.GetData());
     return true;
   }
 
-  bool GLTexture2D::Params::IsValid() const noexcept
+  bool GLTexture2D::IsValid() const
   {
     const bool isValidSize =
-      (width > 0 && height > 0); /* TODO: Condition for IsPowerOfTwo(width) &&
+      (mWidth > 0 && mHeight > 0); /* TODO: Condition for IsPowerOfTwo(width) &&
                                     IsPowerOfTwo(height); */
-    return (isValidSize && internalFormat != GL_NONE && format != GL_NONE
-            && dataType != GL_NONE);
+    return (mData && isValidSize && mInternalFormat != GL_NONE
+            && mFormat != GL_NONE && mDataType != GL_NONE);
   }
 }  // namespace
