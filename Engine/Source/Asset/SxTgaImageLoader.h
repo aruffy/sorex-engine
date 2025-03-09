@@ -27,48 +27,47 @@
 
 #pragma once
 
-#include <Sorex/CoreMinimal.h>
+#include <Sorex/Asset/SxTextureLoader.h>
 
-namespace Sorex::Utils
+namespace Sorex::Resource
 {
-  SRX_API SRX_INLINE bool IsLittleEndian() SRX_NOEXCEPT
+  class TgaImageLoader final: public ImageLoader
   {
-    const uint16      x = 0x0001;
-    static const bool endian =
-      static_cast<bool>(*(reinterpret_cast<const uint8*>(&x)));
-    return endian;
-  }
-
-  template<std::integral T>
-  SRX_API T SwapBits(T val) SRX_NOEXCEPT
-  {
-    T                result = T{ 0 };
-    constexpr size_t bits   = 8 * sizeof(val);
-    for (size_t i = 0; i < bits; ++i)
+public:
+    static constexpr size_t kTgaImageHeaderSize = 18;
+    struct ImageHeader
     {
-      result = (result << 1) | (val & 1);
-      val >>= 1;
-    }
+      uint8  idLength;
+      uint8  colourMapType;
+      uint8  dataTypeCode;
+      uint16 colourMapOrigin;
+      uint16 colourMapLength;
+      uint8  colourMapDepth;
+      uint16 xOrigin;
+      uint16 yOrigin;
+      uint16 width;
+      uint16 height;
+      uint8  bitsPerPixel;
+      uint8  imageDescriptor;
+    };
 
-    return result;
-  }
+public:
+    virtual TUniquePointer<Graphics::TextureBitmap> LoadImage(
+      Stream& stream,
+      Status* status) override;
 
-  template<std::integral T>
-  SRX_API T SwapBytes(T val) SRX_NOEXCEPT
-  {
-    if constexpr (sizeof(T) == 1)
-      return val;
-
-    if constexpr (sizeof(T) == 2 && std::is_unsigned_v<T>)
-      return static_cast<T>((val >> 8) | (val << 8));
-
-    auto*            b    = reinterpret_cast<byte*>(&val);
-    constexpr size_t half = sizeof(T) / 2;
-    constexpr size_t last = sizeof(T) - 1;
-
-    for (size_t i = 0; i < half; ++i)
-      std::swap(b[i], b[last - i]);
-
-    return val;
-  }
+private:
+    TUniquePointer<Graphics::TextureBitmap> LoadUncompressedColorMappedImage(
+      Stream&            stream,
+      const ImageHeader& header,
+      Status*            status);
+    TUniquePointer<Graphics::TextureBitmap> LoadUncompressedTrueColorImage(
+      Stream&            stream,
+      const ImageHeader& header,
+      Status*            status);
+    TUniquePointer<Graphics::TextureBitmap> LoadMonochromeImage(
+      Stream&            stream,
+      const ImageHeader& header,
+      Status*            status);
+  };
 }  // namespace

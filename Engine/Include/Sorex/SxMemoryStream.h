@@ -129,7 +129,7 @@ public:
      */
     SRX_INLINE void AdvanceUnsafe(const size_t step = 1) SRX_NOEXCEPT
     {
-      SRX_CHECK(step < GetLength());
+      SRX_CHECK(static_cast<ssize_t>(step) < GetLength());
       mCurrent += step;
     }
 

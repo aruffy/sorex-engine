@@ -42,8 +42,7 @@ class MyDirector final: public Director
     mAssetManager->Register<Graphics::Texture2D>(
       MakeUnique<Resource::TextureCreator>(*glRenderDevice));
 
-    status = filesystem->Mount("Textures", "/Textures");
-
+    status     = filesystem->Mount("Textures", "/Textures");
     auto asset = mAssetManager->Load<Graphics::Texture2D>("/Textures/1.tga",
                                                           nullptr,
                                                           nullptr);

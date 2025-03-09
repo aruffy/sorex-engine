@@ -264,3 +264,11 @@ private:
 #else
 #  define SRX_STATUS_MSG(errcode, format, ...) SRX_STATUS(errcode)
 #endif
+
+#define SRX_STATUS_PTR_MSG(status, errcode, format, ...)        \
+  if ((status) != nullptr)                                      \
+  {                                                             \
+    *(status) = SRX_STATUS_MSG(errcode, format, ##__VA_ARGS__); \
+  }                                                             \
+  else                                                          \
+    ((void)0)

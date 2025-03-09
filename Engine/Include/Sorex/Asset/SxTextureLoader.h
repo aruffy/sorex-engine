@@ -53,7 +53,7 @@ public:
      */
     virtual TUniquePointer<Graphics::TextureBitmap> LoadImage(
       Stream& stream,
-      Status& status) = 0;
+      Status* status) = 0;
   };
 
   class TextureCreator final: public AssetCreator
