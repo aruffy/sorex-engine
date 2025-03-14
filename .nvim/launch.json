@@ -1,0 +1,17 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug Sandbox (codelldb)",
+      "type": "codelldb",
+      "request": "launch",
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "program": "${workspaceFolder}/build/Sandbox/Sandbox",
+      "args": [],
+      "env": {
+        "DISPLAY": ":0"
+      }
+    }
+  ]
+}
