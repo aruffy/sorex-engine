@@ -139,7 +139,7 @@ namespace Sorex::Resource
   bool TaskWorker::HandleDeferredTask()
   {
     const size_t size = mDeferred.size();
-    if (size <= 0)
+    if (size == 0)
       return false;
 
     Task* task = mDeferred.front();

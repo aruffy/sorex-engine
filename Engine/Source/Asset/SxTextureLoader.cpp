@@ -27,6 +27,25 @@
 
 #include <Sorex/Asset/SxTextureLoader.h>
 
+#include <Sorex/FileSystem/SxPathUtils.h>
+#include <Asset/SxTgaImageLoader.h>
+
+namespace
+{
+  using namespace Sorex;
+  template<typename T>
+  class ImageLoaderCreator final: public TObjectCreator<Resource::ImageLoader>
+  {
+    static_assert(std::is_base_of_v<Resource::ImageLoader, T>, "invalid type");
+
+public:
+    virtual TUniquePointer<Resource::ImageLoader> Create() const override
+    {
+      return MakeUnique<T>();
+    };
+  };
+}  // namespace
+
 namespace Sorex::Resource
 {
   TextureCreator::TextureCreator(Graphics::RenderDevice& renderDevice,
@@ -35,7 +54,8 @@ namespace Sorex::Resource
   {
     if (bEnableDefaultImageLoader)
     {
-      // Register Default Image Loaders
+      RegisterImageLoader("tga",
+                          MakeUnique<ImageLoaderCreator<TgaImageLoader>>());
     }
   }
 
@@ -63,10 +83,6 @@ namespace Sorex::Resource
       mRenderDevice.CreateTexture2D(name);
     if (asset && registry)
     {
-      // const Registry::ECache cache =
-      //   options ? options->GetAssetRegistryCache<Graphics::Texture2D>()
-      //           : Registry::ECache::Default;
-      //
       if (auto st = registry->Register(asset); !st.Ok())
       {
         if (status)
@@ -98,7 +114,7 @@ namespace Sorex::Resource
   TextureLoader::TextureLoader(const TextureCreator&               creator,
                                TSharedPointer<Graphics::Texture2D> texture)
     : AssetLoader(std::move(texture))
-  // , mCreator(creator)
+    , mCreator(creator)
   {}
 
   Status TextureLoader::Preload(AssetStorage&    storage,
@@ -109,102 +125,69 @@ namespace Sorex::Resource
     SRX_DEBUG("Preload {} asset '{}'",
               GetTypeName<Graphics::Texture2D>(),
               name);
-    /*
-       String extansion = String(PathUtils::GetFileExtension(name));
-       if (extansion.empty())
-       {
-         TVector<String> images;
-         storage.GetAll(name,
-                        images);  // @todo: it's not efficient (asset metadata?)
 
-         if (images.empty())
-         { missingFiles.push_back(name);
-           return true;
-         }
+    String extansion = String(Utils::GetFileExtension(name));
+    if (extansion.empty())
+    {
+      // TODO: See RE to implement
+      return SRX_STATUS(EStatusCode::Not_Implemented);
+    }
 
-         if (images.size() != 1)
-         {
-           RFY_MAKE_ERR(error,
-                        Error::Not_Unique,
-                        "texture loading files <{}> conflict",
-                        images.size());
-           return false;
-         }
+    if (!storage.Contains(name))
+    {
+      missingFiles.push_back(name);
+      return SRX_OK;
+    }
 
-         _path     = std::move(images.front());
-         extansion = String(PathUtils::GetFileExtension(_path));
-       }
-       else
-       {
-         if (!storage.Contains(name))
-         {
-           missingFiles.push_back(name);
-           return true;
-         }
-
-         _path = name;
-       }
-
-       _loader = _creator.CreateImageLoader(extansion);
-       if (!_loader)
-       {
-         RFY_MAKE_ERR(error,
-                      Error::Not_Found,
-                      "image data loader for '{}' not found",
-                      _path);
-         return false;
-       }
-     */
-
-    return SRX_STATUS(EStatusCode::Not_Implemented);
+    mLoader = mCreator.CreateImageLoader(extansion);
+    if (!mLoader)
+      return SRX_STATUS_MSG(EStatusCode::Not_Found,
+                            "image data loader for '{}' not found",
+                            name);
+    return SRX_OK;
   }
 
   Status TextureLoader::Load(AssetStorage&       storage,
                              const AssetOptions* options,
                              AssetDependencies&  dependencies)
   {
-    // SRX_CHECK(mLoader && !mPath.empty());
+    SRX_CHECK(mLoader);
     SRX_DEBUG("Load {} asset '{}'",
               GetTypeName<Graphics::Texture2D>(),
               GetAssetName());
-    /*
-       TUniquePointer<Stream> stream = storage.Read(_path, error);
-       if (stream == nullptr)
-         return false;
 
-       _bitmap = _loader->Load(stream.get(), error);
-       if (!_bitmap)
-         return false;
+    Status                 status;
+    TUniquePointer<Stream> stream = storage.Read(GetAssetName(), &status);
+    if (stream == nullptr)
+      return status;
 
-       const auto format = _creator.GetRenderDevice().GetSupportedPixelFormat(
-         _bitmap->GetPixelFormat());
-       if (format != _bitmap->GetPixelFormat())
-       {
-         if (!_bitmap->ConvertToFormat(format, error))
-           return false;
-       }
+    mBitmap = mLoader->LoadImage(*stream, &status);
+    mLoader.reset();
 
-       return true;
-     */
+    return status;
 
-    return SRX_STATUS(EStatusCode::Not_Implemented);
+    /*   const auto format = mCreator.GetRenderDevice().GetSupportedPixelFormat(
+        _bitmap->GetPixelFormat());
+      if (format != _bitmap->GetPixelFormat())
+      {
+        if (!_bitmap->ConvertToFormat(format, error))
+          return false;
+      }
+   */
   }
 
   Status TextureLoader::Finalize(AssetRegistry*           registry,
                                  const AssetDependencies& dependencies)
   {
+    SRX_CHECK(mBitmap && GetAssetPtr());
     SRX_DEBUG("Finalize loading {} asset '{}'",
               GetTypeName<Graphics::Texture2D>(),
               GetAssetName());
 
-    // Graphics::Texture2D* texture =
-    //   static_cast<Graphics::Texture2D*>(GetAssetPtr());
-    /*
-      if (!texture->Initialize(std::move(_bitmap), error))
-        return false;
+    // @TODO: Can We call OpenGL texture related calls not in the main thread?
+    Graphics::Texture2D* texture =
+      static_cast<Graphics::Texture2D*>(GetAssetPtr());
 
-      return true;
-  **/
-    return SRX_STATUS(EStatusCode::Not_Implemented);
+    return texture->Initialize(std::move(mBitmap));
   }
 }  // namespace

@@ -121,7 +121,7 @@ namespace Sorex::Resource
     byte        buffer[kTgaImageHeaderSize];
     ImageHeader header;
 
-    if (stream.Check(EAccessMode::Read))
+    if (!stream.Check(EAccessMode::Read))
     {
       SRX_STATUS_PTR_MSG(status,
                          EStatusCode::Invalid_Argument,

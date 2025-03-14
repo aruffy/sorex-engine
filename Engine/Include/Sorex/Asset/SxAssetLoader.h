@@ -111,6 +111,9 @@ public:
     virtual Status Finalize(AssetRegistry*           registry,
                             const AssetDependencies& dependencies) = 0;
 
+protected:
+    String FindResource(AssetStorage& storage) const;
+
 private:
     TSharedPointer<Asset> mAsset;
   };

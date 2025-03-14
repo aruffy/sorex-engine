@@ -121,6 +121,8 @@ namespace Sorex::Utils
     enable_if_t<Sorex::Details::enum_as_bitmask_v<Type>, bool>
     CheckBitmask(const Type value, const Type bitmask) SRX_NOEXCEPT
   {
-    return (value & bitmask) == bitmask;
+    using int_t = std::underlying_type_t<Type>;
+    return (static_cast<int_t>(value) & static_cast<int_t>(bitmask))
+           == static_cast<int_t>(bitmask);
   }
 }

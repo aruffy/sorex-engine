@@ -25,45 +25,38 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#include <Sorex/FileSystem/SxDirectory.h>
+#include <Sorex/Asset/SxAssetLoader.h>
 
-namespace Sorex::FileSystem
+#include <Sorex/Utils/SxString.h>
+#include <Sorex/FileSystem/SxPathUtils.h>
+
+namespace Sorex::Resource
 {
-  // @NOTE: This isn't effecient class to work with the file system.
-  // @TODO: Optimize it according to the needs.
-  // @TODO: Don't store names of directories and files.
-  // @FIXME: Use std::file_system on demand
-  class StaticDirectory final: public Directory
+  // TODO: What is the point?
+  String AssetLoader::FindResource(AssetStorage& storage) const
   {
-public:
-    explicit StaticDirectory(Path path) SRX_NOEXCEPT;
+    const String& name      = GetAssetName();
+    StringView    extansion = Utils::GetFileExtension(name);
 
-    virtual Status Mount(const Path&    path,
-                         PathStringView alias = {}) SRX_NOEXCEPT override;
-    virtual Status IndexFiles() SRX_NOEXCEPT override;
-    virtual void   GetFiles(const Path&         path,
-                            TVector<FileIndex>& files) SRX_NOEXCEPT override;
-
-    virtual TPair<EFileStatus, TOptional<FileIndex>> GetFileIndex(
-      const Path& path) const SRX_NOEXCEPT override;
-
-    virtual TUniquePointer<Stream> OpenFile(
-      const FileIndex& fileIndex,
-      EAccessMode      mode   = EAccessMode::Read,
-      Status*          status = nullptr) SRX_NOEXCEPT override;
-
-private:
-    int32 CollectFiles(const Path& path,
-                       int32       depth,
-                       Status&     status) SRX_NOEXCEPT;
-
-private:
-    struct Catalog
+    if (extansion.empty())
     {
-      Path               path;
-      TVector<FileIndex> files;  // TODO: Use THashSet<FileIndex>
-    };
+      TVector<String> paths;
+      storage.GetAll(name,
+                     paths);  // @todo: it's not efficient (asset metadata?)
 
-    THashMap<hash_t, Catalog> mCatalogs;
-  };
-}  // namespace
+      if (paths.empty())
+        return Utils::kEmptyString;
+
+      if (paths.size() != 1)
+      {
+        SRX_WARN("[AssetLoader] Resource {} isn't unique ({})",
+                 name,
+                 paths.size());
+      }
+
+      return std::move(paths.front());
+    }
+
+    return storage.Contains(name) ? name : Utils::kEmptyString;
+  }
+}

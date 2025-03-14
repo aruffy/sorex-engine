@@ -43,7 +43,7 @@ class MyDirector final: public Director
       MakeUnique<Resource::TextureCreator>(*glRenderDevice));
 
     status     = filesystem->Mount("Textures", "/Textures");
-    auto asset = mAssetManager->Load<Graphics::Texture2D>("/Textures/1.tga",
+    auto asset = mAssetManager->Load<Graphics::Texture2D>("/Textures/image.tga",
                                                           nullptr,
                                                           nullptr);
     return status;

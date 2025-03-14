@@ -70,22 +70,6 @@ public:
       const TSharedPointer<Asset>& asset,
       Status*                      status) override;
 
-    /**
-     * @brief Create and registrate image file loader.
-     *
-     * @param args - arguments to construct typed image loader;
-     * @return True if loader was added.
-    template<class T, typename... Args>
-      requires std::is_base_of_v<ImageLoader, T>
-    void RegisterImageLoader(Args&&... args);
-     */
-
-    /**
-     * @brief Registrate image file loader.
-     *
-     * @param - pointer to the image loader
-     * @return True if loader was added.
-     */
     void RegisterImageLoader(
       const String&                               extenstion,
       TUniquePointer<TObjectCreator<ImageLoader>> creator);
@@ -117,10 +101,8 @@ public:
                             const AssetDependencies& dependencies) override;
 
 private:
-    // const TextureCreator& mCreator;  // TODO: remove
-    // String                mPath;
-
-    // TUniquePointer<ImageLoader>  mLoader;
-    // TUniquePointer<Graphics::TextureBitmap> mBitmap;
+    const TextureCreator&                   mCreator;
+    TUniquePointer<ImageLoader>             mLoader;
+    TUniquePointer<Graphics::TextureBitmap> mBitmap;
   };
 }  // namespace

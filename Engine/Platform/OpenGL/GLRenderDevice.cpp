@@ -268,6 +268,8 @@ namespace Sorex::Graphics
   Status GLRenderDevice::InitializeTexture(const GLTexture2D& texture,
                                            bool               bMinmaps)
   {
+    SRX_CLSFUN_TRACE();
+
     SRX_CHECK(Thread::IsMainThread());
     SRX_CHECK(glGetError() == GL_NO_ERROR);
 
@@ -291,6 +293,8 @@ namespace Sorex::Graphics
       glTexParameteri(tex->target, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
 
     auto [data, alignment] = texture.GetTexImageData();
+    SRX_CHECK(data && alignment);
+
     GLint currentUnpackAlignment;
     glGetIntegerv(GL_UNPACK_ALIGNMENT, &currentUnpackAlignment);
     if (currentUnpackAlignment != alignment)
