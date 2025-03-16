@@ -35,8 +35,6 @@ namespace Sorex::Resource
     {
     case EAssetState::Unloaded:
       return "Unloaded";
-    case EAssetState::Deferred:
-      return "Deferred";
     case EAssetState::Loading:
       return "Loading";
     case EAssetState::Loaded:
@@ -53,33 +51,4 @@ namespace Sorex::Resource
     , mName(name)
     , mState(EAssetState::Unloaded)
   {}
-
-  bool Asset::IsReady() const
-  {
-    const EAssetState st = GetState();
-    if (st == EAssetState::Loaded)
-      return true;
-
-    if (st == EAssetState::Deferred && mActivator)
-    {
-      if (const auto status = mActivator->Activate(this); !status.Ok())
-      {
-        SRX_NOENTRY(status.ToString().c_str());
-        // FIXME:
-        // SetState(EAssetState::Invalid);
-      }
-
-      mActivator.reset();
-    }
-
-    return false;
-  }
-  void Asset::Defer(TSharedPointer<IAssetActivator> activator) SRX_NOEXCEPT
-  {
-    SRX_CHECK(GetState() == EAssetState::Unloaded);
-    SRX_CHECK_MSG(activator, "asset will never wake up");
-
-    mActivator = std::move(activator);
-    SetState(EAssetState::Deferred);
-  }
 }  // namespace

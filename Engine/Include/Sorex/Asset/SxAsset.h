@@ -33,8 +33,7 @@ namespace Sorex::Resource
 {
   enum class EAssetState : uint8
   {
-    Unloaded,  ///< Initial state of a asset or asset was unloaded
-    Deferred,  ///< Using for lazy loading mode
+    Unloaded,  ///< Initial state of a asset or it was unloaded
     Loading,   ///< Asset is being loaded
     Loaded,    ///< Asset is loaded and ready
     Invalid,   ///< Loading process failed
@@ -42,29 +41,13 @@ namespace Sorex::Resource
 
   String ToString(const EAssetState state) SRX_NOEXCEPT;
 
-  // @class IAssetActivator - activate step to load a deferred asset
-  class Asset;
-  class IAssetActivator
-  {
-public:
-    virtual ~IAssetActivator() = default;
-
-    /**
-     * @brief Activate() is called when deferred asset should be prepared for
-     * using.
-     *
-     * @param asset - awaken asset
-     */
-    virtual Status Activate(const Asset* asset) = 0;
-  };
-
   class Asset: public std::enable_shared_from_this<Asset>
   {
     SRX_RTTI_BASE(Resource::Asset);
 
 public:
     explicit Asset(StringView name) SRX_NOEXCEPT;
-    virtual ~Asset() { mActivator.reset(); }
+    virtual ~Asset() {}
 
     Asset(const Asset& other)            = delete;
     Asset& operator=(const Asset& other) = delete;
@@ -98,9 +81,11 @@ public:
       SRX_ATOMIC_STORE(mState, state);
     }
 
-    void Defer(TSharedPointer<IAssetActivator> activator) SRX_NOEXCEPT;
+    SRX_NODISCARD SRX_INLINE bool IsReady() const
+    {
+      return GetState() == EAssetState::Loaded;
+    }
 
-    bool              IsReady() const;
     SRX_INLINE Status Unload();
 
 protected:
@@ -109,8 +94,6 @@ protected:
 private:
     String                   mName;
     std::atomic<EAssetState> mState;
-
-    mutable TSharedPointer<IAssetActivator> mActivator;
   };
 
   SRX_INLINE Status Asset::Unload()
