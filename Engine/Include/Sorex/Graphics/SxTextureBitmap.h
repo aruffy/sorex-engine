@@ -134,7 +134,6 @@ public:
     SRX_INLINE size_t GetBytesNumber() const { return mData.size(); }
     SRX_INLINE int32  GetBytesPerLine() const SRX_NOEXCEPT;
 
-    // @TODO: Use TSpan
     SRX_INLINE size_t Copy(TSpan<const byte> data) SRX_NOEXCEPT;
     SRX_INLINE size_t Assign(TSpan<const byte> data,
                              const SizeInt&    size,

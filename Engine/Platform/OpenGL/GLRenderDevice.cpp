@@ -564,12 +564,12 @@ namespace Sorex::Graphics
     TSpan<GLUniform> uniforms = mActiveShaderProgram->GetUniforms();
     for (auto& uniform : uniforms)
     {
-      // @FIXME: uncomment
-#ifdef RUFFY_ENGINE_DEBUG
-      const GLint loc = OPENGL_CALL(
-        glGetUniformLocation(program->id, uniform->GetName().c_str()));
-      RFY_ASSERT(loc >= 0 && uniform->GetLocation() == loc);
+#ifdef SOREX_DEBUG_HIGH
+      const GLint loc = SRX_OPENGL_CALL(
+        glGetUniformLocation(program->id, uniform.GetName().c_str()));
+      SRX_ASSERT(loc >= 0 && uniform.GetLocation() == loc);
 #endif
+
       // @FIXME: add camera
       if (uniform.GetType() == GL_FLOAT_MAT4)
       {
