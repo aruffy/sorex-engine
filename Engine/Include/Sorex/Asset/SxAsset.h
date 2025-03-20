@@ -74,7 +74,8 @@ public:
     }
     void SetState(EAssetState state) SRX_NOEXCEPT
     {
-      SRX_TRACE("Asset '{}' state changed: {} -> {}",
+      SRX_TRACE("[{}] Asset '{}' state changed: {} -> {}",
+                GetRuntimeClass().GetName(),
                 mName,
                 ToString(GetState()),
                 ToString(state));

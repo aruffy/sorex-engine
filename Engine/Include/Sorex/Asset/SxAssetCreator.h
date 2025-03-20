@@ -31,7 +31,6 @@
 
 #include "SxAsset.h"
 #include "SxAssetLoader.h"
-#include "SxAssetOptions.h"
 #include "SxAssetRegistry.h"
 
 namespace Sorex::Resource
@@ -39,32 +38,28 @@ namespace Sorex::Resource
   class AssetCreator
   {
 public:
+    using AssetInstance =
+      TPair<TSharedPointer<Asset>, TUniquePointer<AssetLoader>>;
     virtual ~AssetCreator() = default;
 
     /**
-     * @brief Create asset object instance that will be used by loader.
+     * @brief Create an asset instance pair consisting of an asset and its
+     * loader.
      *
-     * @param name - name of the asset;
-     * @param registry - asset registry;
-     * @param options - asset creation/loading options
-     * @param error - error description;
-     * @return Pointer to the asset or null if error occured.
-     */
-    virtual TSharedPointer<Asset> CreateAssetInstance(StringView     name,
-                                                      AssetRegistry* registry,
-                                                      Status* status) = 0;
-
-    /**
-     * @brief Create loader for the asset instance.
+     * This function initializes an asset instance and its associated loader
+     * based on the provided name and registry.
      *
-     * @param asset - loadable asset;
-     * @param options - asset creation/loading options
-     * @param error - description of an error
-     * @return Pointer to the load task or null if error occured.
+     * @param name - the name of the asset to be created.
+     * @param registry - the asset registry used for asset management.
+     * @param status [out] - status variable that will hold the creation status
+     * of the asset instance.
+     * @return A pair containing the asset and its loader. If the asset is
+     * nullptr, an error has occurred, and the loader will also be nullptr. If
+     * the loader is nullptr, the asset is ready for use.
      */
-    virtual TUniquePointer<AssetLoader> CreateAssetLoader(
-      const TSharedPointer<Asset>& asset,
-      Status*                      status) = 0;
+    virtual AssetInstance CreateAssetInstance(StringView     name,
+                                              AssetRegistry* registry,
+                                              Status*        status) = 0;
 
 protected:
     template<typename T>

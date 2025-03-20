@@ -62,13 +62,9 @@ public:
     explicit TextureCreator(Graphics::RenderDevice& renderDevice,
                             const bool bEnableDefaultImageLoaders = true);
 
-    virtual TSharedPointer<Asset> CreateAssetInstance(StringView     name,
-                                                      AssetRegistry* registry,
-                                                      Status* status) override;
-
-    virtual TUniquePointer<AssetLoader> CreateAssetLoader(
-      const TSharedPointer<Asset>& asset,
-      Status*                      status) override;
+    virtual AssetInstance CreateAssetInstance(StringView     name,
+                                              AssetRegistry* registry,
+                                              Status*        status) override;
 
     void RegisterImageLoader(
       const String&                               extenstion,

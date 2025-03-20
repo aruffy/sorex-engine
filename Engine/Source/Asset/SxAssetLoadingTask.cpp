@@ -34,8 +34,8 @@ namespace Sorex::Resource
   {}
 
   TUniquePointer<AssetLoadingTask> AssetLoadingTask::Create(
-    const Parameters&    params,
-    CreateLoaderCallback callback)
+    const Parameters&   params,
+    CreateAssetCallback callback)
   {
     if (!params.storage || !params.type || !callback)
     {
@@ -51,21 +51,12 @@ namespace Sorex::Resource
     task->mCommonCtx.options  = params.options;
     task->mCommonCtx.status   = SRX_OK;
 
-    task->mContext.name   = params.name;
-    task->mContext.type   = params.type;
-    task->mContext.common = &task->mCommonCtx;
-    task->mContext.loader =
+    task->mContext.name = params.name;
+    task->mContext.type = params.type;
+    task->mContext.asset =
       callback(*params.type, params.name, &task->mCommonCtx.status);
-    task->mCreateLoaderCallback = std::move(callback);
-
-    // @node: need create loader here to get access to the asset
-    if (task->mContext.loader == nullptr)
-    {
-      task->Shutdown();
-
-      delete task;
-      return nullptr;
-    }
+    task->mContext.common      = &task->mCommonCtx;
+    task->mCreateAssetCallback = std::move(callback);
 
     return TUniquePointer<AssetLoadingTask>(task);
   }
@@ -83,6 +74,11 @@ namespace Sorex::Resource
 
   ETaskAction AssetLoadingTask::Execute()
   {
+    SRX_DEBUG("[{}] {}: {}",
+              GetRuntimeClass().GetName(),
+              __FUNCTION__,
+              mContext.name);
+
     const ETaskAction res = Load(mContext);
 
 #ifdef SRX_DEBUG_MEDIUM
@@ -95,9 +91,14 @@ namespace Sorex::Resource
 
   void AssetLoadingTask::Shutdown()
   {
+    SRX_DEBUG("[{}] {}: {}",
+              GetRuntimeClass().GetName(),
+              __FUNCTION__,
+              mContext.name);
+
     if (mCommonCtx.status.Ok())
-      mCommonCtx.status = SRX_STATUS_MSG(EStatusCode::Not_Available,
-                                         "laoding task wasn't completed");
+      mCommonCtx.status = SRX_STATUS_MSG(EStatusCode::Interrupted,
+                                         "laoding task was interrupted");
 
     Context::Invalidate(mContext);
   }
@@ -137,7 +138,6 @@ namespace Sorex::Resource
         ++it;
     }
 
-
     if (bCanceled)
       return ETaskAction::Cancel;
 
@@ -145,23 +145,30 @@ namespace Sorex::Resource
                                        : ETaskAction::Await;
   }
 
-  bool AssetLoadingTask::FinilizeRecursive(Context& ctx)
+  bool AssetLoadingTask::FinalizeRecursive(Context& ctx)
   {
-    SRX_CHECK(ctx.stage == Context::ELoadingStage::Loading);
-    // @TODO: Check the ELoadingStage::Loaded state, if any other return error
+    SRX_CHECK(ctx.stage == Context::ELoadingStage::Loaded);
+    if (ctx.stage != Context::ELoadingStage::Loaded)
+    {
+      ctx.common->status = SRX_STATUS_MSG(EStatusCode::Invalid_State,
+                                          "asset '{}' loading failed, stage={}",
+                                          ctx.name,
+                                          static_cast<int>(ctx.stage));
+      return false;
+    }
 
     ctx.stage = Context::ELoadingStage::Finalization;
-    if (ctx.loader)
+    if (const auto loader = ctx.asset.second.get())
     {
       ctx.common->status =
-        ctx.loader->Finalize(ctx.common->registry, ctx.dependencies);
+        loader->Finalize(ctx.common->registry, ctx.dependencies);
 
       if (!ctx.common->status.Ok())
         return false;
     }
 
     for (auto& subctx : ctx.subcontexts)
-      if (!FinilizeRecursive(subctx))
+      if (!FinalizeRecursive(subctx))
         return false;
 
     return true;
@@ -169,9 +176,12 @@ namespace Sorex::Resource
 
   Status AssetLoadingTask::Finalize()
   {
-    // Check if any loading was failed (Canceled)
+    SRX_DEBUG("[{}] {}: {}",
+              GetRuntimeClass().GetName(),
+              __FUNCTION__,
+              mContext.name);
 
-    if (FinilizeRecursive(mContext))
+    if (FinalizeRecursive(mContext))
       Context::Complete(mContext);
 
     return mCommonCtx.status;
@@ -200,7 +210,8 @@ namespace Sorex::Resource
 #endif
 
     SRX_DEBUG(
-      "{} loading {} asset '{}'",
+      "[{}] {} loading <{}> asset '{}'",
+      GetRuntimeClass().GetName(),
       (ctx.stage == Context::ELoadingStage::None ? "Start" : "Continue"),
       ctx.type->GetName(),
       ctx.name);
@@ -216,44 +227,42 @@ namespace Sorex::Resource
       return ETaskAction::Cancel;
     }
 
-    if (!ctx.loader)
-      ctx.loader = mCreateLoaderCallback(*ctx.type, ctx.name, &status);
+    if (!ctx.asset.first)
+      ctx.asset = mCreateAssetCallback(*ctx.type, ctx.name, &status);
 
-    if (ctx.loader == nullptr)
+    Asset* const asset = ctx.asset.first.get();
+    if (!asset)
       return ETaskAction::Cancel;
 
-    TSharedPointer<Asset> asset = ctx.loader ? ctx.loader->GetAsset() : nullptr;
-    SRX_ASSERT(asset);
-
     asset->SetState(EAssetState::Loading);
-    // @note: the resource has already made a preload stage
-    if (ctx.stage < Context::ELoadingStage::Preload)
+    AssetLoader* const loader = ctx.asset.second.get();
+    if (ctx.asset.second == nullptr)
+    {
+      // @NOTE: see the @CreateAssetInstance: the asset is ready to use
+      ctx.stage = Context::ELoadingStage::Loaded;
+      return ETaskAction::Continue;
+    }
+
+    // @NOTE: the resource hasn't made a preload stage yet
+    if (ctx.stage == Context::ELoadingStage::None)
     {
       TVector<String> missingFiles;
-      status = ctx.loader->Preload(*ctx.common->storage,
-                                   ctx.common->registry,
-                                   missingFiles);
+      status = loader->Preload(*ctx.common->storage,
+                               ctx.common->registry,
+                               missingFiles);
       if (!status.Ok())
         return ETaskAction::Cancel;
 
       ctx.stage = Context::ELoadingStage::Preload;
       if (!missingFiles.empty())
       {
-        if (ctx.stage == Context::ELoadingStage::Waiting)
-        {
-          status = SRX_STATUS_MSG(EStatusCode::Invalid_State,
-                                  "preload infinity loop is detected");
-          return ETaskAction::Cancel;
-        }
-
-        ctx.stage              = Context::ELoadingStage::Waiting;
         ETaskAction taskAction = ETaskAction::Cancel;
         if (auto handler = ctx.common->handler)
         {
           auto [action, awaiter] =
             handler->HandleMissingFiles(*ctx.common->storage,
                                         ctx.common->registry,
-                                        asset.get(),
+                                        asset,
                                         missingFiles);
 
           taskAction = action;
@@ -266,6 +275,7 @@ namespace Sorex::Resource
             {
               ctx.awaiter = std::move(awaiter);
               ctx.common->deferred.push_front(&ctx);
+              ctx.stage = Context::ELoadingStage::Waiting;
               return ETaskAction::Await;
             }
           }
@@ -282,9 +292,9 @@ namespace Sorex::Resource
     }
 
     ctx.stage = Context::ELoadingStage::Loading;
-    status    = ctx.loader->Load(*ctx.common->storage,
-                              ctx.common->options,
-                              ctx.dependencies);
+    status =
+      loader->Load(*ctx.common->storage, ctx.common->options, ctx.dependencies);
+
     if (!status.Ok())
       return ETaskAction::Cancel;
 
@@ -293,7 +303,7 @@ namespace Sorex::Resource
     {
       TVector<AssetDependence*> dependencies;
       ctx.dependencies.GetAll(dependencies);
-      for (auto dependence : dependencies)
+      for (AssetDependence* const dependence : dependencies)
       {
         if (!dependence || dependence->GetName().empty())
           continue;
@@ -302,20 +312,22 @@ namespace Sorex::Resource
                                      dependence->GetType(),
                                      dependence->GetName());
 
-        auto&             depctx = ctx.subcontexts.back();
+        Context&          depctx = ctx.subcontexts.back();
         const ETaskAction result = Load(depctx);
 
-        if (result == ETaskAction::Continue)
+        if (result == ETaskAction::Cancel)
           return ETaskAction::Cancel;
 
-        SRX_CHECK(depctx.loader);
-        dependence->SetAsset(depctx.loader->GetAsset());
+        SRX_CHECK(depctx.asset.first);
+        // @TODO: Should be a shared pointer/weak
+        // pointer/raw?
+        dependence->SetAsset(depctx.asset.first->shared_from_this());
         if (result == ETaskAction::Await)
           bAwait = true;
       }
     }
 
-    // TODO: if !bAwait then ctx.stage = Context::EloadingState::Loaded
+    ctx.stage = Context::ELoadingStage::Loaded;
     return bAwait ? ETaskAction::Await : ETaskAction::Continue;
   }
 
@@ -339,7 +351,7 @@ namespace Sorex::Resource
 
   Asset* AssetLoadingTask::Context::GetAsset(Context& ctx)
   {
-    return ctx.loader ? ctx.loader->GetAssetPtr() : nullptr;
+    return ctx.asset.first.get();
   }
 
   void AssetLoadingTask::Context::SetStateRecursive(Context&    ctx,
@@ -361,7 +373,10 @@ namespace Sorex::Resource
                   "complete should be called for root only");
 
     Context& root = Context::GetRoot(ctx);
-    SRX_INFO("Asset <{}> '{}' loaded", root.type->GetName(), root.name);
+    SRX_INFO("[{}] Asset <{}> '{}' loaded",
+             GetTypeName<AssetLoadingTask>(),
+             root.type->GetName(),
+             root.name);
 
     if (auto handler = root.common->handler)
       handler->OnAssetLoaded(ctx.common->registry, GetAsset(root));

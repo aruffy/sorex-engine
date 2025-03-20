@@ -74,7 +74,7 @@ namespace Sorex::Resource
     return mImgLoadersFactory.Create(key);
   }
 
-  TSharedPointer<Asset> TextureCreator::CreateAssetInstance(
+  AssetCreator::AssetInstance TextureCreator::CreateAssetInstance(
     StringView     name,
     AssetRegistry* registry,
     Status*        status)
@@ -87,28 +87,12 @@ namespace Sorex::Resource
       {
         if (status)
           *status = std::move(st);
-        return nullptr;
+        return std::make_pair(nullptr, nullptr);
       }
     }
 
-    return asset;
-  }
-
-  TUniquePointer<AssetLoader> TextureCreator::CreateAssetLoader(
-    const TSharedPointer<Asset>& asset,
-    Status*                      status)
-  {
-    if (!IsLoadableReference<Graphics::Texture2D>(asset.get()))
-    {
-      if (status)
-        *status = SRX_STATUS_MSG(EStatusCode::Invalid_Argument,
-                                 "invalid asset reference");
-      return nullptr;
-    }
-
-    return MakeUnique<TextureLoader>(
-      *this,
-      std::static_pointer_cast<Graphics::Texture2D>(asset));
+    auto loader = MakeUnique<TextureLoader>(*this, asset);
+    return std::make_pair(std::move(asset), std::move(loader));
   }
 
   TextureLoader::TextureLoader(const TextureCreator&               creator,
@@ -122,7 +106,7 @@ namespace Sorex::Resource
                                 TVector<String>& missingFiles)
   {
     const String& name = GetAssetName();
-    SRX_DEBUG("Preload {} asset '{}'",
+    SRX_DEBUG("[TextureLoader] Preload {} asset '{}'",
               GetTypeName<Graphics::Texture2D>(),
               name);
 
@@ -152,7 +136,7 @@ namespace Sorex::Resource
                              AssetDependencies&  dependencies)
   {
     SRX_CHECK(mLoader);
-    SRX_DEBUG("Load {} asset '{}'",
+    SRX_DEBUG("[TextureLoader] Load {} asset '{}'",
               GetTypeName<Graphics::Texture2D>(),
               GetAssetName());
 
@@ -180,7 +164,7 @@ namespace Sorex::Resource
                                  const AssetDependencies& dependencies)
   {
     SRX_CHECK(mBitmap && GetAssetPtr());
-    SRX_DEBUG("Finalize loading {} asset '{}'",
+    SRX_DEBUG("[TextureLoader] Finalize loading {} asset '{}'",
               GetTypeName<Graphics::Texture2D>(),
               GetAssetName());
 

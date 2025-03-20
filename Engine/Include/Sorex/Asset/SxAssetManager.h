@@ -112,10 +112,9 @@ private:
                                     IAssetLoadingHandler* handler,
                                     const AssetOptions*   options);
 
-    TUniquePointer<AssetLoader> CreateAssetLoader(const RuntimeClass& type,
-                                                  StringView          name,
-                                                  const AssetOptions* options,
-                                                  Status* status) const;
+    AssetCreator::AssetInstance CreateAssetInstance(const RuntimeClass& type,
+                                                    StringView          name,
+                                                    Status* status) const;
 
 private:
     mutable std::shared_mutex mMutex;

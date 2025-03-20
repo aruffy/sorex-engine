@@ -115,6 +115,7 @@ protected:
     String FindResource(AssetStorage& storage) const;
 
 private:
+    // FIXME: Should be a weak pointer
     TSharedPointer<Asset> mAsset;
   };
 }  // namespace

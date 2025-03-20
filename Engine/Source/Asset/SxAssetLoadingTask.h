@@ -29,7 +29,7 @@
 
 #include <Sorex/SxCoreMinimal.h>
 #include <Sorex/SxTask.h>
-#include <Sorex/Asset/SxAssetLoader.h>
+#include <Sorex/Asset/SxAssetCreator.h>
 #include <Sorex/Asset/SxAssetHandler.h>
 #include <Sorex/Asset/SxAssetOptions.h>
 
@@ -40,8 +40,8 @@ namespace Sorex::Resource
     SRX_RTTI(Resource::AssetLoadingTask, Task);
 
 public:
-    using CreateLoaderCallback = std::function<
-      TUniquePointer<AssetLoader>(const RuntimeClass&, StringView, Status*)>;
+    using CreateAssetCallback = std::function<
+      AssetCreator::AssetInstance(const RuntimeClass&, StringView, Status*)>;
 
     struct Parameters
     {
@@ -61,22 +61,16 @@ public:
     virtual ~AssetLoadingTask() override;
 
     static TUniquePointer<AssetLoadingTask> Create(
-      const Parameters&    params,
-      CreateLoaderCallback callback);
+      const Parameters&   params,
+      CreateAssetCallback callback);
 
     virtual ETaskAction Execute() override;
     virtual ETaskAction Resume() override;
     virtual void        Shutdown() override;
     virtual Status      Finalize() override;
 
-    TSharedPointer<Asset> GetAsset() const
-    {
-      return mContext.loader ? mContext.loader->GetAsset() : nullptr;
-    }
-    const Asset* GetAssetPtr() const
-    {
-      return mContext.loader ? mContext.loader->GetAssetPtr() : nullptr;
-    }
+    TSharedPointer<Asset> GetAsset() const { return mContext.asset.first; }
+    const Asset* GetAssetPtr() const { return mContext.asset.first.get(); }
 
 private:
     // Context represent the loading state of a resource
@@ -85,10 +79,11 @@ private:
     {
       enum class ELoadingStage
       {
-        None,
-        Waiting,
+        None = 0,
         Preload,
+        Waiting,
         Loading,
+        Loaded,
         Finalization,
         Done
       };
@@ -124,7 +119,7 @@ private:
 
       ELoadingStage stage = ELoadingStage::None;
 
-      TUniquePointer<AssetLoader>   loader;
+      AssetCreator::AssetInstance   asset;
       TUniquePointer<IAssetAwaiter> awaiter;
 
       AssetDependencies dependencies;
@@ -138,7 +133,7 @@ private:
     explicit AssetLoadingTask(ETaskPriority priority);
 
     ETaskAction Load(Context& ctx);
-    bool        FinilizeRecursive(Context& ctx);
+    bool        FinalizeRecursive(Context& ctx);
 
 #ifdef SRX_DEBUG_MEDIUM
     static bool IsContextValid(const Context& ctx);
@@ -148,6 +143,6 @@ private:
     Context         mContext;  // Root context
     Context::Common mCommonCtx;
 
-    CreateLoaderCallback mCreateLoaderCallback;
+    CreateAssetCallback mCreateAssetCallback;
   };
 }  // namespace

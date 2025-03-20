@@ -121,14 +121,13 @@ namespace Sorex::Resource
     params.storage  = &mAssetStorage;
     params.registry = mAssetRegistry.get();
 
-    auto createLoaderCallback = [this, options](const RuntimeClass& type,
-                                                StringView          name,
-                                                Status*             status) {
-      return this->CreateAssetLoader(type, name, options, status);
-    };
+    auto cbCreateAssetInstance =
+      [this](const RuntimeClass& type, StringView name, Status* status) {
+        return this->CreateAssetInstance(type, name, status);
+      };
 
     TUniquePointer<AssetLoadingTask> task =
-      AssetLoadingTask::Create(params, createLoaderCallback);
+      AssetLoadingTask::Create(params, std::move(cbCreateAssetInstance));
 
     TSharedPointer<Asset> asset = task ? task->GetAsset() : nullptr;
     if (!asset)
@@ -154,34 +153,24 @@ namespace Sorex::Resource
     }
   }
 
-  TUniquePointer<AssetLoader> AssetManager::CreateAssetLoader(
+  AssetCreator::AssetInstance AssetManager::CreateAssetInstance(
     const RuntimeClass& type,
     StringView          name,
-    const AssetOptions* options,
     Status*             status) const
   {
-    SharedLock    lock(mMutex);
-    AssetCreator* creator = FindAssetCreator(type);
+    SharedLock          lock(mMutex);
+    AssetCreator* const creator = FindAssetCreator(type);
 
     if (creator == nullptr)
     {
-      if (status)
-        *status = SRX_STATUS_MSG(EStatusCode::Not_Found,
-                                 "asset creator for the type '{}' not found",
-                                 type.GetName());
-      return nullptr;
+      SRX_STATUS_PTR_MSG(status,
+                         EStatusCode::Not_Found,
+                         "asset creator for the type '{}' not found",
+                         type.GetName());
+      return std::make_pair(nullptr, nullptr);
     }
 
-    if (TSharedPointer<Asset> asset =
-          creator->CreateAssetInstance(name, mAssetRegistry.get(), status))
-    {
-      // @FIXME: Why we create an instance and then loader with RTTI casting?
-      // Why we cannot create both at once? auto [asset, loader] =
-      // creator->CreateAssetInstance();
-      return creator->CreateAssetLoader(asset, status);
-    }
-
-    return nullptr;
+    return creator->CreateAssetInstance(name, mAssetRegistry.get(), status);
   }
 
   void AssetManager::Register(const RuntimeClass&          type,
