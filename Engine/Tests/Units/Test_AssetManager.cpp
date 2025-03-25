@@ -9,6 +9,8 @@
 #include <Sorex/Asset/SxAssetHandler.h>
 #include <Sorex/Asset/SxAssetManager.h>
 
+#include <Asset/SxAssetLoadingTask.h>
+
 using namespace Sorex;
 
 namespace
@@ -262,8 +264,35 @@ class TestStorage final: public Resource::AssetStorage
   }
 };
 // ========== TEST ========== //
-TEST(GTestAssetManager, LoadSyncAssetOk)
-{}
+TEST(GTestAssetLoadingTask, LoadSimpleAsset)
+{
+  auto createAssetInstance =
+    [](const RuntimeClass& cls,
+       StringView          name,
+       Status*             st) -> Resource::AssetCreator::AssetInstance {
+    TestAssetOptions          testAssetOptions;
+    TSharedPointer<TestAsset> testAsset =
+      std::make_shared<TestAsset>(name, testAssetOptions);
+    TUniquePointer<MockAssetLoader> mockAssetLoader =
+      std::make_unique<MockAssetLoader>(testAsset);
+
+    EXPECT_CALL(*mockAssetLoader, Preload).WillOnce(testing::Return(SRX_OK));
+    EXPECT_CALL(*mockAssetLoader, Load).WillOnce(testing::Return(SRX_OK));
+    EXPECT_CALL(*mockAssetLoader, Finalize).WillOnce(testing::Return(SRX_OK));
+
+    return std::make_pair(std::move(testAsset), std::move(mockAssetLoader));
+  };
+
+  Resource::AssetLoadingTask::Parameters params;
+  TestStorage                            testStorage;
+  params.name    = "/test/asset";
+  params.type    = &Sorex::GetRuntimeType<TestAsset>();
+  params.storage = &testStorage;
+
+  auto task = Resource::AssetLoadingTask::Create(params, createAssetInstance);
+  task->Execute();
+  task->Finalize();
+}
 
 TEST(GTestAssetManager, LoadSync)
 {
