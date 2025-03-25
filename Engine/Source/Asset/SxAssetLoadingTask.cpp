@@ -115,7 +115,7 @@ namespace Sorex::Resource
       if (Context* ctx = (*it); ctx && ctx->awaiter)
       {
         if (Asset* asset = Context::GetAsset(*ctx))
-          action = ctx->awaiter->GetStatus(*asset, &mCommonCtx.status);
+          action = ctx->awaiter->GetAssetStatus(*asset, &mCommonCtx.status);
 
         if (action == ETaskAction::Cancel)
         {

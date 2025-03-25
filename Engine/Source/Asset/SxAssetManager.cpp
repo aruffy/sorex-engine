@@ -148,7 +148,7 @@ namespace Sorex::Resource
       return asset;
 
     default:
-      SRX_NOEXCEPT("invalid loading mode");
+      SRX_NOENTRY("invalid loading mode");
       return nullptr;
     }
   }

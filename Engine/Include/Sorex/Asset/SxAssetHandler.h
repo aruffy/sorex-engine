@@ -41,7 +41,7 @@ namespace Sorex::Resource
 public:
     virtual ~IAssetAwaiter() = default;
 
-    virtual ETaskAction GetStatus(const Asset& asset, Status* status) = 0;
+    virtual ETaskAction GetAssetStatus(const Asset& asset, Status* status) = 0;
   };
 
   /**
