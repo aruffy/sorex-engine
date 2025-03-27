@@ -3,6 +3,7 @@
 
 #include <sstream>
 #include <thread>
+#include <chrono>
 
 #include <Sorex/Asset/SxAsset.h>
 #include <Sorex/Asset/SxAssetCreator.h>
@@ -89,6 +90,7 @@ class TestAssetLoader: public Resource::AssetLoader
                          TVector<String>&         missingFiles) override
   {
     SRX_ASSERT(_asset->GetStage() == ELoadingStage::None);
+    _asset->ToStage(ELoadingStage::Preload);
 
     if (_asset->GetOptions().bMakeMissingFile && _preload == 0)
     {
@@ -97,7 +99,6 @@ class TestAssetLoader: public Resource::AssetLoader
       return SRX_OK;
     }
 
-    _asset->ToStage(ELoadingStage::Preload);
     if (_asset->GetOptions().failStage == ELoadingStage::Preload)
       return SRX_STATUS_MSG(EStatusCode::Not_Permitted, "preload failed");
 
@@ -166,14 +167,23 @@ class MockAssetLoader final: public TestAssetLoader
 // ========== TEST ASSET CREATOR ========== //
 class TestAssetCreator final: public Resource::AssetCreator
 {
+  bool _bMock = false;
+
   public:
+  TestAssetCreator(bool bMock = false)
+    : _bMock(bMock)
+  {}
   TestAssetOptions      options;
   virtual AssetInstance CreateAssetInstance(StringView               name,
                                             Resource::AssetRegistry* registry,
                                             Status* status) override
   {
-    auto asset  = std::make_shared<TestAsset>(name, options);
-    auto loader = std::make_unique<TestAssetLoader>(asset);
+    auto asset = std::make_shared<TestAsset>(name, options);
+    TUniquePointer<Resource::AssetLoader> loader;
+    if (_bMock)
+      loader = std::make_unique<MockAssetLoader>(asset);
+    else
+      loader = std::make_unique<TestAssetLoader>(asset);
     return std::make_pair(std::move(asset), std::move(loader));
   }
 };
@@ -294,6 +304,28 @@ TEST(GTestAssetLoadingTask, LoadSimpleAsset)
   task->Finalize();
 }
 
+static bool WaitAssetLoading(Resource::AssetManager&      mng,
+                             const Resource::Asset* const asset,
+                             const float                  step = 25.f)
+{
+  if (!asset)
+    return false;
+
+  unsigned ms = 0;
+  while (asset->GetState() <= Resource::EAssetState::Loading)
+  {
+    constexpr unsigned timeout = 5 * 1000;
+    if (ms > timeout)
+      return false;
+
+    mng.Update(step);
+    std::this_thread::sleep_for(std::chrono::milliseconds((unsigned)step));
+    ms += (unsigned)step;
+  }
+
+  return true;
+}
+
 TEST(GTestAssetManager, LoadSync)
 {
   TestStorage    storage;
@@ -345,4 +377,54 @@ TEST(GTestAssetManager, LoadSync)
   EXPECT_TRUE(handler.IsFailed());
   EXPECT_FALSE(handler.IsSuccess());
   handler.Reset();
+}
+
+TEST(GTestAssetManager, LoadAsync)
+{
+  TestStorage            storage;
+  Resource::AssetManager manager(storage, nullptr);
+  manager.Register<TestAsset>(MakeUnique<TestAssetCreator>());
+
+  ASSERT_EQ(manager.Initialize(), SRX_OK);
+
+  auto asset = manager.LoadAsync<TestAsset>("/test/asset/load/async");
+  ASSERT_NE(asset, nullptr);
+
+  WaitAssetLoading(manager, asset.get());
+
+  EXPECT_NE(asset->GetCreationThread(), asset->GetLoadingThread());
+  EXPECT_TRUE(asset->IsLoaded());
+  EXPECT_EQ(asset->GetState(), Resource::EAssetState::Loaded);
+  EXPECT_EQ(asset->GetStage(), ELoadingStage::Done);
+
+  manager.Shutdown();
+}
+
+TEST(GTestAssetManager, LoadAsyncWithAwaiter)
+{
+  TestStorage            storage;
+  Resource::AssetManager manager(storage, nullptr);
+  {
+    auto ac                      = MakeUnique<TestAssetCreator>();
+    ac->options.bMakeMissingFile = true;
+    manager.Register<TestAsset>(std::move(ac));
+  }
+
+  ASSERT_EQ(manager.Initialize(), SRX_OK);
+
+  TestAssetLoadingHandler handler;
+  handler.SetAwait(true);
+  auto asset =
+    manager.LoadAsync<TestAsset>("/test/asset/async/await", &handler);
+
+  WaitAssetLoading(manager, asset.get());
+
+  EXPECT_NE(asset->GetCreationThread(), asset->GetLoadingThread());
+  EXPECT_FALSE(handler.IsFailed());
+  EXPECT_TRUE(handler.IsSuccess());
+  EXPECT_EQ(asset->GetState(), Resource::EAssetState::Loaded);
+  EXPECT_EQ(asset->GetStage(), ELoadingStage::Done);
+  EXPECT_EQ(handler.GetWaitingAssetName(), asset->GetName());
+
+  manager.Shutdown();
 }

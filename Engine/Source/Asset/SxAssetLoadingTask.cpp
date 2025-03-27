@@ -74,7 +74,7 @@ namespace Sorex::Resource
 
   ETaskAction AssetLoadingTask::Execute()
   {
-    SRX_DEBUG("[{}] {}: {}",
+    SRX_DEBUG("[{}] {}: asset '{}' loading",
               GetRuntimeClass().GetName(),
               __FUNCTION__,
               mContext.name);
@@ -91,7 +91,7 @@ namespace Sorex::Resource
 
   void AssetLoadingTask::Shutdown()
   {
-    SRX_DEBUG("[{}] {}: {}",
+    SRX_DEBUG("[{}] {}: asset '{}' loading",
               GetRuntimeClass().GetName(),
               __FUNCTION__,
               mContext.name);
@@ -176,7 +176,7 @@ namespace Sorex::Resource
 
   Status AssetLoadingTask::Finalize()
   {
-    SRX_DEBUG("[{}] {}: {}",
+    SRX_DEBUG("[{}] {}: asset '{}' loading",
               GetRuntimeClass().GetName(),
               __FUNCTION__,
               mContext.name);
