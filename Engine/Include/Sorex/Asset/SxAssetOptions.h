@@ -100,36 +100,11 @@ public:
       return defaultValue;
     }
 
-    /*
-   //  FIXME: Should be implemented in the AssetRegistry class
-    void SetDefaultRegistryCache(const AssetRegistry::Cache cache)
-    {
-      mDefaultRegistryCache = cache;
-    }
-
-    template<Concept::RuntimeClass T>
-    AssetRegistry::Cache GetAssetRegistryCache() const
-    {
-      if (auto it = mRegistryCache.find(&GetRuntimeClass<T>());
-          it != mRegistryCache.end())
-        return it->second;
-
-      return mDefaultRegistryCache;
-    }
-
-    template<Concept::RuntimeClass T>
-    void SetAssetRegistryCache(const AssetRegistry::Cache cache)
-    {
-      mRegistryCache[&GetRuntimeClass<T>()] = cache;
-    } */
-
 public:
     TObjectContainer<AssetOption> mParameters;
 
 private:
     THashMap<String, Option>                            mOptions;
     THashMap<const RuntimeClass*, AssetRegistry::Cache> mRegistryCache;
-    // AssetRegistry::Cache                                mDefaultRegistryCache
-    // = AssetRegistry::Cache::kDefaultCache;
   };
 }
