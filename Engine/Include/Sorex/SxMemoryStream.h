@@ -453,7 +453,6 @@ private:
       break;
     default:
       SRX_NOENTRY("invalid seek mode");
-      pos = -1;
       return false;
     }
 

@@ -27,7 +27,9 @@ jobs:
             submodules: recursive
 
       - name: Set up Clang
-        run: sudo apt-get update && sudo apt-get -y install clang cmake libgtest-dev xorg-dev
+        run: |
+          sudo apt-get update
+          sudo apt-get -y install clang cmake libgtest-dev libgmock-dev xorg-dev
 
       - name: Configure CMake Preset
         run: |

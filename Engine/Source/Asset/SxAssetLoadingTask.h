@@ -109,7 +109,7 @@ private:
       static Asset*   GetAsset(Context& ctx);
 
       static void Invalidate(Context& ctx);
-      static void Complete(Context& ctx);
+      static void Finalize(Context& ctx);
 
       Common*  common = nullptr;
       Context* parent = nullptr;
@@ -127,16 +127,16 @@ private:
 
   private:
       static void SetStateRecursive(Context& ctx, EAssetState state);
+      static bool FinalizeRecursive(Context& ctx);
     };  // Context
 
 private:
     explicit AssetLoadingTask(ETaskPriority priority);
 
     ETaskAction Load(Context& ctx);
-    bool        FinalizeRecursive(Context& ctx);
 
-#ifdef SRX_DEBUG_MEDIUM
-    static bool IsContextValid(const Context& ctx);
+#ifdef SOREX_DEBUG_MEDIUM
+    static bool IsValidContextToLoad(const Context& ctx);
 #endif
 
 private:

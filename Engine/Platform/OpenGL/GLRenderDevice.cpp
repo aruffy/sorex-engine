@@ -265,6 +265,7 @@ namespace Sorex::Graphics
     return MakeUnique<GLTexture2D>(name, *this, false);
   }
 
+  // cppcheck-suppress functionConst
   Status GLRenderDevice::InitializeTexture(const GLTexture2D& texture,
                                            bool               bMinmaps)
   {
@@ -415,8 +416,9 @@ namespace Sorex::Graphics
   {
     SRX_CHECK(Thread::IsMainThread());
 
-    GLResourceReference* token = shader ? shader->GetResourceToken() : nullptr;
-    GLResource* const    resource = GetResource(token);
+    const GLResourceReference* token =
+      shader ? shader->GetResourceToken() : nullptr;
+    GLResource* const resource = GetResource(token);
 
     if (resource == nullptr)
       return SRX_STATUS_MSG(EStatusCode::Invalid_Argument,

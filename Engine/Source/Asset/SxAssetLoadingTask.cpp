@@ -96,10 +96,18 @@ namespace Sorex::Resource
               __FUNCTION__,
               mContext.name);
 
+    // If the asset loading stage is done than:
+    // 1. It has already been invalidated
+    // 2. The asset was successfully loaded
+    // No additional action is needed
+    if (mContext.stage == Context::ELoadingStage::Done)
+      return;
+
     if (mCommonCtx.status.Ok())
       mCommonCtx.status = SRX_STATUS_MSG(EStatusCode::Interrupted,
                                          "laoding task was interrupted");
 
+    // TODO: Do we need to keep dependencies here?
     Context::Invalidate(mContext);
   }
 
@@ -114,7 +122,7 @@ namespace Sorex::Resource
       ETaskAction action = ETaskAction::Continue;
       if (Context* ctx = (*it); ctx && ctx->awaiter)
       {
-        if (Asset* asset = Context::GetAsset(*ctx))
+        if (const Asset* asset = Context::GetAsset(*ctx))
           action = ctx->awaiter->GetAssetStatus(*asset, &mCommonCtx.status);
 
         if (action == ETaskAction::Cancel)
@@ -145,7 +153,7 @@ namespace Sorex::Resource
                                        : ETaskAction::Await;
   }
 
-  bool AssetLoadingTask::FinalizeRecursive(Context& ctx)
+  bool AssetLoadingTask::Context::FinalizeRecursive(Context& ctx)
   {
     SRX_CHECK(ctx.stage == Context::ELoadingStage::Loaded);
     if (ctx.stage != Context::ELoadingStage::Loaded)
@@ -181,14 +189,13 @@ namespace Sorex::Resource
               __FUNCTION__,
               mContext.name);
 
-    if (FinalizeRecursive(mContext))
-      Context::Complete(mContext);
+    Context::Finalize(mContext);
 
     return mCommonCtx.status;
   }
 
-#ifdef SRX_DEBUG_MEDIUM
-  bool AssetLoadingTask::IsContextValid(const Context& ctx)
+#ifdef SOREX_DEBUG_MEDIUM
+  bool AssetLoadingTask::IsValidContextToLoad(const Context& ctx)
   {
     if (!ctx.common || !ctx.common->storage)
       return false;
@@ -205,8 +212,8 @@ namespace Sorex::Resource
 
   ETaskAction AssetLoadingTask::Load(Context& ctx)
   {
-#ifdef SRX_DEBUG_MEDIUM
-    SRX_ASSERT(IsContextValid(ctx));
+#ifdef SOREX_DEBUG_MEDIUM
+    SRX_ASSERT(IsValidContextToLoad(ctx));
 #endif
 
     SRX_DEBUG(
@@ -367,21 +374,27 @@ namespace Sorex::Resource
       SetStateRecursive(subctx, state);
   }
 
-  void AssetLoadingTask::Context::Complete(Context& ctx)
+  void AssetLoadingTask::Context::Finalize(Context& ctx)
   {
     SRX_CHECK_MSG(ctx.parent == nullptr,
-                  "complete should be called for root only");
+                  "finilize should be called for root only");
 
     Context& root = Context::GetRoot(ctx);
+    if (!ctx.common->status.Ok() || !FinalizeRecursive(root))
+    {
+      Invalidate(root);
+      return;
+    }
+
     SRX_INFO("[{}] Asset <{}> '{}' loaded",
              GetTypeName<AssetLoadingTask>(),
              root.type->GetName(),
              root.name);
 
+    SetStateRecursive(root, EAssetState::Loaded);
+
     if (auto handler = root.common->handler)
       handler->OnAssetLoaded(ctx.common->registry, GetAsset(root));
-
-    SetStateRecursive(root, EAssetState::Loaded);
   }
 
   void AssetLoadingTask::Context::Invalidate(Context& ctx)

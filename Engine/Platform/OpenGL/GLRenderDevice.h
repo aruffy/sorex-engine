@@ -60,6 +60,7 @@ public:
     // Interface RenderDevice
     virtual void                      Cleanup() override;
     virtual TUniquePointer<Texture2D> CreateTexture2D(StringView name) override;
+    // cppcheck-suppress functionConst
     Status InitializeTexture(const GLTexture2D& texture, bool bMinmaps = false);
 
     /**
