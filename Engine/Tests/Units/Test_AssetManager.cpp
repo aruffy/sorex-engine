@@ -9,6 +9,7 @@
 #include <Sorex/Asset/SxAssetCreator.h>
 #include <Sorex/Asset/SxAssetHandler.h>
 #include <Sorex/Asset/SxAssetManager.h>
+#include <Sorex/FileSystem/SxPathUtils.h>
 
 #include <Asset/SxAssetLoadingTask.h>
 
@@ -85,9 +86,9 @@ class TestAssetLoader: public Resource::AssetLoader
     _asset = asset.get();
   }
 
-  virtual Status Preload(Resource::AssetStorage&  storage,
-                         Resource::AssetRegistry* registry,
-                         TVector<String>&         missingFiles) override
+  virtual Status Preload(Resource::AssetStorage&    storage,
+                         Resource::AssetRegistry*   registry,
+                         TVector<FileSystem::Path>& missingFiles) override
   {
     SRX_ASSERT(_asset->GetStage() == ELoadingStage::None);
     _asset->ToStage(ELoadingStage::Preload);
@@ -95,7 +96,7 @@ class TestAssetLoader: public Resource::AssetLoader
     if (_asset->GetOptions().bMakeMissingFile && _preload == 0)
     {
       _preload++;
-      missingFiles.push_back(_asset->GetName());
+      missingFiles.push_back(_asset->GetPath());
       return SRX_OK;
     }
 
@@ -149,8 +150,8 @@ class MockAssetLoader final: public TestAssetLoader
   MOCK_METHOD(Status,
               Preload,
               (Resource::AssetStorage & storage,
-               Resource::AssetRegistry* registry,
-               TVector<String>&         missingFiles),
+               Resource::AssetRegistry*   registry,
+               TVector<FileSystem::Path>& missingFiles),
               (override));
   MOCK_METHOD(Status,
               Load,
@@ -235,10 +236,10 @@ class TestAssetLoadingHandler final: public Resource::IAssetLoadingHandler
   }
 
   virtual TPair<ETaskAction, TUniquePointer<Resource::IAssetAwaiter>>
-  HandleMissingFiles(Resource::AssetStorage&  storage,
-                     Resource::AssetRegistry* registy,
-                     const Resource::Asset*   asset,
-                     const TSpan<String>&     files) override
+  HandleMissingFiles(Resource::AssetStorage&        storage,
+                     Resource::AssetRegistry*       registy,
+                     const Resource::Asset*         asset,
+                     const TSpan<FileSystem::Path>& files) override
   {
     if (_bAwait)
       return std::make_pair(ETaskAction::Await,
@@ -268,7 +269,8 @@ class TestAssetLoadingHandler final: public Resource::IAssetLoadingHandler
 class TestStorage final: public Resource::AssetStorage
 {
   public:
-  virtual TUniquePointer<Stream> Read(StringView name, Status* status) override
+  virtual TUniquePointer<Stream> Read(const FileSystem::Path& path,
+                                      Status*                 status) override
   {
     return nullptr;
   }
@@ -338,7 +340,7 @@ TEST(GTestAssetManager, LoadSync)
     manager.Register<TestAsset>(std::move(ac));
   }
 
-  auto asset = manager.Load<TestAsset>("/test/asset");
+  auto asset = manager.Load<TestAsset>(SRX_PATH("/test/asset"));
   ASSERT_NE(asset, nullptr);
   EXPECT_EQ(asset->GetCreationThread(), asset->GetLoadingThread());
   EXPECT_TRUE(asset->IsLoaded());
@@ -348,7 +350,7 @@ TEST(GTestAssetManager, LoadSync)
   ASSERT_EQ(asset, nullptr);
 
   TestAssetLoadingHandler handler;
-  asset = manager.Load<TestAsset>("/test/asset/load/sync", &handler);
+  asset = manager.Load<TestAsset>(SRX_PATH("/test/asset/load/sync"), &handler);
   ASSERT_NE(asset, nullptr);
   EXPECT_EQ(asset->GetCreationThread(), asset->GetLoadingThread());
   EXPECT_TRUE(asset->IsLoaded());
@@ -358,21 +360,23 @@ TEST(GTestAssetManager, LoadSync)
   handler.Reset();
 
   assetCreator->options.failStage = ELoadingStage::Preload;
-  asset = manager.Load<TestAsset>("/test/asset/fail/preload", &handler);
+  asset =
+    manager.Load<TestAsset>(SRX_PATH("/test/asset/fail/preload"), &handler);
   ASSERT_EQ(asset, nullptr);
   EXPECT_TRUE(handler.IsFailed());
   EXPECT_FALSE(handler.IsSuccess());
   handler.Reset();
 
   assetCreator->options.failStage = ELoadingStage::Load;
-  asset = manager.Load<TestAsset>("/test/asset/fail/load", &handler);
+  asset = manager.Load<TestAsset>(SRX_PATH("/test/asset/fail/load"), &handler);
   ASSERT_EQ(asset, nullptr);
   EXPECT_TRUE(handler.IsFailed());
   EXPECT_FALSE(handler.IsSuccess());
   handler.Reset();
 
   assetCreator->options.failStage = ELoadingStage::Finalizing;
-  asset = manager.Load<TestAsset>("/test/asset/fail/finalizing", &handler);
+  asset =
+    manager.Load<TestAsset>(SRX_PATH("/test/asset/fail/finalizing"), &handler);
   ASSERT_EQ(asset, nullptr);
   EXPECT_TRUE(handler.IsFailed());
   EXPECT_FALSE(handler.IsSuccess());
@@ -387,7 +391,7 @@ TEST(GTestAssetManager, LoadAsync)
 
   ASSERT_EQ(manager.Initialize(), SRX_OK);
 
-  auto asset = manager.LoadAsync<TestAsset>("/test/asset/load/async");
+  auto asset = manager.LoadAsync<TestAsset>(SRX_PATH("/test/asset/load/async"));
   ASSERT_NE(asset, nullptr);
 
   WaitAssetLoading(manager, asset.get());
@@ -415,7 +419,7 @@ TEST(GTestAssetManager, LoadAsyncWithAwaiter)
   TestAssetLoadingHandler handler;
   handler.SetAwait(true);
   auto asset =
-    manager.LoadAsync<TestAsset>("/test/asset/async/await", &handler);
+    manager.LoadAsync<TestAsset>(SRX_PATH("/test/asset/async/await"), &handler);
 
   WaitAssetLoading(manager, asset.get());
 

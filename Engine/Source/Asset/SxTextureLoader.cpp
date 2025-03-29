@@ -101,25 +101,25 @@ namespace Sorex::Resource
     , mCreator(creator)
   {}
 
-  Status TextureLoader::Preload(AssetStorage&    storage,
-                                AssetRegistry*   registry,
-                                TVector<String>& missingFiles)
+  Status TextureLoader::Preload(AssetStorage&              storage,
+                                AssetRegistry*             registry,
+                                TVector<FileSystem::Path>& missingFiles)
   {
-    const String& name = GetAssetName();
+    const auto& path = GetAssetPath();
     SRX_DEBUG("[TextureLoader] Preload {} asset '{}'",
               GetTypeName<Graphics::Texture2D>(),
-              name);
+              GetAssetName());
 
-    String extansion = String(Utils::GetFileExtension(name));
+    const String extansion = path.extension().generic_string();
     if (extansion.empty())
     {
       // TODO: See RE to implement
       return SRX_STATUS(EStatusCode::Not_Implemented);
     }
 
-    if (!storage.Contains(name))
+    if (!storage.Contains(path.native()))
     {
-      missingFiles.push_back(name);
+      missingFiles.push_back(path);
       return SRX_OK;
     }
 
@@ -127,7 +127,7 @@ namespace Sorex::Resource
     if (!mLoader)
       return SRX_STATUS_MSG(EStatusCode::Not_Found,
                             "image data loader for '{}' not found",
-                            name);
+                            GetAssetName());
     return SRX_OK;
   }
 
@@ -141,7 +141,7 @@ namespace Sorex::Resource
               GetAssetName());
 
     Status                 status;
-    TUniquePointer<Stream> stream = storage.Read(GetAssetName(), &status);
+    TUniquePointer<Stream> stream = storage.Read(GetAssetPath(), &status);
     if (stream == nullptr)
       return status;
 

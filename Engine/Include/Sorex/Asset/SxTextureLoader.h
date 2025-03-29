@@ -85,9 +85,9 @@ public:
     TextureLoader(const TextureCreator&               creator,
                   TSharedPointer<Graphics::Texture2D> texture);
 
-    virtual Status Preload(AssetStorage&    storage,
-                           AssetRegistry*   registry,
-                           TVector<String>& missingFiles) override;
+    virtual Status Preload(AssetStorage&              storage,
+                           AssetRegistry*             registry,
+                           TVector<FileSystem::Path>& missingFiles) override;
 
     virtual Status Load(AssetStorage&       storage,
                         const AssetOptions* options,

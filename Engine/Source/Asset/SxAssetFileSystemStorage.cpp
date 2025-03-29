@@ -33,20 +33,21 @@ namespace Sorex::Resource
     : mFileSystem(fs)
   {}
 
-  bool AssetFileSystemStorage::Contains(StringView name) const
+  bool AssetFileSystemStorage::Contains(SxPathView path) const
   {
-    return mFileSystem.IsFileExists(name);
+    // @FIXME: What is the mess with SxPathView and cost Path&
+    return mFileSystem.IsFileExists(path);
   }
 
-  void AssetFileSystemStorage::GetAll(StringView name, TVector<String>& paths)
+  void AssetFileSystemStorage::GetAll(SxPathView path, TVector<String>& paths)
   {
     // mFileSystem.GetFiles(name, paths);
   }
 
-  TUniquePointer<Stream> AssetFileSystemStorage::Read(StringView name,
-                                                      Status*    status)
+  TUniquePointer<Stream> AssetFileSystemStorage::Read(const SxPath& path,
+                                                      Status*       status)
   {
-    SRX_CHECK(Contains(name));
-    return mFileSystem.OpenFile(name, EAccessMode::Read, status);
+    SRX_CHECK(Contains(path));
+    return mFileSystem.OpenFile(path, EAccessMode::Read, status);
   }
 }  // namespace

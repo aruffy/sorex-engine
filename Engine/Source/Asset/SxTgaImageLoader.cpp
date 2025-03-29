@@ -197,7 +197,7 @@ namespace Sorex::Resource
         palette.resize(paletteSize);
     }
 
-    if (int32 n = stream.Read(palette, paletteSize); n != paletteSize)
+    if (ssize_t n = stream.Read(palette, paletteSize); n != paletteSize)
     {
       SRX_STATUS_PTR_MSG(
         status,

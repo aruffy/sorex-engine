@@ -253,7 +253,7 @@ namespace Sorex::Resource
     // @NOTE: the resource hasn't made a preload stage yet
     if (ctx.stage == Context::ELoadingStage::None)
     {
-      TVector<String> missingFiles;
+      TVector<FileSystem::Path> missingFiles;
       status = loader->Preload(*ctx.common->storage,
                                ctx.common->registry,
                                missingFiles);

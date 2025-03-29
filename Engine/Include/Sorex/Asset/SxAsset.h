@@ -28,6 +28,7 @@
 #pragma once
 
 #include <Sorex/SxCoreMinimal.h>
+#include <Sorex/FileSystem/SxFileSystem.h>
 
 namespace Sorex::Resource
 {
@@ -46,7 +47,7 @@ namespace Sorex::Resource
     SRX_RTTI_BASE(Resource::Asset);
 
 public:
-    explicit Asset(StringView name) SRX_NOEXCEPT;
+    explicit Asset(FileSystem::Path path) SRX_NOEXCEPT;
     virtual ~Asset() {}
 
     Asset(const Asset& other)            = delete;
@@ -66,12 +67,14 @@ public:
      *
      * @return asset name string
      */
-    const String& GetName() const { return mName; }
+    virtual String          GetName() const { return mPath.generic_string(); }
+    const FileSystem::Path& GetPath() const { return mPath; }
 
     EAssetState GetState() const SRX_NOEXCEPT
     {
       return SRX_ATOMIC_LOAD(mState);
     }
+
     void SetState(EAssetState state) SRX_NOEXCEPT
     {
       SRX_TRACE("[{}] Asset '{}' state changed: {} -> {}",
@@ -93,7 +96,7 @@ protected:
     virtual Status OnUnload() { return SRX_OK; }
 
 private:
-    String                   mName;
+    FileSystem::Path         mPath;
     std::atomic<EAssetState> mState;
   };
 

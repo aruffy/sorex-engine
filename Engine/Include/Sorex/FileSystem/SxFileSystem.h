@@ -32,11 +32,18 @@
 
 #include <filesystem>
 
+namespace Sorex
+{
+  // FIXME: Move typedef here
+}
+
 namespace Sorex::FileSystem
 {
   using Path           = std::filesystem::path;
   using PathString     = Path::string_type;
   using PathStringView = BasicStringView<PathString::value_type>;
+
+  inline static const Path kEmptyPath;
 
   enum class EFileStatus
   {
@@ -222,3 +229,5 @@ public:
 }  // namespace
 
 using SxFileSystem = Sorex::FileSystem::IFileSystem;
+using SxPath       = Sorex::FileSystem::Path;
+using SxPathView   = Sorex::FileSystem::PathStringView;

@@ -62,9 +62,14 @@ public:
     Asset*                GetAssetPtr() { return mAsset.get(); }
     const Asset*          GetAssetPtr() const { return mAsset.get(); }
 
-    const String& GetAssetName() const
+    String GetAssetName() const
     {
       return mAsset ? mAsset->GetName() : Utils::kEmptyString;
+    }
+
+    const FileSystem::Path& GetAssetPath() const
+    {
+      return mAsset ? mAsset->GetPath() : FileSystem::kEmptyPath;
     }
 
     /**
@@ -80,9 +85,9 @@ public:
      * @param missingFiles - containts files that needed to load resorurce.
      * @return preload operation status
      */
-    virtual Status Preload(AssetStorage&    storage,
-                           AssetRegistry*   registry,
-                           TVector<String>& missingFiles) = 0;
+    virtual Status Preload(AssetStorage&              storage,
+                           AssetRegistry*             registry,
+                           TVector<FileSystem::Path>& missingFiles) = 0;
 
     /**
      * @brief Start loading of the asset.
@@ -110,9 +115,6 @@ public:
      */
     virtual Status Finalize(AssetRegistry*           registry,
                             const AssetDependencies& dependencies) = 0;
-
-protected:
-    String FindResource(AssetStorage& storage) const;
 
 private:
     // FIXME: Should be a weak pointer

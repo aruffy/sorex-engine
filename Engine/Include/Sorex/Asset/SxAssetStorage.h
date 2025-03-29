@@ -29,6 +29,7 @@
 
 #include <Sorex/SxCoreMinimal.h>
 #include <Sorex/SxStream.h>
+#include <Sorex/FileSystem/SxFileSystem.h>
 
 #include "SxAsset.h"
 
@@ -47,10 +48,10 @@ namespace Sorex::Resource
 public:
     virtual ~AssetStorage() = default;
 
-    virtual bool Contains(StringView name) const { return false; }
-    virtual void GetAll(StringView name, TVector<String>& paths) {}
+    virtual bool Contains(SxPathView path) const { return false; }
+    virtual void GetAll(SxPathView path, TVector<String>& paths) {}
 
-    virtual TUniquePointer<Stream> Read(StringView name, Status* status) = 0;
+    virtual TUniquePointer<Stream> Read(const SxPath& path, Status* status) = 0;
 
     // @TODO: for future improvement
     // Write(name, stream, meta)

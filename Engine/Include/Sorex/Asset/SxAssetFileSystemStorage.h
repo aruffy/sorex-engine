@@ -44,10 +44,10 @@ public:
     AssetFileSystemStorage(const AssetFileSystemStorage&)            = delete;
     AssetFileSystemStorage& operator=(const AssetFileSystemStorage&) = delete;
 
-    virtual bool Contains(StringView name) const override;
-    virtual void GetAll(StringView name, TVector<String>& paths) override;
-    virtual TUniquePointer<Stream> Read(StringView name,
-                                        Status*    status) override;
+    virtual bool Contains(SxPathView name) const override;
+    virtual void GetAll(SxPathView name, TVector<String>& paths) override;
+    virtual TUniquePointer<Stream> Read(const SxPath& path,
+                                        Status*       status) override;
 
 private:
     FileSystem::IFileSystem& mFileSystem;

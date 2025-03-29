@@ -440,16 +440,18 @@ private:
       return false;
     }
 
+    // FIXME: convert int32
+
     const size_t size = GetSize();
     switch (mode)
     {
     case ESeekMode::Begin:
       break;
     case ESeekMode::Current:
-      pos = GetPosition() + pos;
+      pos = (int32)GetPosition() + pos;
       break;
     case ESeekMode::End:
-      pos = size + pos;
+      pos = (int32)size + pos;
       break;
     default:
       SRX_NOENTRY("invalid seek mode");

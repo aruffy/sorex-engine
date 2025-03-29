@@ -31,32 +31,4 @@
 #include <Sorex/FileSystem/SxPathUtils.h>
 
 namespace Sorex::Resource
-{
-  // TODO: What is the point?
-  String AssetLoader::FindResource(AssetStorage& storage) const
-  {
-    const String& name      = GetAssetName();
-    StringView    extansion = Utils::GetFileExtension(name);
-
-    if (extansion.empty())
-    {
-      TVector<String> paths;
-      storage.GetAll(name,
-                     paths);  // @todo: it's not efficient (asset metadata?)
-
-      if (paths.empty())
-        return Utils::kEmptyString;
-
-      if (paths.size() != 1)
-      {
-        SRX_WARN("[AssetLoader] Resource {} isn't unique ({})",
-                 name,
-                 paths.size());
-      }
-
-      return std::move(paths.front());
-    }
-
-    return storage.Contains(name) ? name : Utils::kEmptyString;
-  }
-}
+{}

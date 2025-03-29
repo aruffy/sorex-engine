@@ -98,10 +98,10 @@ public:
      * @return action that caller should follow;
      */
     virtual TPair<ETaskAction, TUniquePointer<IAssetAwaiter>>
-    HandleMissingFiles(AssetStorage&        storage,
-                       AssetRegistry*       registy,
-                       const Asset*         asset,
-                       const TSpan<String>& files)
+    HandleMissingFiles(AssetStorage&                  storage,
+                       AssetRegistry*                 registy,
+                       const Asset*                   asset,
+                       const TSpan<FileSystem::Path>& files)
     {
       return std::make_pair(ETaskAction::Cancel, nullptr);
     }

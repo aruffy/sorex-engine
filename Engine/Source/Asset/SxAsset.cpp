@@ -46,9 +46,9 @@ namespace Sorex::Resource
     }
   }
 
-  Asset::Asset(StringView name) SRX_NOEXCEPT
+  Asset::Asset(FileSystem::Path path) SRX_NOEXCEPT
     : std::enable_shared_from_this<Asset>()
-    , mName(name)
+    , mPath(std::move(path))
     , mState(EAssetState::Unloaded)
   {}
 }  // namespace
