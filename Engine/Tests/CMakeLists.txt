@@ -25,7 +25,7 @@ find_package(GTest QUIET)
 
 if(GTEST_FOUND)
   message(STATUS "GoogleTest library -- found")
-  set(GTEST_LIBRARIES GTest::GTest GTest::Main)
+  set(GTEST_LIBRARIES GTest::GTest GTest::Main GTest::gmock)
 else()
   message(STATUS "GoogleTest library -- not found")
 
