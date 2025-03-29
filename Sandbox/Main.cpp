@@ -14,6 +14,7 @@
 #include <Sorex/Asset/SxAssetManager.h>
 #include <Sorex/Asset/SxAssetFileSystemStorage.h>
 #include <Sorex/Asset/SxTextureLoader.h>
+#include <Sorex/FileSystem/SxPathUtils.h>
 
 #include <Sorex/SxDesktopLauncher.h>
 
@@ -45,14 +46,15 @@ class MyDirector final: public Director
     status = filesystem->Mount("Textures", "/Textures");
     SRX_ASSERT(status.Ok());  // FIXME: If false -> crash
 
-    auto asset2 =
-      mAssetManager->LoadAsync<Graphics::Texture2D>("/Textures/image2.tga",
-                                                    nullptr,
-                                                    nullptr);
+    auto asset2 = mAssetManager->LoadAsync<Graphics::Texture2D>(
+      SRX_PATH("/Textures/image2.tga"),
+      nullptr,
+      nullptr);
 
-    auto asset = mAssetManager->Load<Graphics::Texture2D>("/Textures/image.tga",
-                                                          nullptr,
-                                                          nullptr);
+    auto asset =
+      mAssetManager->Load<Graphics::Texture2D>(SRX_PATH("/Textures/image.tga"),
+                                               nullptr,
+                                               nullptr);
     return status;
   }
 
