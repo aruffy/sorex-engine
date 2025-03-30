@@ -86,9 +86,9 @@ class TestAssetLoader: public Resource::AssetLoader
     _asset = asset.get();
   }
 
-  virtual Status Preload(Resource::AssetStorage&    storage,
-                         Resource::AssetRegistry*   registry,
-                         TVector<FileSystem::Path>& missingFiles) override
+  virtual Status Preload(Resource::AssetStorage&  storage,
+                         Resource::AssetRegistry* registry,
+                         TVector<Path>&           missingFiles) override
   {
     SRX_ASSERT(_asset->GetStage() == ELoadingStage::None);
     _asset->ToStage(ELoadingStage::Preload);
@@ -150,8 +150,8 @@ class MockAssetLoader final: public TestAssetLoader
   MOCK_METHOD(Status,
               Preload,
               (Resource::AssetStorage & storage,
-               Resource::AssetRegistry*   registry,
-               TVector<FileSystem::Path>& missingFiles),
+               Resource::AssetRegistry* registry,
+               TVector<Path>&           missingFiles),
               (override));
   MOCK_METHOD(Status,
               Load,
@@ -236,10 +236,10 @@ class TestAssetLoadingHandler final: public Resource::IAssetLoadingHandler
   }
 
   virtual TPair<ETaskAction, TUniquePointer<Resource::IAssetAwaiter>>
-  HandleMissingFiles(Resource::AssetStorage&        storage,
-                     Resource::AssetRegistry*       registy,
-                     const Resource::Asset*         asset,
-                     const TSpan<FileSystem::Path>& files) override
+  HandleMissingFiles(Resource::AssetStorage&  storage,
+                     Resource::AssetRegistry* registy,
+                     const Resource::Asset*   asset,
+                     const TSpan<Path>&       files) override
   {
     if (_bAwait)
       return std::make_pair(ETaskAction::Await,
@@ -269,8 +269,7 @@ class TestAssetLoadingHandler final: public Resource::IAssetLoadingHandler
 class TestStorage final: public Resource::AssetStorage
 {
   public:
-  virtual TUniquePointer<Stream> Read(const FileSystem::Path& path,
-                                      Status*                 status) override
+  virtual TUniquePointer<Stream> Read(const Path& path, Status* status) override
   {
     return nullptr;
   }

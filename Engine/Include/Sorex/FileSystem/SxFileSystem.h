@@ -34,15 +34,13 @@
 
 namespace Sorex
 {
-  // FIXME: Move typedef here
+  using Path       = std::filesystem::path;
+  using PathString = Path::string_type;
+  using PathView   = BasicStringView<PathString::value_type>;
 }
 
 namespace Sorex::FileSystem
 {
-  using Path           = std::filesystem::path;
-  using PathString     = Path::string_type;
-  using PathStringView = BasicStringView<PathString::value_type>;
-
   inline static const Path kEmptyPath;
 
   enum class EFileStatus
@@ -52,10 +50,10 @@ namespace Sorex::FileSystem
     Existent  ///< File exists and ready to work
   };
 
-  SRX_API hash_t            GetHash(PathStringView path) SRX_NOEXCEPT;
+  SRX_API hash_t            GetHash(PathView path) SRX_NOEXCEPT;
   SRX_API SRX_INLINE hash_t GetHash(const Path& path) SRX_NOEXCEPT
   {
-    return GetHash(PathStringView(path.native()));
+    return GetHash(PathView(path.native()));
   }
 
   // Platform implementation
@@ -125,8 +123,7 @@ public:
      *
      * @return SRX_OK if the path was successfully mounted.
      */
-    virtual Status Mount(const Path&    path,
-                         PathStringView alias) SRX_NOEXCEPT = 0;
+    virtual Status Mount(const Path& path, PathView alias) SRX_NOEXCEPT = 0;
 
     /**
      * @brief Indexes the files in the file system.
@@ -229,5 +226,5 @@ public:
 }  // namespace
 
 using SxFileSystem = Sorex::FileSystem::IFileSystem;
-using SxPath       = Sorex::FileSystem::Path;
-using SxPathView   = Sorex::FileSystem::PathStringView;
+using SxPath       = Sorex::Path;
+using SxPathView   = Sorex::PathView;

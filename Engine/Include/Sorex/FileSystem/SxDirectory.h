@@ -40,8 +40,8 @@ public:
     virtual ~Directory() override {}
 
     virtual const Path& GetSystemPath() const SRX_NOEXCEPT override;
-    virtual Status      Mount(const Path&    path,
-                              PathStringView alias = {}) SRX_NOEXCEPT override;
+    virtual Status      Mount(const Path& path,
+                              PathView    alias = {}) SRX_NOEXCEPT override;
 
 protected:
     SRX_INLINE const Path& GetPath() const SRX_NOEXCEPT { return mSystemPath; }

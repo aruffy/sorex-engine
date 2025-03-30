@@ -47,7 +47,7 @@ namespace Sorex::Resource
     SRX_RTTI_BASE(Resource::Asset);
 
 public:
-    explicit Asset(FileSystem::Path path) SRX_NOEXCEPT;
+    explicit Asset(Path path) SRX_NOEXCEPT;
     virtual ~Asset() {}
 
     Asset(const Asset& other)            = delete;
@@ -67,8 +67,8 @@ public:
      *
      * @return asset name string
      */
-    virtual String          GetName() const { return mPath.generic_string(); }
-    const FileSystem::Path& GetPath() const { return mPath; }
+    virtual String GetName() const { return mPath.generic_string(); }
+    const Path&    GetPath() const { return mPath; }
 
     EAssetState GetState() const SRX_NOEXCEPT
     {
@@ -96,7 +96,7 @@ protected:
     virtual Status OnUnload() { return SRX_OK; }
 
 private:
-    FileSystem::Path         mPath;
+    Path                     mPath;
     std::atomic<EAssetState> mState;
   };
 

@@ -34,9 +34,9 @@ namespace Sorex::FileSystem
   SRX_API Path GetUserAppsDataPath() SRX_NOEXCEPT
   {
     if (const char* path = getenv("XDG_CONFIG_HOME"))
-      return FileSystem::Path(path);
+      return Path(path);
 
-    FileSystem::Path path = getenv("HOME");
+    Path path = getenv("HOME");
     SRX_ASSERT(!path.empty());
 
     return path / ".config";
@@ -50,6 +50,6 @@ namespace Sorex::FileSystem
     SRX_ASSERT_MSG(length > 0 && length < PATH_MAX, "readlink() failed");
 
     fullpath[length] = '\0';
-    return FileSystem::Path(fullpath).remove_filename();
+    return Path(fullpath).remove_filename();
   }
 }  // namespace

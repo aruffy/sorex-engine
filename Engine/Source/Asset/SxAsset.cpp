@@ -46,7 +46,7 @@ namespace Sorex::Resource
     }
   }
 
-  Asset::Asset(FileSystem::Path path) SRX_NOEXCEPT
+  Asset::Asset(Path path) SRX_NOEXCEPT
     : std::enable_shared_from_this<Asset>()
     , mPath(std::move(path))
     , mState(EAssetState::Unloaded)

@@ -101,9 +101,9 @@ namespace Sorex::Resource
     , mCreator(creator)
   {}
 
-  Status TextureLoader::Preload(AssetStorage&              storage,
-                                AssetRegistry*             registry,
-                                TVector<FileSystem::Path>& missingFiles)
+  Status TextureLoader::Preload(AssetStorage&  storage,
+                                AssetRegistry* registry,
+                                TVector<Path>& missingFiles)
   {
     const auto& path = GetAssetPath();
     SRX_DEBUG("[TextureLoader] Preload {} asset '{}'",

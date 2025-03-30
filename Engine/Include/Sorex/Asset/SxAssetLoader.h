@@ -67,7 +67,7 @@ public:
       return mAsset ? mAsset->GetName() : Utils::kEmptyString;
     }
 
-    const FileSystem::Path& GetAssetPath() const
+    const Path& GetAssetPath() const
     {
       return mAsset ? mAsset->GetPath() : FileSystem::kEmptyPath;
     }
@@ -85,9 +85,9 @@ public:
      * @param missingFiles - containts files that needed to load resorurce.
      * @return preload operation status
      */
-    virtual Status Preload(AssetStorage&              storage,
-                           AssetRegistry*             registry,
-                           TVector<FileSystem::Path>& missingFiles) = 0;
+    virtual Status Preload(AssetStorage&  storage,
+                           AssetRegistry* registry,
+                           TVector<Path>& missingFiles) = 0;
 
     /**
      * @brief Start loading of the asset.
