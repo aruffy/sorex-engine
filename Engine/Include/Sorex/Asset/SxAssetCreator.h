@@ -57,7 +57,7 @@ public:
      * nullptr, an error has occurred, and the loader will also be nullptr. If
      * the loader is nullptr, the asset is ready for use.
      */
-    virtual AssetInstance CreateAssetInstance(StringView     name,
+    virtual AssetInstance CreateAssetInstance(Path           path,
                                               AssetRegistry* registry,
                                               Status*        status) = 0;
 

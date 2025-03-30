@@ -75,12 +75,12 @@ namespace Sorex::Resource
   }
 
   AssetCreator::AssetInstance TextureCreator::CreateAssetInstance(
-    StringView     name,
+    Path           path,
     AssetRegistry* registry,
     Status*        status)
   {
     TSharedPointer<Graphics::Texture2D> asset =
-      mRenderDevice.CreateTexture2D(name);
+      mRenderDevice.CreateTexture2D(std::move(path));
     if (asset && registry)
     {
       if (auto st = registry->Register(asset); !st.Ok())

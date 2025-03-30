@@ -29,6 +29,7 @@
 
 #include <Sorex/SxDirector.h>
 #include <Sorex/SxStream.h>
+#include <Sorex/FileSystem/SxFileSystem.h>
 
 #include "SxRenderer.h"
 #include "SxTextureBitmap.h"
@@ -66,7 +67,7 @@ public:
      * @param name - name of the texture
      * @return pointer to 2D texture;
      */
-    virtual TUniquePointer<Texture2D> CreateTexture2D(StringView name) = 0;
+    virtual TUniquePointer<Texture2D> CreateTexture2D(Path path) = 0;
 
     /**
      * @brief Retrieve supported texture pixel format.

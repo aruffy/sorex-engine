@@ -114,7 +114,7 @@ namespace Sorex::Resource
                                                 const AssetOptions*   options)
   {
     AssetLoadingTask::Parameters params;
-    params.name     = name;
+    params.path     = name;
     params.type     = &type;
     params.handler  = handler;
     params.options  = options;
@@ -122,8 +122,8 @@ namespace Sorex::Resource
     params.registry = mAssetRegistry.get();
 
     auto cbCreateAssetInstance =
-      [this](const RuntimeClass& type, StringView name, Status* status) {
-        return this->CreateAssetInstance(type, name, status);
+      [this](const RuntimeClass& type, Path path, Status* status) {
+        return this->CreateAssetInstance(type, std::move(path), status);
       };
 
     TUniquePointer<AssetLoadingTask> task =
@@ -155,7 +155,7 @@ namespace Sorex::Resource
 
   AssetCreator::AssetInstance AssetManager::CreateAssetInstance(
     const RuntimeClass& type,
-    StringView          name,
+    Path                path,
     Status*             status) const
   {
     SharedLock          lock(mMutex);
@@ -170,7 +170,9 @@ namespace Sorex::Resource
       return std::make_pair(nullptr, nullptr);
     }
 
-    return creator->CreateAssetInstance(name, mAssetRegistry.get(), status);
+    return creator->CreateAssetInstance(std::move(path),
+                                        mAssetRegistry.get(),
+                                        status);
   }
 
   void AssetManager::Register(const RuntimeClass&          type,

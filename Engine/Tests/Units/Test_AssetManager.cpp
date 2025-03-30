@@ -46,8 +46,8 @@ class TestAsset final: public Resource::Asset
   SRX_RTTI(TestAsset, Resource::Asset);
 
   public:
-  TestAsset(StringView str, const TestAssetOptions& options)
-    : Asset(String(str))
+  TestAsset(Path path, const TestAssetOptions& options)
+    : Asset(std::move(path))
     , _ctid(s_GetThreadId())
     , _ltid(0ull)
     , _stage(ELoadingStage::None)
@@ -175,11 +175,11 @@ class TestAssetCreator final: public Resource::AssetCreator
     : _bMock(bMock)
   {}
   TestAssetOptions      options;
-  virtual AssetInstance CreateAssetInstance(StringView               name,
+  virtual AssetInstance CreateAssetInstance(Path                     path,
                                             Resource::AssetRegistry* registry,
                                             Status* status) override
   {
-    auto asset = std::make_shared<TestAsset>(name, options);
+    auto asset = std::make_shared<TestAsset>(std::move(path), options);
     TUniquePointer<Resource::AssetLoader> loader;
     if (_bMock)
       loader = std::make_unique<MockAssetLoader>(asset);
@@ -277,13 +277,11 @@ class TestStorage final: public Resource::AssetStorage
 // ========== TEST ========== //
 TEST(GTestAssetLoadingTask, LoadSimpleAsset)
 {
-  auto createAssetInstance =
-    [](const RuntimeClass& cls,
-       StringView          name,
-       Status*             st) -> Resource::AssetCreator::AssetInstance {
+  auto createAssetInstance = [](const RuntimeClass& cls, Path path, Status* st)
+    -> Resource::AssetCreator::AssetInstance {
     TestAssetOptions          testAssetOptions;
     TSharedPointer<TestAsset> testAsset =
-      std::make_shared<TestAsset>(name, testAssetOptions);
+      std::make_shared<TestAsset>(std::move(path), testAssetOptions);
     TUniquePointer<MockAssetLoader> mockAssetLoader =
       std::make_unique<MockAssetLoader>(testAsset);
 
@@ -296,7 +294,7 @@ TEST(GTestAssetLoadingTask, LoadSimpleAsset)
 
   Resource::AssetLoadingTask::Parameters params;
   TestStorage                            testStorage;
-  params.name    = "/test/asset";
+  params.path    = SRX_PATH("/test/asset");
   params.type    = &Sorex::GetRuntimeType<TestAsset>();
   params.storage = &testStorage;
 

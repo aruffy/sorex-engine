@@ -39,7 +39,9 @@ namespace Sorex::Graphics
     SRX_RTTI(Graphics::Texture2D, Resource::Asset);
 
 public:
-    SRX_INLINE explicit Texture2D(StringView name) SRX_NOEXCEPT: Asset(name) {}
+    SRX_INLINE explicit Texture2D(Path path) SRX_NOEXCEPT
+      : Asset(std::move(path))
+    {}
     virtual ~Texture2D() override = default;
 
     /**

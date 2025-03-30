@@ -113,7 +113,7 @@ private:
                                     const AssetOptions*   options);
 
     AssetCreator::AssetInstance CreateAssetInstance(const RuntimeClass& type,
-                                                    StringView          name,
+                                                    Path                path,
                                                     Status* status) const;
 
 private:

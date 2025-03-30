@@ -41,7 +41,7 @@ namespace Sorex::Resource
 
 public:
     using CreateAssetCallback = std::function<
-      AssetCreator::AssetInstance(const RuntimeClass&, StringView, Status*)>;
+      AssetCreator::AssetInstance(const RuntimeClass&, Path, Status*)>;
 
     struct Parameters
     {
@@ -53,7 +53,7 @@ public:
       IAssetLoadingHandler* handler = nullptr;
       const AssetOptions*   options = nullptr;
 
-      String              name;
+      Path                path;
       const RuntimeClass* type = nullptr;
     };
 
@@ -97,13 +97,13 @@ private:
         AssetRegistry* registry = nullptr;
 
         TList<Context*> deferred;  ///< loading context of postponed assets
-        StringView      current;   ///< current loading asset
+        PathView        current;   ///< current loading asset
 
         Status status;
       };
 
       Context() = default;
-      Context(Context& parent, const RuntimeClass& aType, StringView aName);
+      Context(Context& parent, const RuntimeClass& aType, Path aPath);
 
       static Context& GetRoot(Context& ctx);
       static Asset*   GetAsset(Context& ctx);
@@ -114,7 +114,7 @@ private:
       Common*  common = nullptr;
       Context* parent = nullptr;
 
-      String              name;
+      Path                path;
       const RuntimeClass* type = nullptr;
 
       ELoadingStage stage = ELoadingStage::None;

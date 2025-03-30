@@ -260,9 +260,9 @@ namespace Sorex::Graphics
     return shader;
   }
 
-  TUniquePointer<Texture2D> GLRenderDevice::CreateTexture2D(StringView name)
+  TUniquePointer<Texture2D> GLRenderDevice::CreateTexture2D(Path path)
   {
-    return MakeUnique<GLTexture2D>(name, *this, false);
+    return MakeUnique<GLTexture2D>(std::move(path), *this, false);
   }
 
   // cppcheck-suppress functionConst

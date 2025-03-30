@@ -62,7 +62,7 @@ public:
     explicit TextureCreator(Graphics::RenderDevice& renderDevice,
                             const bool bEnableDefaultImageLoaders = true);
 
-    virtual AssetInstance CreateAssetInstance(StringView     name,
+    virtual AssetInstance CreateAssetInstance(Path           path,
                                               AssetRegistry* registry,
                                               Status*        status) override;
 

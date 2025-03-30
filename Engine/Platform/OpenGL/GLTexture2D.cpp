@@ -49,10 +49,8 @@ namespace
 
 namespace Sorex::Graphics
 {
-  GLTexture2D::GLTexture2D(StringView      name,
-                           GLRenderDevice& glDevice,
-                           bool            bMipmaps)
-    : Texture2D(name)
+  GLTexture2D::GLTexture2D(Path path, GLRenderDevice& glDevice, bool bMipmaps)
+    : Texture2D(std::move(path))
     , mToken(AllocateResource(&glDevice, GLResourceType::Texture2D))
     , mWidth(0)
     , mHeight(0)

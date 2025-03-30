@@ -48,9 +48,7 @@ public:
     };
 
 public:
-    GLTexture2D(StringView      name,
-                GLRenderDevice& glDevice,
-                bool            bMipmaps = false);
+    GLTexture2D(Path path, GLRenderDevice& glDevice, bool bMipmaps = false);
     virtual ~GLTexture2D() override;
 
     GLTexture2D(const GLTexture2D& other)            = delete;
