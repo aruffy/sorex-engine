@@ -108,13 +108,13 @@ namespace Sorex::Resource
   }
 
   TSharedPointer<Asset> AssetManager::LoadAsset(const RuntimeClass&   type,
-                                                StringView            name,
+                                                Path                  path,
                                                 ELoadingMode          mode,
                                                 IAssetLoadingHandler* handler,
                                                 const AssetOptions*   options)
   {
     AssetLoadingTask::Parameters params;
-    params.path     = name;
+    params.path     = std::move(path);
     params.type     = &type;
     params.handler  = handler;
     params.options  = options;
@@ -134,7 +134,7 @@ namespace Sorex::Resource
     {
       SRX_WARN("[AssetManager] Failed to load {} asset '{}'",
                type.GetName(),
-               name);
+               params.path.generic_string());
       return nullptr;
     }
 

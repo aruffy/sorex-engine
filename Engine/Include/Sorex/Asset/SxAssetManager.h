@@ -65,11 +65,14 @@ public:
      * @return TSharedPointer<T> - pointer to the asset
      */
     template<typename T>
-    TSharedPointer<T> Load(StringView            name,
+    TSharedPointer<T> Load(Path                  path,
                            IAssetLoadingHandler* handler = nullptr,
                            const AssetOptions*   options = nullptr)
     {
-      return LoadAsset<T>(ELoadingMode::Sync, name, handler, options);
+      return LoadAsset<T>(ELoadingMode::Sync,
+                          std::move(path),
+                          handler,
+                          options);
     }
 
     /**
@@ -84,11 +87,14 @@ public:
      */
     template<typename T>
       requires std::is_base_of_v<Asset, T>
-    TSharedPointer<T> LoadAsync(StringView            name,
+    TSharedPointer<T> LoadAsync(Path                  path,
                                 IAssetLoadingHandler* handler = nullptr,
                                 const AssetOptions*   options = nullptr)
     {
-      return LoadAsset<T>(ELoadingMode::Async, name, handler, options);
+      return LoadAsset<T>(ELoadingMode::Async,
+                          std::move(path),
+                          handler,
+                          options);
     }
 
     template<typename T>
@@ -103,11 +109,11 @@ private:
     template<typename T>
       requires std::is_base_of_v<Asset, T>
     TSharedPointer<T>     LoadAsset(ELoadingMode          mode,
-                                    StringView            name,
+                                    Path                  path,
                                     IAssetLoadingHandler* handler,
                                     const AssetOptions*   options);
     TSharedPointer<Asset> LoadAsset(const RuntimeClass&   type,
-                                    StringView            name,
+                                    Path                  path,
                                     ELoadingMode          mode,
                                     IAssetLoadingHandler* handler,
                                     const AssetOptions*   options);
@@ -131,17 +137,19 @@ private:
   template<typename T>
     requires std::is_base_of_v<Asset, T>
   TSharedPointer<T> AssetManager::LoadAsset(ELoadingMode          mode,
-                                            StringView            name,
+                                            Path                  path,
                                             IAssetLoadingHandler* handler,
                                             const AssetOptions*   options)
   {
     TSharedPointer<T> asset =
-      mAssetRegistry ? mAssetRegistry->Get<T>(name) : nullptr;
+      mAssetRegistry ? mAssetRegistry->Get<T>(path) : nullptr;
 
-    return asset
-             ? asset
-             : std::static_pointer_cast<T>(
-                 LoadAsset(GetRuntimeType<T>(), name, mode, handler, options));
+    return asset ? asset
+                 : std::static_pointer_cast<T>(LoadAsset(GetRuntimeType<T>(),
+                                                         std::move(path),
+                                                         mode,
+                                                         handler,
+                                                         options));
   }
 
   template<typename T>

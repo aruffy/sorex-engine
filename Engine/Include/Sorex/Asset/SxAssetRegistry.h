@@ -85,16 +85,16 @@ public:
 
     template<typename T>
       requires std::is_base_of_v<Asset, T>
-    SRX_INLINE TSharedPointer<T> Get(StringView name)
+    SRX_INLINE TSharedPointer<T> Get(const Path& path)
     {
-      return std::static_pointer_cast<T>(GetAsset(GetRuntimeType<T>(), name));
+      return std::static_pointer_cast<T>(GetAsset(GetRuntimeType<T>(), path));
     }
 
 protected:
     virtual TSharedPointer<Asset> GetAsset(const RuntimeClass& type,
-                                           StringView          name) = 0;
+                                           const Path&         path) = 0;
     virtual Status                RegisterAsset(const RuntimeClass&   type,
                                                 TSharedPointer<Asset> asset,
-                                                int                   cache)  = 0;
+                                                int                   cache)   = 0;
   };
 }  // namespace
