@@ -312,12 +312,11 @@ namespace Sorex::Resource
       ctx.dependencies.GetAll(dependencies);
       for (AssetDependence* const dependence : dependencies)
       {
-        if (!dependence || dependence->GetName().empty())
+        if (!dependence || dependence->path.empty())
           continue;
 
-        ctx.subcontexts.emplace_back(ctx,
-                                     dependence->GetType(),
-                                     dependence->GetName());
+        // @TODO: hold in context PathView
+        ctx.subcontexts.emplace_back(ctx, dependence->type, dependence->path);
 
         Context&          depctx = ctx.subcontexts.back();
         const ETaskAction result = Load(depctx);
@@ -326,9 +325,8 @@ namespace Sorex::Resource
           return ETaskAction::Cancel;
 
         SRX_CHECK(depctx.asset.first);
-        // @TODO: Should be a shared pointer/weak
-        // pointer/raw?
-        dependence->SetAsset(depctx.asset.first->shared_from_this());
+        dependence->SetAsset(depctx.asset.first);
+
         if (result == ETaskAction::Await)
           bAwait = true;
       }
@@ -367,7 +365,7 @@ namespace Sorex::Resource
     if (state == EAssetState::Loaded || state == EAssetState::Invalid)
       ctx.stage = Context::ELoadingStage::Done;
 
-    if (Asset* asset = Context::GetAsset(ctx))
+    if (Asset* const asset = Context::GetAsset(ctx))
       asset->SetState(state);
 
     for (auto& subctx : ctx.subcontexts)

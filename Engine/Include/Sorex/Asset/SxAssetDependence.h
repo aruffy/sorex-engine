@@ -33,54 +33,48 @@
 
 namespace Sorex::Resource
 {
-  class AssetDependence final
+  struct AssetDependence final
   {
-public:
-    SRX_INLINE AssetDependence(const RuntimeClass& type,
-                               StringView          name) SRX_NOEXCEPT
-      : mName(name)
-      , mType(type)
+    Path                path;
+    const RuntimeClass& type;
+
+    TSharedPointer<Asset> asset;
+
+    SRX_INLINE AssetDependence(const RuntimeClass& aType,
+                               Path                aPath) SRX_NOEXCEPT
+      : path(std::move(aPath))
+      , type(aType)
+      , asset(nullptr)
     {}
 
-    AssetDependence(const AssetDependence& other)            = default;
-    AssetDependence& operator=(const AssetDependence& other) = delete;
-
-    AssetDependence(AssetDependence&& other)            = default;
-    AssetDependence& operator=(AssetDependence&& other) = delete;
-
-    const RuntimeClass& GetType() const { return mType; }
-    const String&       GetName() const { return mName; }
-
-    bool IsEmpty() const { return mAsset == nullptr; }
-
-    bool SetAsset(TSharedPointer<Asset> asset)
+    bool SetAsset(TSharedPointer<Asset> aAsset)
     {
-      if (asset && asset->GetRuntimeClass().IsA(mType))
+      if (!aAsset)
       {
-        SRX_CHECK(!mAsset);
-        mAsset = std::move(asset);
+        asset.reset();
         return true;
       }
 
-      return false;
-    }
+      if (!aAsset->GetRuntimeClass().IsA(type))
+      {
+        SRX_NOENTRY("invalid asset type");
+        return false;
+      }
 
-    TSharedPointer<Asset> GetAsset() const { return mAsset; }
+      SRX_CHECK(!asset);
+      asset = std::move(aAsset);
+      return true;
+    }
 
     bool operator==(const AssetDependence& other) const noexcept
     {
-      return other.mType == mType && other.mName == mName;
+      return other.type == type && other.path == path;
     }
+
     bool operator!=(const AssetDependence& other) const noexcept
     {
       return !(*this == other);
     }
-
-private:
-    const String        mName;
-    const RuntimeClass& mType;
-
-    TSharedPointer<Asset> mAsset;
   };
 
   class AssetDependencies final
@@ -105,7 +99,7 @@ public:
 
     template<typename T>
       requires std::is_base_of_v<Asset, T>
-    TUniquePointer<T> GetAsset(const String& name) const
+    TSharedPointer<T> GetAsset(const String& name) const
     {
       const RuntimeClass* rt     = GetRuntimeType<T>();
       auto                dictIt = mResources.find(rt);
@@ -115,7 +109,7 @@ public:
 
       if (auto it = dictIt->second.find(name); it != dictIt->second.end())
       {
-        if (TSharedPointer<Asset> asset = it->second.GetAsset())
+        if (TSharedPointer<Asset> asset = it->second.asset)
         {
           SRX_CHECK_MSG(asset->IsA<T>(), "invalid type");
           return std::static_pointer_cast<T>(asset);
