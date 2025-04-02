@@ -68,7 +68,7 @@ public:
      * asset or null);
      * @param reason - error description.
      */
-    virtual void OnAssetLoadingFailed(StringView name,
+    virtual void OnAssetLoadingFailed(PathView name,
                                       Asset*     asset,
                                       Status&    reason)
     {}

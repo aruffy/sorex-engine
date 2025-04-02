@@ -79,7 +79,7 @@ public:
     {
       SRX_TRACE("[{}] Asset '{}' state changed: {} -> {}",
                 GetRuntimeClass().GetName(),
-                mName,
+                GetName(),
                 ToString(GetState()),
                 ToString(state));
       SRX_ATOMIC_STORE(mState, state);

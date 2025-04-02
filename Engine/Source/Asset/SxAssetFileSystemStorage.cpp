@@ -47,7 +47,7 @@ namespace Sorex::Resource
   TUniquePointer<Stream> AssetFileSystemStorage::Read(const SxPath& path,
                                                       Status*       status)
   {
-    SRX_CHECK(Contains(path));
+    SRX_CHECK(Contains(path.native()));
     return mFileSystem.OpenFile(path, EAccessMode::Read, status);
   }
 }  // namespace

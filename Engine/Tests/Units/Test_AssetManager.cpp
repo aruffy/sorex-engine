@@ -223,7 +223,7 @@ class TestAssetLoadingHandler final: public Resource::IAssetLoadingHandler
     , _bSuccess(false)
   {}
 
-  virtual void OnAssetLoadingFailed(StringView       name,
+  virtual void OnAssetLoadingFailed(PathView         name,
                                     Resource::Asset* asset,
                                     Status&          reason) override
   {

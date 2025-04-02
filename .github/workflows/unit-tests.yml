@@ -111,7 +111,7 @@ jobs:
         run: |
           echo "%SystemRoot%\System32\VCRUNTIME140.dll"
           echo "%SystemRoot%\System32\MSVCP140.dll"
-          ctest --output-on-failure -V -C Release --test-dir build\${{ env.CI_CONFIG_TEST_PRESET }}\
+          ctest --output-on-failure -C Release --test-dir build\${{ env.CI_CONFIG_TEST_PRESET }}\
 
       - name: Upload Test Results
         if: always()

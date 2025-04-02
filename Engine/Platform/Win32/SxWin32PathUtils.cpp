@@ -34,7 +34,7 @@
 
 namespace
 {
-  using namespace Sorex::FileSystem;
+  using namespace Sorex;
   enum class ESysDirectory
   {
     Common_AppData = 0,
