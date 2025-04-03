@@ -35,6 +35,8 @@
 #include <gtc/type_ptr.hpp>
 
 #include "GLPrimitiveRenderer.h"
+#include "GLTexture2D.h"
+#include "GLTypes.h"
 
 namespace
 {
@@ -66,10 +68,15 @@ namespace Sorex::Graphics
   Status GLRenderDevice::Initialize()
   {
     SRX_CLSFUN_TRACE();
+    SRX_DEBUG("[GLRenderDevice] OpenGL version: {}",
+              reinterpret_cast<const char*>(glGetString(GL_VERSION)));
+    SRX_DEBUG("[GLRenderDevice] OpenGL renderer: {}",
+              reinterpret_cast<const char*>(glGetString(GL_RENDERER)));
 
 #ifndef SOREX_DEBUG_NONE
     mExtensions = MakeUnique<GLExtensions>();
 #endif
+
 
     mRenderContext = MakeUnique<GLRenderContext>(*this);
 
@@ -253,6 +260,74 @@ namespace Sorex::Graphics
     return shader;
   }
 
+  TUniquePointer<Texture2D> GLRenderDevice::CreateTexture2D(Path path)
+  {
+    return MakeUnique<GLTexture2D>(std::move(path), *this, false);
+  }
+
+  // cppcheck-suppress functionConst
+  Status GLRenderDevice::InitializeTexture(const GLTexture2D& texture,
+                                           bool               bMinmaps)
+  {
+    SRX_CLSFUN_TRACE();
+
+    SRX_CHECK(Thread::IsMainThread());
+    SRX_CHECK(glGetError() == GL_NO_ERROR);
+
+    if (!texture.IsValid())
+      return SRX_STATUS_MSG(EStatusCode::Invalid_Argument, "invalid texture");
+
+    GLResource* tex = GetResource(texture.GetResourceToken());
+    if (tex == nullptr || tex->inited)
+      return SRX_STATUS_MSG(EStatusCode::Invalid_State,
+                            "GLTexture2D invalid token or state");
+
+    SRX_OPENGL_CALL(glActiveTexture(GL_TEXTURE0));
+    SRX_OPENGL_CALL(glBindTexture(tex->target, tex->id));
+
+    SRX_OPENGL_CALL(glTexParameteri(tex->target, GL_TEXTURE_WRAP_S, GL_REPEAT));
+    SRX_OPENGL_CALL(glTexParameteri(tex->target, GL_TEXTURE_WRAP_T, GL_REPEAT));
+
+    SRX_OPENGL_CALL(
+      glTexParameteri(tex->target, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
+    SRX_OPENGL_CALL(
+      glTexParameteri(tex->target, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
+
+    auto [data, alignment] = texture.GetTexImageData();
+    SRX_CHECK(data && alignment);
+
+    GLint currentUnpackAlignment;
+    glGetIntegerv(GL_UNPACK_ALIGNMENT, &currentUnpackAlignment);
+    if (currentUnpackAlignment != alignment)
+      SRX_OPENGL_CALL(glPixelStorei(GL_UNPACK_ALIGNMENT, alignment));
+
+    GLint  internalFormat;
+    GLenum format, type;
+    texture.GetTexImageFormat(internalFormat, format, type);
+    const SizeInt size = texture.GetSize();
+    SRX_OPENGL_CALL(glTexImage2D(tex->target,
+                                 0,
+                                 internalFormat,
+                                 size.width,
+                                 size.height,
+                                 0,
+                                 format,
+                                 type,
+                                 data));
+
+    // @TODO: Generate with level if ES 2.0
+    if (bMinmaps)
+      SRX_OPENGL_CALL(glGenerateMipmap(tex->target));
+
+    if (GLenum errc = glGetError(); errc != GL_NO_ERROR)
+      return SRX_STATUS_MSG(EStatusCode::Not_Available,
+                            "OpenGL texture call error: {}",
+                            errc);
+
+    tex->inited = true;
+    return SRX_OK;
+  }
+
   Status GLRenderDevice::BuildShaderProgram(
     const GLShaderProgram& shaderProgram,
     TVector<GLUniform>&    uniforms) SRX_NOEXCEPT
@@ -341,8 +416,9 @@ namespace Sorex::Graphics
   {
     SRX_CHECK(Thread::IsMainThread());
 
-    GLResourceReference* token = shader ? shader->GetResourceToken() : nullptr;
-    GLResource* const    resource = GetResource(token);
+    const GLResourceReference* token =
+      shader ? shader->GetResourceToken() : nullptr;
+    GLResource* const resource = GetResource(token);
 
     if (resource == nullptr)
       return SRX_STATUS_MSG(EStatusCode::Invalid_Argument,
@@ -439,7 +515,7 @@ namespace Sorex::Graphics
         SRX_OPENGL_CALL(glGetUniformLocation(program.id, name));
       uniform.hash = Sorex::Utils::GetHash(StringView(name));
 
-#ifdef SRX_DEBUG_MEDIUM
+#ifdef SOREX_DEBUG_MEDIUM
       uniform.name.assign(name);
 #endif
       uniforms.emplace_back(uniform);
@@ -490,12 +566,12 @@ namespace Sorex::Graphics
     TSpan<GLUniform> uniforms = mActiveShaderProgram->GetUniforms();
     for (auto& uniform : uniforms)
     {
-      // @FIXME: uncomment
-#ifdef RUFFY_ENGINE_DEBUG
-      const GLint loc = OPENGL_CALL(
-        glGetUniformLocation(program->id, uniform->GetName().c_str()));
-      RFY_ASSERT(loc >= 0 && uniform->GetLocation() == loc);
+#ifdef SOREX_DEBUG_HIGH
+      const GLint loc = SRX_OPENGL_CALL(
+        glGetUniformLocation(program->id, uniform.GetName().c_str()));
+      SRX_ASSERT(loc >= 0 && uniform.GetLocation() == loc);
 #endif
+
       // @FIXME: add camera
       if (uniform.GetType() == GL_FLOAT_MAT4)
       {

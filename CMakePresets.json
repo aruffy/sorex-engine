@@ -2,7 +2,7 @@
     "version": 2,
     "configurePresets": [
         {
-            "name": "win_x64_debug_2",
+            "name": "win_x64_debug",
             "displayName": "Windows x64 (Debug)",
             "description": "Windows x64 build with Ninja generator",
             "generator": "Ninja",
@@ -76,18 +76,6 @@
                 "SRXENG_DISABLE_CHECK": "ON",
                 "SOREX_BUILD_SANDBOX": "OFF",
                 "SOREX_BUILD_TESTS": "ON"
-            }
-        },
-        {
-            "name": "win_x64_debug",
-            "displayName": "Configure preset using toolchain file",
-            "description": "Sets Ninja generator, build and install directory",
-            "generator": "Ninja",
-            "binaryDir": "${sourceDir}/out/build/${presetName}",
-            "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "Debug",
-                "CMAKE_TOOLCHAIN_FILE": "",
-                "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}"
             }
         }
     ],

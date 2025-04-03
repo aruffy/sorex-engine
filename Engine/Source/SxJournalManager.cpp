@@ -28,6 +28,7 @@
 #include <Sorex/SxJournalManager.h>
 
 #include <Sorex/SxAssert.h>
+#include <Sorex/SxThread.h>
 
 #include <spdlog/async.h>
 #include <spdlog/sinks/stdout_sinks.h>
@@ -121,6 +122,12 @@ namespace Sorex
 
     const unsigned index = static_cast<unsigned>(level);
     return kSpdLevels.size() > index ? kSpdLevels[index] : spdlog::level::trace;
+  }
+
+  JournalManager::ELogger JournalManager::GetEngineLogger() SRX_NOEXCEPT
+  {
+    return Thread::IsMainThread() ? JournalManager::kEngineLogger
+                                  : JournalManager::kTaskLogger;
   }
 
   TUniquePointer<spdlog::logger> JournalManager::CreateLogger(

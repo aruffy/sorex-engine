@@ -28,16 +28,21 @@
 #pragma once
 
 #include <Sorex/SxCoreMinimal.h>
+#include <Sorex/Asset/SxAsset.h>
 
 #include "SxTextureBitmap.h"
 
 namespace Sorex::Graphics
 {
-  class Texture2D
+  class Texture2D: public Sorex::Resource::Asset
   {
+    SRX_RTTI(Graphics::Texture2D, Resource::Asset);
+
 public:
-    explicit Texture2D(StringView name);
-    // virtual ~Texture2D() override = default;
+    SRX_INLINE explicit Texture2D(Path path) SRX_NOEXCEPT
+      : Asset(std::move(path))
+    {}
+    virtual ~Texture2D() override = default;
 
     /**
      * @brief Initialize texture with certain bitmap.
@@ -105,4 +110,4 @@ public:
   };
 }  // namespace
 
-using SxTexture = Sorex::Graphics::Texture2D;
+using SxTex2D = Sorex::Graphics::Texture2D;

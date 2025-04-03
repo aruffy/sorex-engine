@@ -29,9 +29,9 @@
 
 namespace Sorex::FileSystem
 {
-  SRX_API hash_t GetHash(PathStringView path) SRX_NOEXCEPT
+  SRX_API hash_t GetHash(PathView path) SRX_NOEXCEPT
   {
-    static const THash<PathStringView> kPathViewHasher;
+    static const THash<PathView> kPathViewHasher;
     return kPathViewHasher(path);
   }
 

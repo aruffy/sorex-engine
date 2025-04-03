@@ -33,13 +33,13 @@ using namespace Sorex::FileSystem;
 
 namespace
 {
-  typedef Path::value_type Char;
-  constexpr Char           kSlash = Path::preferred_separator;
+  typedef Sorex::Path::value_type Char;
+  constexpr Char                  kSlash = Sorex::Path::preferred_separator;
 }
 
 namespace Sorex::Utils
 {
-  PathString CombinePath(const TVector<PathStringView>& dirs) SRX_NOEXCEPT
+  PathString CombinePath(const TVector<PathView>& dirs) SRX_NOEXCEPT
   {
     PathString   result;
     const size_t size = dirs.size();
@@ -50,7 +50,7 @@ namespace Sorex::Utils
     result = Utils::TrimRight(dirs[0], kSlash);
     for (size_t i = 1; i < size; ++i)
     {
-      PathStringView str = Utils::Trim(dirs[i], kSlash);
+      PathView str = Utils::Trim(dirs[i], kSlash);
       if (str.empty())
       {
         SRX_NOENTRY("Warning: unexpected dir name");
@@ -66,18 +66,18 @@ namespace Sorex::Utils
 
   PathString CombinePath(const TVector<PathString>& dirs) SRX_NOEXCEPT
   {
-    TVector<PathStringView> views;
+    TVector<PathView> views;
     views.resize(dirs.size());
 
     std::transform(dirs.begin(),
                    dirs.end(),
                    views.begin(),
-                   [](const PathString& s) { return PathStringView(s); });
+                   [](const PathString& s) { return PathView(s); });
 
     return CombinePath(views);
   }
 
-  PathString MakePathWithClosingSlash(PathStringView path) SRX_NOEXCEPT
+  PathString MakePathWithClosingSlash(PathView path) SRX_NOEXCEPT
   {
     if (path.back() == kSlash)
       return PathString(path);
@@ -99,8 +99,8 @@ namespace Sorex::Utils
       path.push_back(kSlash);
   }
 
-  PathStringView GetFileExtension(PathStringView path,
-                                  bool bIncludeDot /* = false */) SRX_NOEXCEPT
+  PathView GetFileExtension(PathView path,
+                            bool     bIncludeDot /* = false */) SRX_NOEXCEPT
   {
     constexpr Char kDot = SRX_PATH('.');
 
@@ -118,9 +118,9 @@ namespace Sorex::Utils
     return bIncludeDot ? path.substr(indx) : path.substr(indx + 1);
   }
 
-  TPair<PathStringView, PathStringView> SplitPath(
-    PathStringView path,
-    bool           bClosingSlash /* = false */) SRX_NOEXCEPT
+  TPair<PathView, PathView> SplitPath(PathView path,
+                                      bool     bClosingSlash /* = false */)
+    SRX_NOEXCEPT
   {
     const size_t length = path.length();
     if (length == 0)
@@ -128,12 +128,12 @@ namespace Sorex::Utils
 
     if (path.back() == kSlash)
       return std::make_pair(
-        (bClosingSlash ? PathStringView(path) : path.substr(0, length - 1)),
-        PathStringView());
+        (bClosingSlash ? PathView(path) : path.substr(0, length - 1)),
+        PathView());
 
     const size_t indx = path.rfind(kSlash);
     if (indx == path.npos)
-      return std::make_pair(path, PathStringView());
+      return std::make_pair(path, PathView());
 
     return std::make_pair(path.substr(0, (bClosingSlash ? (indx + 1) : indx)),
                           path.substr(indx + 1));

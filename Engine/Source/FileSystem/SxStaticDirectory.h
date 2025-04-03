@@ -32,13 +32,14 @@ namespace Sorex::FileSystem
   // @NOTE: This isn't effecient class to work with the file system.
   // @TODO: Optimize it according to the needs.
   // @TODO: Don't store names of directories and files.
+  // @FIXME: Use std::file_system on demand
   class StaticDirectory final: public Directory
   {
 public:
     explicit StaticDirectory(Path path) SRX_NOEXCEPT;
 
-    virtual Status Mount(const Path&    path,
-                         PathStringView alias = {}) SRX_NOEXCEPT override;
+    virtual Status Mount(const Path& path,
+                         PathView    alias = {}) SRX_NOEXCEPT override;
     virtual Status IndexFiles() SRX_NOEXCEPT override;
     virtual void   GetFiles(const Path&         path,
                             TVector<FileIndex>& files) SRX_NOEXCEPT override;

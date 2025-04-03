@@ -26,7 +26,9 @@
 /**************************************************************************/
 
 #include <Sorex/SxDirector.h>
+
 #include <Sorex/SxTime.h>
+#include <Sorex/SxThread.h>
 #include <Sorex/Graphics/SxCanvas.h>
 
 namespace Sorex

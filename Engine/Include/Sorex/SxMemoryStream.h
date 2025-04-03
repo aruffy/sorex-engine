@@ -129,7 +129,7 @@ public:
      */
     SRX_INLINE void AdvanceUnsafe(const size_t step = 1) SRX_NOEXCEPT
     {
-      SRX_CHECK(step < GetLength());
+      SRX_CHECK(static_cast<ssize_t>(step) < GetLength());
       mCurrent += step;
     }
 
@@ -440,20 +440,21 @@ private:
       return false;
     }
 
+    // FIXME: convert int32
+
     const size_t size = GetSize();
     switch (mode)
     {
     case ESeekMode::Begin:
       break;
     case ESeekMode::Current:
-      pos = GetPosition() + pos;
+      pos = (int32)GetPosition() + pos;
       break;
     case ESeekMode::End:
-      pos = size + pos;
+      pos = (int32)size + pos;
       break;
     default:
       SRX_NOENTRY("invalid seek mode");
-      pos = -1;
       return false;
     }
 

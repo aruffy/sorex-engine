@@ -170,3 +170,8 @@ namespace Sorex
 
 #define SRX_LIKELY [[likely]]
 #define SRX_UNLIKELY [[unlikely]]
+
+#define SRX_ATOMIC_LOAD(atomic) \
+  std::atomic_load_explicit((&(atomic)), std::memory_order_consume)
+#define SRX_ATOMIC_STORE(atomic, value) \
+  std::atomic_store_explicit((&(atomic)), (value), std::memory_order_release)

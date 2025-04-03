@@ -83,7 +83,7 @@ namespace Sorex::FileSystem
       else if (it->is_regular_file())
       {
         PathString   filename = it->path().filename().native();
-        const hash_t fileHash = GetHash(PathStringView(filename)) ^ dirHash;
+        const hash_t fileHash = GetHash(PathView(filename)) ^ dirHash;
 
         catalog.files.push_back({ dirHash, fileHash, std::move(filename) });
         fileNum++;
@@ -97,8 +97,7 @@ namespace Sorex::FileSystem
     return fileNum;
   }
 
-  Status StaticDirectory::Mount(const Path&    path,
-                                PathStringView alias) SRX_NOEXCEPT
+  Status StaticDirectory::Mount(const Path& path, PathView alias) SRX_NOEXCEPT
   {
     // @TODO: Implement aliasing
     if (!alias.empty())
@@ -164,9 +163,8 @@ namespace Sorex::FileSystem
         if (const PathString* filePath =
               std::get_if<PathString>(&fileIndex.filepath))
         {
-          PathStringView ext = Utils::GetFileExtension(*filePath, true);
-          PathStringView fname(filePath->data(),
-                               filePath->length() - ext.length());
+          PathView ext = Utils::GetFileExtension(*filePath, true);
+          PathView fname(filePath->data(), filePath->length() - ext.length());
 
           bPush = (filename == fname);
         }

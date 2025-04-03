@@ -50,8 +50,8 @@ namespace Sorex
     SRX_CLSFUN_TRACE();
   }
 
-  Status DirectorFileSystem::Mount(const Path&    path,
-                                   PathStringView alias) SRX_NOEXCEPT
+  Status DirectorFileSystem::Mount(const Path& path,
+                                   PathView    alias) SRX_NOEXCEPT
   {
     if (alias.empty() || alias.find(Path::preferred_separator, 1) != alias.npos)
       return SRX_STATUS_MSG(EStatusCode::Invalid_Argument,
@@ -160,15 +160,14 @@ namespace Sorex
     return EFileStatus::Unknown;
   }
 
-  IFileSystem* DirectorFileSystem::GetFileSystem(PathStringView path)
-    SRX_NOEXCEPT
+  IFileSystem* DirectorFileSystem::GetFileSystem(PathView path) SRX_NOEXCEPT
   {
     auto it = mFilesystems.find(GetHash(GetFileSystemName(path)));
     return it != mFilesystems.end() ? it->second.filesystem.get() : nullptr;
   }
 
-  const IFileSystem* DirectorFileSystem::GetFileSystem(
-    PathStringView path) const SRX_NOEXCEPT
+  const IFileSystem* DirectorFileSystem::GetFileSystem(PathView path) const
+    SRX_NOEXCEPT
   {
     auto it = mFilesystems.find(GetHash(GetFileSystemName(path)));
     return it != mFilesystems.cend() ? it->second.filesystem.get() : nullptr;
@@ -177,7 +176,7 @@ namespace Sorex
   TPair<IFileSystem*, Path> DirectorFileSystem::GetFileSystemWithPath(
     const Path& path) const SRX_NOEXCEPT
   {
-    PathStringView fsname = GetFileSystemName(path.native());
+    PathView fsname = GetFileSystemName(path.native());
     if (auto it = mFilesystems.find(GetHash(fsname)); it != mFilesystems.end())
     {
       const Path& fspath = it->second.path;
@@ -196,8 +195,7 @@ namespace Sorex
     return std::make_pair<IFileSystem*, Path>(nullptr, {});
   }
 
-  PathStringView DirectorFileSystem::GetFileSystemName(PathStringView path)
-    SRX_NOEXCEPT
+  PathView DirectorFileSystem::GetFileSystemName(PathView path) SRX_NOEXCEPT
   {
     auto root = Utils::GetRootName<SRX_PATH('/')>(path);
     return root.empty() ? path : root;

@@ -121,6 +121,7 @@ public:
       return SRX_UNKNOWN_SIZE;
     }
 
+    // TODO: int64
     /**
      * @brief Change the position of the stream.
      *

@@ -59,7 +59,8 @@ public:
     virtual void   Shutdown() override;
 
     // IFileSystem Interface
-    Status Mount(const Path& path, PathStringView alias) SRX_NOEXCEPT override;
+    Status         Mount(const Path& path,
+                         PathView    alias = PathView()) SRX_NOEXCEPT override;
     virtual Status IndexFiles() SRX_NOEXCEPT override;
 
     virtual void GetFiles(const Path&         path,
@@ -77,11 +78,11 @@ public:
                                             Status*          status)
       SRX_NOEXCEPT override;
 
-    const IFileSystem* GetFileSystem(PathStringView path) const SRX_NOEXCEPT;
+    const IFileSystem* GetFileSystem(PathView path) const SRX_NOEXCEPT;
 
 private:
-    IFileSystem*          GetFileSystem(PathStringView path) SRX_NOEXCEPT;
-    static PathStringView GetFileSystemName(PathStringView path) SRX_NOEXCEPT;
+    IFileSystem*    GetFileSystem(PathView path) SRX_NOEXCEPT;
+    static PathView GetFileSystemName(PathView path) SRX_NOEXCEPT;
 
     TPair<IFileSystem*, Path> GetFileSystemWithPath(const Path& path) const
       SRX_NOEXCEPT;

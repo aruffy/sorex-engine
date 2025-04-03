@@ -38,6 +38,7 @@
 #include "GLRenderContext.h"
 #include "GLVertexArray.h"
 #include "GLExtensions.h"
+#include "GLTexture2D.h"
 
 namespace Sorex::Graphics
 {
@@ -57,7 +58,10 @@ public:
     virtual void   Shutdown() override;
 
     // Interface RenderDevice
-    virtual void Cleanup() override;
+    virtual void                      Cleanup() override;
+    virtual TUniquePointer<Texture2D> CreateTexture2D(Path path) override;
+    // cppcheck-suppress functionConst
+    Status InitializeTexture(const GLTexture2D& texture, bool bMinmaps = false);
 
     /**
      * @brief Allocate new OpenGL resource.

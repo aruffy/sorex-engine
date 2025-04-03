@@ -9,8 +9,8 @@ using namespace Sorex;
 
 TEST(StaticDirectory, Main)
 {
-  FileSystem::Path path(__FILE__);
-  const auto       dirPath = path.parent_path().make_preferred();
+  Path       path(__FILE__);
+  const auto dirPath = path.parent_path().make_preferred();
 
   FileSystem::StaticDirectory dir(dirPath);
 
@@ -40,7 +40,7 @@ TEST(StaticDirectory, Main)
 
 TEST(StaticDirectory, Recursion)
 {
-  FileSystem::Path path(__FILE__);
+  Path path(__FILE__);
 
   const auto dirPath = path.parent_path().parent_path().make_preferred();
 

@@ -27,6 +27,24 @@
 
 #include <Sorex/SxThread.h>
 
+#include <Sorex/Utils/SxString.h>
+
+namespace
+{
+#ifndef SOREX_DEBUG_NONE
+  uint64_t s_GetThreadId()
+  {
+    std::stringstream ssconv;
+    ssconv << Sorex::Thread::GetId();
+    uint64_t tid;
+    SRX_VERIFY(Sorex::Utils::ToInteger(ssconv.str(), tid)
+               == Sorex::EStatusCode::Ok);
+
+    return tid;
+  }
+#endif
+}  // namespace
+
 namespace Sorex
 {
   bool Thread::IsMainThread() SRX_NOEXCEPT
@@ -60,4 +78,53 @@ namespace Sorex
     if (mThreadObject.joinable())
       mThreadObject.join();
   }
-}
+
+  LoopingThread::LoopingThread(StringView name)
+    : mName(name)
+    , mIsRunning(false)
+    , mIsQuitRequested(false)
+  {}
+
+  EStatusCode LoopingThread::Start()
+  {
+    if (SRX_ATOMIC_LOAD(mIsRunning))
+      return EStatusCode::Busy;
+
+    SRX_ATOMIC_STORE(mIsRunning, true);
+    SRX_ATOMIC_STORE(mIsQuitRequested, false);
+
+    Thread::Execute([this]() {
+
+#ifndef SOREX_DEBUG_NONE
+      const uint64_t tid = s_GetThreadId();
+      SRX_INFO("Thread {} <{}> start", mName, tid);
+#endif
+
+      uint32 milliseconds = 0;
+      while (!SRX_ATOMIC_LOAD(mIsQuitRequested))
+      {
+        const ETaskAction action = ThreadFunction(milliseconds);
+
+        if (action == ETaskAction::Cancel)
+          break;
+
+        if (action == ETaskAction::Await && milliseconds > 10U)
+          Thread::Sleep(milliseconds);
+      }
+
+      SRX_ATOMIC_STORE(mIsRunning, false);
+
+#ifndef SOREX_DEBUG_NONE
+      SRX_INFO("Thread <{}> stop", tid);
+#endif
+    });
+
+    return EStatusCode::Ok;
+  }
+
+  void LoopingThread::Stop()
+  {
+    SRX_ATOMIC_STORE(mIsQuitRequested, true);
+  }
+
+}  // namespace

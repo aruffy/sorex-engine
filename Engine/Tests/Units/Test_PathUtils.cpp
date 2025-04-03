@@ -207,7 +207,7 @@ TEST(PathUtils, BaseName)
 
   for (const Test_PathIntstance& path : paths)
   {
-    PathStringView base = Utils::GetBaseName(path.str.native());
+    PathView base = Utils::GetBaseName(path.str.native());
     EXPECT_EQ(base, path.dir.native())
       << "Path:'" << path.str.generic_string() << "' Base: '"
       << path.dir.generic_string() << "' vs '" << Path(base).generic_string()
@@ -242,7 +242,7 @@ TEST(PathUtils, RootName)
 
   for (const Test_PathIntstance& path : paths)
   {
-    PathStringView root = Utils::GetRootName(path.str.native());
+    PathView root = Utils::GetRootName(path.str.native());
     EXPECT_EQ(root, path.root.native())
       << "Path:'" << path.str.generic_string() << "' Root: '"
       << path.root.generic_string() << "' vs '" << Path(root).generic_string()
@@ -370,9 +370,8 @@ TEST(PathUtils, GetFileExtension)
   {
     data.ext.make_preferred();
 
-    PathStringView ext =
-      Utils::GetFileExtension(data.path.make_preferred().native(),
-                              data.bSeparator);
+    PathView ext = Utils::GetFileExtension(data.path.make_preferred().native(),
+                                           data.bSeparator);
 
     EXPECT_EQ(ext, data.ext.native())
       << "Path: '" << data.path.generic_string() << "' ext: '"

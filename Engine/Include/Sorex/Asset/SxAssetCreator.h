@@ -27,48 +27,55 @@
 
 #pragma once
 
-#include <Sorex/CoreMinimal.h>
+#include <Sorex/SxCoreMinimal.h>
 
-namespace Sorex::Utils
+#include "SxAsset.h"
+#include "SxAssetLoader.h"
+#include "SxAssetRegistry.h"
+
+namespace Sorex::Resource
 {
-  SRX_API SRX_INLINE bool IsLittleEndian() SRX_NOEXCEPT
+  class AssetCreator
   {
-    const uint16      x = 0x0001;
-    static const bool endian =
-      static_cast<bool>(*(reinterpret_cast<const uint8*>(&x)));
-    return endian;
-  }
+public:
+    using AssetInstance =
+      TPair<TSharedPointer<Asset>, TUniquePointer<AssetLoader>>;
+    virtual ~AssetCreator() = default;
 
-  template<std::integral T>
-  SRX_API T SwapBits(T val) SRX_NOEXCEPT
+    /**
+     * @brief Create an asset instance pair consisting of an asset and its
+     * loader.
+     *
+     * This function initializes an asset instance and its associated loader
+     * based on the provided name and registry.
+     *
+     * @param name - the name of the asset to be created.
+     * @param registry - the asset registry used for asset management.
+     * @param status [out] - status variable that will hold the creation status
+     * of the asset instance.
+     * @return A pair containing the asset and its loader. If the asset is
+     * nullptr, an error has occurred, and the loader will also be nullptr. If
+     * the loader is nullptr, the asset is ready for use.
+     */
+    virtual AssetInstance CreateAssetInstance(Path           path,
+                                              AssetRegistry* registry,
+                                              Status*        status) = 0;
+
+protected:
+    template<typename T>
+    static bool IsLoadableReference(const Asset* asset) SRX_NOEXCEPT;
+  };
+
+  template<typename T>
+  bool AssetCreator::IsLoadableReference(const Asset* asset) SRX_NOEXCEPT
   {
-    T                result = T{ 0 };
-    constexpr size_t bits   = 8 * sizeof(val);
-    for (size_t i = 0; i < bits; ++i)
-    {
-      result = (result << 1) | (val & 1);
-      val >>= 1;
-    }
+    if (!asset)
+      return false;
 
-    return result;
-  }
+    const EAssetState state = asset->GetState();
+    if (state != EAssetState::Unloaded)
+      return false;
 
-  template<std::integral T>
-  SRX_API T SwapBytes(T val) SRX_NOEXCEPT
-  {
-    if constexpr (sizeof(T) == 1)
-      return val;
-
-    if constexpr (sizeof(T) == 2 && std::is_unsigned_v<T>)
-      return static_cast<T>((val >> 8) | (val << 8));
-
-    auto*            b    = reinterpret_cast<byte*>(&val);
-    constexpr size_t half = sizeof(T) / 2;
-    constexpr size_t last = sizeof(T) - 1;
-
-    for (size_t i = 0; i < half; ++i)
-      std::swap(b[i], b[last - i]);
-
-    return val;
+    return asset->template IsA<T>();
   }
 }  // namespace

@@ -27,7 +27,9 @@ jobs:
             submodules: recursive
 
       - name: Set up Clang
-        run: sudo apt-get update && sudo apt-get -y install clang cmake libgtest-dev xorg-dev
+        run: |
+          sudo apt-get update
+          sudo apt-get -y install clang cmake libgtest-dev libgmock-dev xorg-dev
 
       - name: Configure CMake Preset
         run: |
@@ -109,7 +111,7 @@ jobs:
         run: |
           echo "%SystemRoot%\System32\VCRUNTIME140.dll"
           echo "%SystemRoot%\System32\MSVCP140.dll"
-          ctest --output-on-failure -V -C Release --test-dir build\${{ env.CI_CONFIG_TEST_PRESET }}\
+          ctest --output-on-failure -C Release --test-dir build\${{ env.CI_CONFIG_TEST_PRESET }}\
 
       - name: Upload Test Results
         if: always()
