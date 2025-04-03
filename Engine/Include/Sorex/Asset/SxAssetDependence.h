@@ -133,8 +133,8 @@ public:
       assets.reserve(it->second.size());
       for (const auto& [_, dep] : it->second)
       {
-        if (TSharedPointer<Asset> asset = dep.GetAsset())
-          assets.push_back(std::move(std::static_pointer_cast<T>(asset)));
+        if (dep.asset)
+          assets.push_back(std::move(std::static_pointer_cast<T>(dep.asset)));
       }
     }
 
@@ -152,8 +152,7 @@ public:
     SRX_INLINE void Clear() { mResources.clear(); }
 
 private:
-    size_t mSize = 0;
-    // TODO: Flat-Map boost
+    size_t                                                           mSize = 0;
     THashMap<const RuntimeClass*, THashMap<String, AssetDependence>> mResources;
   };
 }  // namespace

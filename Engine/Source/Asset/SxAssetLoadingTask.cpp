@@ -407,7 +407,7 @@ namespace Sorex::Resource
               root.common->status.ToString());
 
     if (auto handler = root.common->handler)
-      handler->OnAssetLoadingFailed(ctx.common->current,
+      handler->OnAssetLoadingFailed(Path(ctx.common->current),
                                     GetAsset(root),
                                     ctx.common->status);
 
