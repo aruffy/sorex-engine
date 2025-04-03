@@ -440,32 +440,35 @@ private:
       return false;
     }
 
-    // FIXME: convert int32
-
-    const size_t size = GetSize();
+    size_t       position = 0;
+    const size_t size     = GetSize();
     switch (mode)
     {
     case ESeekMode::Begin:
+      SRX_CHECK(pos >= 0);
+      position = size_t(pos);
       break;
     case ESeekMode::Current:
-      pos = (int32)GetPosition() + pos;
+      SRX_CHECK(pos >= 0 || GetPosition() >= size_t(-pos));
+      position = GetPosition() + pos;
       break;
     case ESeekMode::End:
-      pos = (int32)size + pos;
+      SRX_CHECK(pos >= 0 || size >= size_t(-pos));
+      position = size + pos;
       break;
     default:
       SRX_NOENTRY("invalid seek mode");
       return false;
     }
 
-    if (pos < 0 || (size_t)pos >= size)
+    if (position >= size)
     {
       mStatus = SRX_STATUS_MSG(EStatusCode::Out_Of_Range,
                                "Seek(): position is out of range");
       return false;
     }
 
-    mCurrent = mBegin + pos;
+    mCurrent = mBegin + position;
     return true;
   }
 
