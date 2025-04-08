@@ -449,7 +449,7 @@ private:
       position = size_t(pos);
       break;
     case ESeekMode::Current:
-      SRX_CHECK(pos >= 0 || GetPosition() >= size_t(-pos));
+      SRX_CHECK(pos >= 0 || GetPosition() >= ssize_t(-pos));
       position = GetPosition() + pos;
       break;
     case ESeekMode::End:
