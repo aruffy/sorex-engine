@@ -43,7 +43,6 @@ namespace
 
     if (action == ETaskAction::Await || action == ETaskAction::Cancel)
     {
-      // TODO: Add while looping to wait for the task to complete
       if (action == ETaskAction::Await)
         status =
           SRX_STATUS_MSG(EStatusCode::Not_Supported,

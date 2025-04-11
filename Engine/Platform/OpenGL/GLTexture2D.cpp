@@ -51,7 +51,8 @@ namespace Sorex::Graphics
 {
   GLTexture2D::GLTexture2D(Path path, GLRenderDevice& glDevice, bool bMipmaps)
     : Texture2D(std::move(path))
-    , mToken(AllocateResource(&glDevice, GLResourceType::Texture2D))
+    , mToken(nullptr)
+    , mRenderDevice(glDevice)
     , mWidth(0)
     , mHeight(0)
     , mInternalFormat(GL_NONE)
@@ -67,11 +68,6 @@ namespace Sorex::Graphics
 
   Status GLTexture2D::Initialize(TUniquePointer<TextureBitmap> bitmap)
   {
-    GLRenderDevice* glDevice = mToken ? mToken->GetRenderDevice() : nullptr;
-    if (glDevice == nullptr)
-      return SRX_STATUS_MSG(EStatusCode::Invalid_State,
-                            "invalid render device token");
-
     if (mFormat != GL_NONE)
       return SRX_STATUS_MSG(EStatusCode::Not_Permitted,
                             "texture uploaded to the OpenGL");
@@ -110,8 +106,10 @@ namespace Sorex::Graphics
     mContentRect = Rect(Point(0.f, 0.f),
                         Size(static_cast<float>(origSize.width),
                              static_cast<float>(origSize.height)));
+    if (!mToken)
+      mToken = AllocateResource(&mRenderDevice, GLResourceType::Texture2D);
 
-    Status status = glDevice->InitializeTexture(*this, mMipmaps);
+    Status status = mRenderDevice.InitializeTexture(*this, mMipmaps);
     if (!status.Ok())
       ResetTexImageParams();
 
