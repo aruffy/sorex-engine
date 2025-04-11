@@ -78,7 +78,7 @@ namespace Sorex::Resource
     SRX_DEBUG("[{}] {}: asset '{}' loading",
               GetRuntimeClass().GetName(),
               __FUNCTION__,
-              mContext.path->generic_string());
+              mAssetPath.generic_string());
 
     const ETaskAction res = Load(mContext);
 
@@ -95,7 +95,7 @@ namespace Sorex::Resource
     SRX_DEBUG("[{}] {}: asset '{}' loading",
               GetRuntimeClass().GetName(),
               __FUNCTION__,
-              mContext.path->generic_string());
+              mAssetPath.generic_string());
 
     // If the asset loading stage is done than:
     // 1. It has already been invalidated
@@ -118,7 +118,7 @@ namespace Sorex::Resource
     for (auto it = mCommonCtx.deferred.begin();
          it != mCommonCtx.deferred.end();)
     {
-      SRX_CHECK(*it && (*it)->awaiter);
+      SRX_CHECK(*it && (*it)->awaiter && (*it)->path);
 
       ETaskAction action = ETaskAction::Continue;
       if (Context* ctx = (*it); ctx && ctx->awaiter)
@@ -188,7 +188,7 @@ namespace Sorex::Resource
     SRX_DEBUG("[{}] {}: asset '{}' loading",
               GetRuntimeClass().GetName(),
               __FUNCTION__,
-              mContext.path->generic_string());
+              mAssetPath.generic_string());
 
     Context::Finalize(mContext);
 
