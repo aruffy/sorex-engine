@@ -59,10 +59,48 @@ public:
 
     virtual ~Task() = default;
 
-    virtual ETaskAction Execute()  = 0;
-    virtual ETaskAction Resume()   = 0;
-    virtual void        Shutdown() = 0;
-    virtual Status      Finalize() = 0;
+    /**
+     * @brief Execute the main task function.
+     *
+     * If `Execute` return ETaskAction::Await, the task should be resumed later
+     * by Resume() call. When Resume() return ETaskAction::Continue, the task
+     * will be executed again.
+     *
+     * @return ETaskAction - the action to be performed after the task
+     * execution.
+     */
+    virtual ETaskAction Execute() = 0;
+
+    /**
+     * @brief Try to resume the task.
+     *
+     * @return ETaskAction - next action describes if the caller should await,
+     * can execute the task or should cancel it.
+     */
+    virtual ETaskAction Resume() = 0;
+
+    /**
+     * @brief Shutdown the task.
+     *
+     * This call is used if the task is cancelled. It should free all resources
+     * that was allocated for the task.
+     * After this call, the task might be deleted.
+     *
+     */
+    virtual void Shutdown() = 0;
+
+    /**
+     * @brief Finalize the task.
+     *
+     * This call is used to finalize the task execution.
+     * It might be helpful when the task is executed in a separate thread.
+     * But some task action is required to be performed in the `main` thread.
+     * As an example: the OpenGL call should be performed in the active OpenGL
+     * context.
+     *
+     * @return Status - the final status of the task.
+     */
+    virtual Status Finalize() = 0;
 
     ETaskPriority GetPriority() const { return mPriority; }
 
