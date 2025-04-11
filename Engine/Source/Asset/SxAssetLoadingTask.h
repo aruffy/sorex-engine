@@ -103,7 +103,7 @@ private:
       };
 
       Context() = default;
-      Context(Context& parent, const RuntimeClass& aType, Path aPath);
+      Context(Context& parent, const RuntimeClass& aType, const Path* aPath);
 
       static Context& GetRoot(Context& ctx);
       static Asset*   GetAsset(Context& ctx);
@@ -114,7 +114,7 @@ private:
       Common*  common = nullptr;
       Context* parent = nullptr;
 
-      Path                path;
+      const Path*         path = nullptr;
       const RuntimeClass* type = nullptr;
 
       ELoadingStage stage = ELoadingStage::None;
@@ -140,9 +140,10 @@ private:
 #endif
 
 private:
-    Context         mContext;  // Root context
+    Context         mContext;
     Context::Common mCommonCtx;
 
+    Path                mAssetPath;
     CreateAssetCallback mCreateAssetCallback;
   };
 }  // namespace
