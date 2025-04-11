@@ -55,6 +55,7 @@ namespace
       return status;
     }
 
+    // TODO: Call Finalize in any case to deallocate resource
     status = task->Finalize();
     if (!status.Ok())
       task->Shutdown();
@@ -98,7 +99,8 @@ namespace Sorex::Resource
     {
       if (auto task = mWorker->Pop())
       {
-        if (!task->Finalize())
+        // TODO: Call Finalize in any case to deallocate resource
+        if (task->Finalize() != SRX_OK)
           task->Shutdown();
       }
     }
