@@ -51,7 +51,8 @@ namespace Sorex::Resource
     task->mCommonCtx.options  = params.options;
     task->mCommonCtx.status   = SRX_OK;
 
-    task->mContext.path = params.path;
+    task->mAssetPath    = params.path;
+    task->mContext.path = &task->mAssetPath;
     task->mContext.type = params.type;
     task->mContext.asset =
       callback(*params.type, params.path, &task->mCommonCtx.status);
@@ -77,7 +78,7 @@ namespace Sorex::Resource
     SRX_DEBUG("[{}] {}: asset '{}' loading",
               GetRuntimeClass().GetName(),
               __FUNCTION__,
-              mContext.path.generic_string());
+              mAssetPath.generic_string());
 
     const ETaskAction res = Load(mContext);
 
@@ -94,7 +95,7 @@ namespace Sorex::Resource
     SRX_DEBUG("[{}] {}: asset '{}' loading",
               GetRuntimeClass().GetName(),
               __FUNCTION__,
-              mContext.path.generic_string());
+              mAssetPath.generic_string());
 
     // If the asset loading stage is done than:
     // 1. It has already been invalidated
@@ -117,7 +118,7 @@ namespace Sorex::Resource
     for (auto it = mCommonCtx.deferred.begin();
          it != mCommonCtx.deferred.end();)
     {
-      SRX_CHECK(*it && (*it)->awaiter);
+      SRX_CHECK(*it && (*it)->awaiter && (*it)->path);
 
       ETaskAction action = ETaskAction::Continue;
       if (Context* ctx = (*it); ctx && ctx->awaiter)
@@ -128,13 +129,13 @@ namespace Sorex::Resource
         if (action == ETaskAction::Cancel)
         {
           bCanceled          = true;
-          mCommonCtx.current = ctx->path.native();
+          mCommonCtx.current = ctx->path->native();
           if (mCommonCtx.status.Ok())
           {
             SRX_NOENTRY("loading failed/canceled: should be error description");
             mCommonCtx.status = SRX_STATUS_MSG(EStatusCode::Interrupted,
                                                "asset '{}' loading canceled",
-                                               ctx->path.generic_string());
+                                               ctx->path->generic_string());
           }
           break;
         }
@@ -160,7 +161,7 @@ namespace Sorex::Resource
     {
       ctx.common->status = SRX_STATUS_MSG(EStatusCode::Invalid_State,
                                           "asset '{}' loading failed, stage={}",
-                                          ctx.path.generic_string(),
+                                          ctx.path->generic_string(),
                                           static_cast<int>(ctx.stage));
       return false;
     }
@@ -187,7 +188,7 @@ namespace Sorex::Resource
     SRX_DEBUG("[{}] {}: asset '{}' loading",
               GetRuntimeClass().GetName(),
               __FUNCTION__,
-              mContext.path.generic_string());
+              mAssetPath.generic_string());
 
     Context::Finalize(mContext);
 
@@ -200,7 +201,7 @@ namespace Sorex::Resource
     if (!ctx.common || !ctx.common->storage)
       return false;
 
-    if (ctx.path.empty() || ctx.type == nullptr)
+    if (ctx.path == nullptr || ctx.path->empty() || ctx.type == nullptr)
       return false;
 
     if (ctx.stage >= Context::ELoadingStage::Loading)
@@ -212,21 +213,18 @@ namespace Sorex::Resource
 
   ETaskAction AssetLoadingTask::Load(Context& ctx)
   {
-#ifdef SOREX_DEBUG_MEDIUM
-    SRX_ASSERT(IsValidContextToLoad(ctx));
-#endif
-
+    SRX_CHECK(IsValidContextToLoad(ctx));
     SRX_DEBUG(
       "[{}] {} loading <{}> asset '{}'",
       GetRuntimeClass().GetName(),
       (ctx.stage == Context::ELoadingStage::None ? "Start" : "Continue"),
       ctx.type->GetName(),
-      ctx.path.generic_string());
+      ctx.path->generic_string());
 
-    ctx.common->current = ctx.path.native();
+    ctx.common->current = ctx.path->native();
     Status& status      = ctx.common->status;
 
-    if (ctx.path.empty())
+    if (ctx.path->empty())
     {
       status = SRX_STATUS_MSG(EStatusCode::Invalid_Argument,
                               "asset '{}' name is empty",
@@ -235,7 +233,7 @@ namespace Sorex::Resource
     }
 
     if (!ctx.asset.first)
-      ctx.asset = mCreateAssetCallback(*ctx.type, ctx.path, &status);
+      ctx.asset = mCreateAssetCallback(*ctx.type, *ctx.path, &status);
 
     Asset* const asset = ctx.asset.first.get();
     if (!asset)
@@ -250,7 +248,6 @@ namespace Sorex::Resource
       return ETaskAction::Continue;
     }
 
-    // @NOTE: the resource hasn't made a preload stage yet
     if (ctx.stage == Context::ELoadingStage::None)
     {
       TVector<Path> missingFiles;
@@ -316,7 +313,7 @@ namespace Sorex::Resource
           continue;
 
         // @TODO: hold in context PathView
-        ctx.subcontexts.emplace_back(ctx, dependence->type, dependence->path);
+        ctx.subcontexts.emplace_back(ctx, dependence->type, &dependence->path);
 
         Context&          depctx = ctx.subcontexts.back();
         const ETaskAction result = Load(depctx);
@@ -338,10 +335,10 @@ namespace Sorex::Resource
 
   AssetLoadingTask::Context::Context(Context&            parent,
                                      const RuntimeClass& aType,
-                                     Path                aPath)
+                                     const Path*         aPath)
     : common(parent.common)
     , parent(&parent)
-    , path(std::move(aPath))
+    , path(aPath)
     , type(&aType)
   {}
 
@@ -403,7 +400,7 @@ namespace Sorex::Resource
     Context& root = Context::GetRoot(ctx);
     SRX_ERROR("Asset <{}> '{}' loading failed: {}",
               root.type->GetName(),
-              root.path.generic_string(),
+              root.path->generic_string(),
               root.common->status.ToString());
 
     if (auto handler = root.common->handler)

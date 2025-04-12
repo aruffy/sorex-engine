@@ -117,7 +117,6 @@ public:
                             const AssetDependencies& dependencies) = 0;
 
 private:
-    // FIXME: Should be a weak pointer
     TSharedPointer<Asset> mAsset;
   };
 }  // namespace

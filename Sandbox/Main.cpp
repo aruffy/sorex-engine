@@ -44,7 +44,7 @@ class MyDirector final: public Director
       MakeUnique<Resource::TextureCreator>(*glRenderDevice));
 
     status = filesystem->Mount(SRX_PATH("Textures"), SRX_PATH("/Textures"));
-    SRX_ASSERT(status.Ok());  // FIXME: If false -> crash
+    SRX_ASSERT(status.Ok());
 
     auto asset2 = mAssetManager->LoadAsync<Graphics::Texture2D>(
       SRX_PATH("/Textures/image2.tga"),

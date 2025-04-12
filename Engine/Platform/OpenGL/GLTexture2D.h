@@ -88,6 +88,7 @@ private:
 
 private:
     GLResourceToken mToken;
+    GLRenderDevice& mRenderDevice;
 
     GLsizei mWidth;
     GLsizei mHeight;
