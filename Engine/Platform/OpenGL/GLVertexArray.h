@@ -148,4 +148,7 @@ private:
 
     return SRX_OK;
   }
+
+  template<typename Vertex, typename Index>
+  Status FlushVertexArray(GLVertexArray<Vertex, Index>& vtxArray);
 }  // namespace Ruffy::Graphics

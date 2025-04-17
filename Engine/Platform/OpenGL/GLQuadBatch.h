@@ -62,24 +62,13 @@ public:
     GLQuadBatch(const GLQuadBatch& other)            = delete;
     GLQuadBatch& operator=(const GLQuadBatch& other) = delete;
 
-    /**
-     * @brief Clamp quad number according to a index buffer capacity and its
-     * index type.
-     *
-     * @param quadNumber - desired quad number
-     * @param minQuadNumber - minimal quad number
-     * @return number of quad within possible range
-     */
-    template<typename IndexType>
-    static size_t ClampQuadNumber(const size_t quadNumber,
-                                  const size_t minQuadNumber = 1);
-
     SRX_INLINE Status Initialize() SRX_NOEXCEPT;
-    SRX_INLINE void   Clear() SRX_NOEXCEPT { mVtxArray.Clear(); }
 
+    SRX_INLINE void Clear() SRX_NOEXCEPT { mVtxArray.Clear(); }
     SRX_INLINE bool IsEmpty() const SRX_NOEXCEPT { return mVtxArray.IsEmpty(); }
-    size_t          GetSize() const SRX_NOEXCEPT;
-    size_t          GetCapacity() const { return mCapacity; }
+
+    size_t GetSize() const SRX_NOEXCEPT;
+    size_t GetCapacity() const { return mCapacity; }
 
     /**
      * @brief Allocate a quad.
@@ -93,8 +82,18 @@ public:
      */
     Status Allocate(Quad& quad) SRX_NOEXCEPT;
 
-protected:
-    SRX_INLINE const VertexArray& GetVertexArray() const { return mVtxArray; }
+private:
+    /**
+     * @brief Clamp quad number according to a index buffer capacity and its
+     * index type.
+     *
+     * @param quadNumber - desired quad number
+     * @param minQuadNumber - minimal quad number
+     * @return number of quad within possible range
+     */
+    template<typename IndexType>
+    static size_t ClampQuadNumber(const size_t quadNumber,
+                                  const size_t minQuadNumber = 1);
 
 private:
     VertexArray  mVtxArray;
@@ -171,4 +170,7 @@ private:
 
     return SRX_OK;
   }
+
+  // TODO: Allocate(TSpan<Quad>);
+
 }  // namespace
