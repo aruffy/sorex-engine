@@ -59,13 +59,30 @@ public:
     {
       return mVtxBuffer ? mVtxBuffer->Allocate(num) : nullptr;
     }
+
     SRX_INLINE size_t GetVertexCapacity() const SRX_NOEXCEPT
     {
       return mVtxBuffer ? mVtxBuffer->GetCapacity() : 0;
     }
+
     SRX_INLINE size_t GetVertexNum() const SRX_NOEXCEPT
     {
       return mVtxBuffer ? mVtxBuffer->GetSize() : 0;
+    }
+
+    SRX_INLINE IndexType* AllocateIndecies(const size_t num) SRX_NOEXCEPT
+    {
+      return mIndxBuffer ? mIndxBuffer->AllocateIndecies(num) : nullptr;
+    }
+
+    SRX_INLINE size_t GetIndexNum() const SRX_NOEXCEPT
+    {
+      return mIndxBuffer ? mIndxBuffer->GetSize() : 0;
+    }
+
+    SRX_INLINE size_t GetIndexCapacity() const SRX_NOEXCEPT
+    {
+      return mIndxBuffer ? mIndxBuffer->GetCapacity() : 0;
     }
 
     bool IsEmpty() const SRX_NOEXCEPT
