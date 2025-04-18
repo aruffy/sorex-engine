@@ -72,7 +72,7 @@ public:
 
     SRX_INLINE IndexType* AllocateIndecies(const size_t num) SRX_NOEXCEPT
     {
-      return mIndxBuffer ? mIndxBuffer->AllocateIndecies(num) : nullptr;
+      return mIndxBuffer ? mIndxBuffer->Allocate(num) : nullptr;
     }
 
     SRX_INLINE size_t GetIndexNum() const SRX_NOEXCEPT
@@ -104,12 +104,12 @@ public:
         mIndxBuffer->Clear();
     }
 
-private:
-    GLRenderDevice* GetRenderDevice()
+    GLRenderDevice* GetRenderDevice() const
     {
       return mGlToken ? mGlToken->GetRenderDevice() : nullptr;
     }
 
+private:
     template<typename T>
     T* CreateBuffer(TUniquePointer<T>& buffer,
                     const size_t       capacity) SRX_NOEXCEPT;

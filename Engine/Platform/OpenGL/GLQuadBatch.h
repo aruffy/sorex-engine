@@ -28,9 +28,11 @@
 #pragma once
 
 #include <Sorex/SxCoreMinimal.h>
+#include <Sorex/Graphics/SxVertex.h>
 
 #include "GLBuffer.h"
 #include "GLVertexArray.h"
+
 
 namespace Sorex::Graphics
 {
@@ -62,13 +64,16 @@ public:
     GLQuadBatch(const GLQuadBatch& other)            = delete;
     GLQuadBatch& operator=(const GLQuadBatch& other) = delete;
 
-    SRX_INLINE Status Initialize() SRX_NOEXCEPT;
-
     SRX_INLINE void Clear() SRX_NOEXCEPT { mVtxArray.Clear(); }
     SRX_INLINE bool IsEmpty() const SRX_NOEXCEPT { return mVtxArray.IsEmpty(); }
 
     size_t GetSize() const SRX_NOEXCEPT;
     size_t GetCapacity() const { return mCapacity; }
+
+    SRX_INLINE GLRenderDevice* GetRenderDevice() const
+    {
+      return mVtxArray.GetRenderDevice();
+    }
 
     /**
      * @brief Allocate a quad.
@@ -82,7 +87,7 @@ public:
      */
     Status Allocate(Quad& quad) SRX_NOEXCEPT;
 
-private:
+protected:
     /**
      * @brief Clamp quad number according to a index buffer capacity and its
      * index type.
@@ -94,6 +99,8 @@ private:
     template<typename IndexType>
     static size_t ClampQuadNumber(const size_t quadNumber,
                                   const size_t minQuadNumber = 1);
+
+    const VertexArray& GetVertexArray() const { return mVtxArray; }
 
 private:
     VertexArray  mVtxArray;
@@ -111,7 +118,7 @@ private:
 
     if (minQuadNumber > kMaxQuadNumber)
     {
-      RFY_NOENTRY("invaid minimal quad number");
+      SRX_NOENTRY("invaid minimal quad number");
       return kMaxQuadNumber;
     }
 
@@ -125,14 +132,11 @@ private:
     : mCapacity(ClampQuadNumber<IndexType>(capacity, 8))
     , mVtxArray(&glDevice)
   {
-    RFY_CHECK(capacity == mCapacity);
-  }
-
-  template<typename VertexType>
-  SRX_INLINE Status GLQuadBatch<VertexType>::Initialize() SRX_NOEXCEPT
-  {
-    return mVtxArray.Initialize(mCapacity * kVertexNumberByQuad,
-                                mCapacity * kIndexNumberByQuad);
+    SRX_CHECK(capacity == mCapacity);
+    SRX_VERIFY(mVtxArray
+                 .Initialize(mCapacity * kVertexNumberByQuad,
+                             mCapacity * kIndexNumberByQuad)
+                 .Ok());
   }
 
   template<typename VertexType>
@@ -173,4 +177,17 @@ private:
 
   // TODO: Allocate(TSpan<Quad>);
 
+  class GLTexBatch final: private GLQuadBatch<Vertex::V2F_C4B_TC2F>
+  {
+    using VertexType = Vertex::V2F_C4B_TC2F;
+    using Quad       = typename GLQuadBatch<VertexType>::Quad;
+
+public:
+    GLTexBatch(GLRenderDevice& glDevice, size_t capacity) SRX_NOEXCEPT;
+
+    Status Flush();
+    void   Draw(const TArray<Point, 4>& texcoord,
+                const TArray<Point, 4>& screenPoints,
+                Color                   color);
+  };
 }  // namespace
