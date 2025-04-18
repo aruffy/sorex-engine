@@ -1,3 +1,4 @@
+
 /**************************************************************************/
 /*                         This file is part of:                          */
 /*                                SOREX                                   */
@@ -25,59 +26,68 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#include <GLShader.h>
+#pragma once
 
-using namespace Sorex::Graphics;
+#include <Sorex/Graphics/SxRenderer.h>
 
-namespace
+#include "GLQuadBatch.h"
+
+namespace Sorex::Graphics
 {
-  const GLString __kTextureVertexShaderSource = R"(
-        #version 330 core
+  class GLRenderDevice;
+  class GLTextureRenderer final: public TextureRenderer
+  {
+public:
+    GLTextureRenderer(GLRenderDevice& glRenderDevice, size_t maxQuadNumber);
 
-        in mediump vec2 a_position;
-        in mediump vec2 a_texcoord;
+    virtual Status Initialize() SRX_NOEXCEPT override;
+    // virtual Status Initialize() override SRX_NOEXCEPT;
+    virtual Status Activate() SRX_NOEXCEPT override;
 
-        in mediump vec4 a_color;
+    virtual void Flush() SRX_NOEXCEPT override;
+    virtual void Reset() SRX_NOEXCEPT override;
 
-        uniform mediump mat4 u_mvp;
-        uniform mediump vec2 u_scale_tex_0;
+    virtual bool IsEmpty() const SRX_NOEXCEPT override
+    {
+      return mQuadBatch.IsEmpty();
+    }
 
-        out lowp vec4 v_color;
-        out mediump vec2 v_texcoord;
+    /* inline GLRenderDevice* GetRenderDevice()
+    {
+      // return _quadBatch.GetRenderDevice();
+    } */
 
-        void main()
-        {
-            // convert texture coordinates from ST space to UV.
-            v_texcoord = a_texcoord * u_scale_tex_0;
+    // API TextureRenderer
+    virtual void DrawTexture(const Texture2D* texture,
+                             const Point&     position,
+                             Color            color) SRX_NOEXCEPT override;
 
-            v_color = a_color;
-            gl_Position = u_mvp * vec4(a_position.x, a_position.y, 0.f, 1.f);
-        }
-    )";
+    virtual void DrawTexture(const Texture2D* texture,
+                             const Rect&      texRect,
+                             const Point&     position,
+                             Color            color) SRX_NOEXCEPT override;
 
+    virtual void DrawTexture(const Texture2D* texture,
+                             const Point&     position,
+                             const Vector2&   scale,
+                             EAnchorPoint     anchor,
+                             scalar_t         rotation,
+                             Color            color) SRX_NOEXCEPT override;
 
-  const GLString __kTextureFragmentShaderSource = R"(
-        #version 330 core
+private:
+    void DrawQuad(const Texture2D* texture, Color color);
 
-        in lowp vec4 v_color;
-        in mediump vec2 v_texcoord;
+private:
+    GLTexBatch mQuadBatch;
 
-        uniform sampler2D u_sampler_0;
+    // const CanvasState* _canvasState;
+    // GLRenderTechnique  _technique;
 
-        out lowp vec4 out_color;
+    // const Texture2D* _texture;
+    // TArray<Point, 4> _screenPoints;
+    // TArray<Point, 4> _texPoints;
 
-        void main()
-        {
-            out_color = texture(u_sampler_0, v_texcoord) * v_color;
-        }
-    )";
+    // TUniquePointer<GLShaderProgram> _shaderProgram;
+    // Error                           _error;
+  };
 }
-
-namespace Sorex::Graphics::OpenGL
-{
-  const GLShaderSource Shader::kTextureVertexShaderSource =
-    GLShaderSource{ EShaderType::Vertex, __kTextureVertexShaderSource };
-
-  const GLShaderSource Shader::kTextureFragmentShaderSource =
-    GLShaderSource{ EShaderType::Fragment, __kTextureFragmentShaderSource };
-}  // namespace

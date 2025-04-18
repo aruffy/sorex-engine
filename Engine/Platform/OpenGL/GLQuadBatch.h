@@ -185,6 +185,8 @@ private:
 public:
     GLTexBatch(GLRenderDevice& glDevice, size_t capacity) SRX_NOEXCEPT;
 
+    bool IsEmpty() const { return GLQuadBatch<VertexType>::IsEmpty(); }
+
     Status Flush();
     void   Draw(const TArray<Point, 4>& texcoord,
                 const TArray<Point, 4>& screenPoints,
