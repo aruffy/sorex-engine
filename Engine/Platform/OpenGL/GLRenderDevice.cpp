@@ -601,6 +601,24 @@ namespace Sorex::Graphics
     return SRX_OK;
   }
 
+  Status GLRenderDevice::Bind(const OpenGL::Buffer& buffer) const SRX_NOEXCEPT
+  {
+    GLResource* bo = GetResource(buffer.GetResourceToken());
+    if (bo == nullptr)
+      return SRX_STATUS_MSG(EStatusCode::Invalid_State,
+                            "{} has expired resource reference",
+                            ToString(buffer.GetType()));
+
+    SRX_OPENGL_CALL(glBindBuffer(bo->target, bo->id));
+    if (bo->inited)
+    {
+      UpdateBufferData(*bo, buffer.GetData());
+      return SRX_OK;
+    }
+
+    return InitializeBuffer(*bo, buffer.GetData());
+  }
+
   Status GLRenderDevice::InitializeBuffer(GLResource&         resource,
                                           const GLBufferData& buffer)
     SRX_NOEXCEPT

@@ -34,6 +34,15 @@
 
 namespace Sorex::Graphics
 {
+  struct GLBufferData
+  {
+    GLsizei       size     = 0;
+    GLsizei       capacity = 0;
+    const GLbyte* memptr   = nullptr;
+
+    bool IsEmpty() const { return (memptr == nullptr || size == 0); }
+  };
+
   class GLRenderDevice;
   namespace OpenGL
   {
@@ -62,21 +71,13 @@ namespace Sorex::Graphics
       }
 
       SRX_INLINE GLResourceType GetType() const { return mType; }
+      virtual GLBufferData      GetData() const = 0;
 
   private:
       GLResourceToken mGlToken;
       GLResourceType  mType;
     };
   }  // namespace OpenGL
-
-  struct GLBufferData
-  {
-    GLsizei       size     = 0;
-    GLsizei       capacity = 0;
-    const GLbyte* memptr   = nullptr;
-
-    bool IsEmpty() const { return (memptr == nullptr || size == 0); }
-  };
 
   class GLRenderDevice;
   template<typename ValueType>
@@ -105,7 +106,7 @@ public:
     size_t GetSize() const { return mBuffer.size(); }
     size_t GetCapacity() const { return mBuffer.capacity(); }
 
-    GLBufferData GetData() const;
+    virtual GLBufferData GetData() const override;
 
     SRX_NODISCARD ValueType* Allocate(size_t number) SRX_NOEXCEPT;
     bool                     PushBack(const ValueType& value) SRX_NOEXCEPT;

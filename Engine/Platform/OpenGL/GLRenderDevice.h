@@ -115,6 +115,7 @@ private:
 
     Status ActivateShaderProgram(GLenum& mode) SRX_NOEXCEPT;
 
+    Status        Bind(const OpenGL::Buffer& buffer) const SRX_NOEXCEPT;
     static Status InitializeBuffer(GLResource&         resource,
                                    const GLBufferData& buffer) SRX_NOEXCEPT;
     static Status UpdateBufferData(const GLResource&   resource,
@@ -200,43 +201,14 @@ private:
         ToString(GLResourceType::VertexArray));
 
     SRX_OPENGL_CALL(glBindVertexArray(vao->id));
-    GLResource* vbo = GetResource(vtxBuffer->GetResourceToken());
-    if (vbo == nullptr)
-      return SRX_STATUS_MSG(EStatusCode::Invalid_State,
-                            "{} has expired resource reference",
-                            ToString(GLResourceType::VertexBuffer));
+    Status status = Bind(*vtxBuffer);
+    if (!status.Ok())
+      return status;
 
-    // TODO: if not vao->inited
-    Status status;
-    SRX_OPENGL_CALL(glBindBuffer(vbo->target, vbo->id));
-    if (vbo->inited == false)
-    {
-      status = InitializeBuffer(*vbo, vtxBuffer->GetData());
-      if (!status.Ok())
-        return status;
-
-      EnableVertexAttributes(vtxBuffer->GetVertexLayout());
-    }
-
-    UpdateBufferData(*vbo, vtxBuffer->GetData());
+    EnableVertexAttributes(vtxBuffer->GetVertexLayout());
 
     if (const GLIndexBuffer<IndexType>* indxBuffer = vtxArray.GetIndexBuffer())
-    {
-      GLResource* ebo = GetResource(indxBuffer->GetResourceToken());
-      if (ebo == nullptr)
-        return SRX_STATUS_MSG(EStatusCode::Invalid_State,
-                              "Index buffer has expired resource reference");
-
-      SRX_OPENGL_CALL(glBindBuffer(ebo->target, ebo->id));
-      if (ebo->inited == false)
-      {
-        status = InitializeBuffer(*ebo, indxBuffer->GetData());
-        if (!status.Ok())
-          return status;
-      }
-
-      UpdateBufferData(*ebo, indxBuffer->GetData());
-    }
+      status = Bind(*indxBuffer);
 
     return status;
   }
