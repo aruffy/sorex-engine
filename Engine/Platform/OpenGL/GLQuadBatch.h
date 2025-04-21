@@ -177,15 +177,13 @@ private:
 
   // TODO: Allocate(TSpan<Quad>);
 
-  class GLTexBatch final: private GLQuadBatch<Vertex::V2F_C4B_TC2F>
+  class GLTexBatch final: public GLQuadBatch<Vertex::V2F_C4B_TC2F>
   {
     using VertexType = Vertex::V2F_C4B_TC2F;
     using Quad       = typename GLQuadBatch<VertexType>::Quad;
 
 public:
     GLTexBatch(GLRenderDevice& glDevice, size_t capacity) SRX_NOEXCEPT;
-
-    bool IsEmpty() const { return GLQuadBatch<VertexType>::IsEmpty(); }
 
     Status Flush();
     void   Draw(const TArray<Point, 4>& texcoord,

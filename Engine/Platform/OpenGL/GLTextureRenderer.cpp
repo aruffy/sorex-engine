@@ -33,16 +33,22 @@ namespace Sorex::Graphics
   GLTextureRenderer::GLTextureRenderer(GLRenderDevice& glRenderDevice,
                                        size_t          maxQuadNumber)
     : mQuadBatch(glRenderDevice, maxQuadNumber)
+    , mActiveTexture(nullptr)
   {}
 
   Status GLTextureRenderer::Initialize() SRX_NOEXCEPT
   {
-    /* _shaderProgram = GLShaderProgram::CreateFromSource(
-      GetRenderDevice(),
-      GLShaderSource::kTextureVertexShaderSource,
-      GLShaderSource::kTextureFragmentShaderSource,
-      error); */
+    SRX_CLSFUN_TRACE();
 
+    Status status = SRX_STATUS(EStatusCode::Invalid_State);
+    if (const auto glDevice = GetRenderDevice())
+    {
+      mShaderProgram =
+        GLShaderProgram::Create(*glDevice,
+                                OpenGL::Shader::kTextureVertexShaderSource,
+                                OpenGL::Shader::kTextureFragmentShaderSource,
+                                status);
+    }
     // _technique.blend   = BlendMode::Alpha;
     // _technique.program = _shaderProgram.get();
 
@@ -52,7 +58,11 @@ namespace Sorex::Graphics
 
   Status GLTextureRenderer::Activate() SRX_NOEXCEPT
   {
-    /* GLRenderDevice* glDevice = GetRenderDevice();
+    SRX_CLSFUN_TRACE();  // @FIXME: remove
+
+    GLRenderDevice* glDevice = GetRenderDevice();
+
+    /*
     if (!glDevice || !_shaderProgram)
     {
       RFY_MAKE_ERR(error, Error::Invalid_State, "invalid gl resource");
@@ -65,42 +75,38 @@ namespace Sorex::Graphics
     _technique.blend = state.blendMode;
 
     // _glDevice->SetShaderParam(kUniformCamera, mat4x4, ) @todo
+    */
 
-    return glDevice->ApplyRenderTechnique(_technique, error); */
-
+    return glDevice->ApplyRenderTechnique(mRenderTechnique);
     return SRX_STATUS(EStatusCode::Not_Implemented);
   }
 
   void GLTextureRenderer::Flush() SRX_NOEXCEPT
   {
-    /* if (IsEmpty())
-      return;
-
-    if (!_quadBatch.Flush(&_error))
-      RFY_WARN("[GLTextureRenderer] Missed draw call: {}",
-               _error.GetMessage().c_str()); */
+    if (auto status = mQuadBatch.Flush(); !status.Ok())
+      SRX_WARN("[GLTextureRenderer] Missed draw call: {}", status.ToString());
   }
 
   void GLTextureRenderer::Reset() SRX_NOEXCEPT
   {
-    /* _texture = nullptr;
-    _quadBatch.Clear(); */
+    mActiveTexture = nullptr;
+    mQuadBatch.Clear();
   }
 
   void GLTextureRenderer::DrawTexture(const Texture2D* texture,
                                       const Point&     position,
                                       Color            color) SRX_NOEXCEPT
   {
-    /* if (texture == nullptr)
+    if (texture == nullptr)
       return;
 
     Rect rect = texture->GetContentRect();
-    rect.ToArray(_texPoints);
+    rect.ToArray(mTexPoints);
 
     rect.SetLocation(position);
-    rect.ToArray(_screenPoints);
+    rect.ToArray(mScreenPoints);
 
-    DrawQuad(texture, color); */
+    DrawQuad(texture, color);
   }
 
   void GLTextureRenderer::DrawTexture(const Texture2D* texture,
@@ -189,20 +195,21 @@ namespace Sorex::Graphics
 
   void GLTextureRenderer::DrawQuad(const Texture2D* texture, Color color)
   {
-    /*     if (_texture != texture)
-        {
-          Flush();
-          _texture = texture;
-          RFY_VERIFY_MSG(_shaderProgram->SetTexture(0, texture, nullptr,
-       &_error), _error.GetMessage().c_str());
-        }
+    if (mActiveTexture != texture)
+    {
+      Flush();
+      mActiveTexture = texture;  // FIXME: Should update after applying
+      Status status;
+      SRX_VERIFY_MSG(mShaderProgram->SetTexture(0, texture, nullptr, &status),
+                     status.ToString());
+    }
 
-        if (_canvasState && _canvasState->bUseTransform)
-        {
-          for (Point& sp : _screenPoints)  // cppcheck-suppress useStlAlgorithm
-            sp = Matrix3x3::Transform(_canvasState->transform, sp);
-        }
+    /* if (_canvasState && _canvasState->bUseTransform)
+    {
+      for (Point& sp : _screenPoints)  // cppcheck-suppress useStlAlgorithm
+        sp = Matrix3x3::Transform(_canvasState->transform, sp);
+    } */
 
-        _quadBatch.Draw(_texPoints, _screenPoints, color); */
+    mQuadBatch.Draw(mTexPoints, mScreenPoints, color);
   }
 }

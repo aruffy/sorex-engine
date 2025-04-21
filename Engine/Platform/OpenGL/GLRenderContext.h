@@ -56,7 +56,7 @@ public:
 
     void SetColor(const Color value) { mColor = value; }
 
-    // error_t SetTexture(size_t slot, const GLTexture2D* texture);
+    // Status SetTexture(size_t slot, const GLTexture2D& texture);
     // error_t SetTextureSampler(size_t slot, const TextureSampler& sampler);
 
     // bool ActivateTexture(GLenum slot, Error* error);

@@ -31,12 +31,16 @@
 #include <Sorex/Graphics/SxRenderer.h>
 
 #include "GLQuadBatch.h"
+#include "GLShaderProgram.h"
+#include "GLRenderTechnique.h"
 
 namespace Sorex::Graphics
 {
   class GLRenderDevice;
   class GLTextureRenderer final: public TextureRenderer
   {
+    SRX_RTTI(Graphics::GLTextureRenderer, Graphics::TextureRenderer);
+
 public:
     GLTextureRenderer(GLRenderDevice& glRenderDevice, size_t maxQuadNumber);
 
@@ -52,10 +56,10 @@ public:
       return mQuadBatch.IsEmpty();
     }
 
-    /* inline GLRenderDevice* GetRenderDevice()
+    SRX_INLINE GLRenderDevice* GetRenderDevice()
     {
-      // return _quadBatch.GetRenderDevice();
-    } */
+      return mQuadBatch.GetRenderDevice();
+    }
 
     // API TextureRenderer
     virtual void DrawTexture(const Texture2D* texture,
@@ -78,16 +82,17 @@ private:
     void DrawQuad(const Texture2D* texture, Color color);
 
 private:
-    GLTexBatch mQuadBatch;
+    GLTexBatch                      mQuadBatch;
+    TUniquePointer<GLShaderProgram> mShaderProgram;
+    GLRenderTechnique               mRenderTechnique;
 
+
+    const Texture2D* mActiveTexture;
     // const CanvasState* _canvasState;
-    // GLRenderTechnique  _technique;
 
-    // const Texture2D* _texture;
-    // TArray<Point, 4> _screenPoints;
-    // TArray<Point, 4> _texPoints;
+    TArray<Point, 4> mScreenPoints;
+    TArray<Point, 4> mTexPoints;
 
-    // TUniquePointer<GLShaderProgram> _shaderProgram;
     // Error                           _error;
   };
 }

@@ -513,7 +513,7 @@ namespace Sorex::Graphics
 
       uniform.location =
         SRX_OPENGL_CALL(glGetUniformLocation(program.id, name));
-      uniform.hash = Sorex::Utils::GetHash(StringView(name));
+      uniform.hash = Sorex::Utils::GetHash(GLStringView(name));
 
 #ifdef SOREX_DEBUG_MEDIUM
       uniform.name.assign(name);
