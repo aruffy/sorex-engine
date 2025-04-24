@@ -123,11 +123,13 @@ namespace Sorex::Resource
       return SRX_OK;
     }
 
-    mLoader = mCreator.CreateImageLoader(extansion);
+    mLoader = mCreator.CreateImageLoader(extansion.substr(1));
     if (!mLoader)
-      return SRX_STATUS_MSG(EStatusCode::Not_Found,
-                            "image data loader for '{}' not found",
-                            GetAssetName());
+      return SRX_STATUS_MSG(
+        EStatusCode::Not_Found,
+        "image data loader for '{}' key not found, asset: '{}'",
+        extansion,
+        GetAssetName());
     return SRX_OK;
   }
 

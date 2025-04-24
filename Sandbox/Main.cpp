@@ -51,7 +51,7 @@ class MyDirector final: public Director
       nullptr,
       nullptr);
 
-    auto asset =
+    mTexture =
       mAssetManager->Load<Graphics::Texture2D>(SRX_PATH("/Textures/image.tga"),
                                                nullptr,
                                                nullptr);
@@ -71,11 +71,15 @@ class MyDirector final: public Director
     canvas.DrawRect(Rect(Point(200.f, 400.f), Size(64.f, 128.f)),
                     Color::Yellow);
     canvas.DrawCircle(Point(300.f, 400.f), 64.f, 32, Color::Red);
+
+    if (mTexture)
+      canvas.DrawTexture(mTexture.get(), Point(200.f, 25.f));
   }
 
   private:
   TUniquePointer<Resource::AssetStorage> mAssetStorage;
   SxAssetManager*                        mAssetManager = nullptr;
+  TSharedPointer<Graphics::Texture2D>    mTexture;
 };
 
 int main(const int argc, const char* argv[])

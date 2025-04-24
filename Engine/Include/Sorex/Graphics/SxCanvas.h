@@ -58,11 +58,12 @@ public:
                     float        radius,
                     int32        segments,
                     Color        color) SRX_NOEXCEPT;
+
+    void DrawTexture(const Graphics::Texture2D* texture,
+                     const Point&               location,
+                     Color                      color = Color::White);
     /*
                void DrawSprite(const Graphics::Sprite& sprite);
-            void DrawTexture(const Graphics::Texture2D* texture,
-                             const Point&               location,
-                             Color                      color);
             void DrawTexture(const Graphics::Texture2D* texture,
                              const Point&               location,
                              float                      rotation = 0.f,
@@ -127,7 +128,7 @@ private:
     Graphics::Renderer*     mRenderer = nullptr;
 
     TUniquePointer<Graphics::PrimitiveRenderer> mPrimitiveRenderer;
-    // TUniquePointer<Graphics::TextureRenderer>   _textureRenderer;
+    TUniquePointer<Graphics::TextureRenderer>   mTextureRenderer;
     // TUniquePointer<Graphics::TextRenderer>      _textRenderer;
 
     // Graphics::CanvasState         _state;

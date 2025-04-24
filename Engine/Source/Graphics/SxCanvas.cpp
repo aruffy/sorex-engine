@@ -37,6 +37,8 @@ namespace Sorex
   {
     mPrimitiveRenderer =
       mRenderDevice.CreateRenderer<Graphics::PrimitiveRenderer>();
+    mTextureRenderer =
+      mRenderDevice.CreateRenderer<Graphics::TextureRenderer>();
 
     if (mPrimitiveRenderer == nullptr)
       return SRX_STATUS_MSG(EStatusCode::Not_Supported,
@@ -99,6 +101,14 @@ namespace Sorex
       mPrimitiveRenderer->DrawCircle(center, radius, segments, color);
   }
 
+
+  void Canvas::DrawTexture(const Graphics::Texture2D* texture,
+                           const Point&               location,
+                           Color                      color)
+  {
+    if (ActivateRenderer(mTextureRenderer.get()))
+      mTextureRenderer->DrawTexture(texture, location, color);
+  }
 
   void Canvas::Clear() SRX_NOEXCEPT
   {

@@ -35,6 +35,7 @@
 #include <gtc/type_ptr.hpp>
 
 #include "GLPrimitiveRenderer.h"
+#include "GLTextureRenderer.h"
 #include "GLTexture2D.h"
 #include "GLTypes.h"
 
@@ -383,7 +384,6 @@ namespace Sorex::Graphics
     }
 
     // TODO: From shader_program [attrib, name]
-    // TODO: Default Uniform Block
     SRX_OPENGL_CALL(glBindAttribLocation(program->id,
                                          (GLuint)EVertexAttrib::Position,
                                          "a_position"));
@@ -715,11 +715,13 @@ namespace Sorex::Graphics
                                            ssize_t capacity) SRX_NOEXCEPT
   {
     if (capacity == SRX_UNKNOWN_SIZE)
-      capacity = 2048;  // @TODO: Magic constant
+      capacity = 2048;  // @FIXME: Magic constant
 
-    // @TODO: Factory
+    // @FIXME: Factory, remove new
     if (cls.IsA(GetRuntimeType<Graphics::PrimitiveRenderer>()))
       return new GLPrimitiveRenderer(this, capacity);
+    else if (cls.IsA(GetRuntimeType<Graphics::TextureRenderer>()))
+      return new GLTextureRenderer(*this, capacity);
 
     return nullptr;
   }
