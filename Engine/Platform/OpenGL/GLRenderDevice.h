@@ -62,6 +62,7 @@ public:
     virtual TUniquePointer<Texture2D> CreateTexture2D(Path path) override;
     // cppcheck-suppress functionConst
     Status InitializeTexture(const GLTexture2D& texture, bool bMinmaps = false);
+    Status SetTexture2D(GLuint index, const Texture2D* texture);
 
     /**
      * @brief Allocate new OpenGL resource.
@@ -91,6 +92,12 @@ public:
                               TVector<GLUniform>&    uniforms) SRX_NOEXCEPT;
     Status ApplyRenderTechnique(const GLRenderTechnique& technique)
       SRX_NOEXCEPT;
+
+    SRX_INLINE const GLResource* GetDeviceResource(
+      const GLResourceReference* glResourceReference) const SRX_NOEXCEPT
+    {
+      return GetResource(glResourceReference);
+    }
 
 protected:
     virtual Renderer* CreateRenderer(const RuntimeClass& cls,

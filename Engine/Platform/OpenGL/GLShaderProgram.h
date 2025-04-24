@@ -82,7 +82,7 @@ public:
     Status SetTexture(uint32 index, const Texture2D& texture);
 
 private:
-    GLUniform* FindUniform(const hash_t hash) const;
+    GLUniform* FindUniform(const hash_t hash);
     Status     SetTexCoordTransform(uint32 index, const Vector2& transform);
 
 private:

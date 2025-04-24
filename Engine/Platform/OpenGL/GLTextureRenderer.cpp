@@ -78,7 +78,6 @@ namespace Sorex::Graphics
     */
 
     return glDevice->ApplyRenderTechnique(mRenderTechnique);
-    return SRX_STATUS(EStatusCode::Not_Implemented);
   }
 
   void GLTextureRenderer::Flush() SRX_NOEXCEPT
@@ -198,10 +197,10 @@ namespace Sorex::Graphics
     if (mActiveTexture != texture)
     {
       Flush();
-      mActiveTexture = texture;  // FIXME: Should update after applying
-      Status status;
-      SRX_VERIFY_MSG(mShaderProgram->SetTexture(0, texture, nullptr, &status),
-                     status.ToString());
+      if (texture && mShaderProgram->SetTexture(0, *texture).Ok())
+        mActiveTexture = texture;
+      else
+        mActiveTexture = nullptr;
     }
 
     /* if (_canvasState && _canvasState->bUseTransform)
@@ -210,6 +209,7 @@ namespace Sorex::Graphics
         sp = Matrix3x3::Transform(_canvasState->transform, sp);
     } */
 
+    SRX_CHECK_MSG(mActiveTexture, "no texture to draw");
     mQuadBatch.Draw(mTexPoints, mScreenPoints, color);
   }
 }

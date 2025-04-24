@@ -33,6 +33,7 @@
 
 #include "GLTypes.h"
 #include "GLRenderTechnique.h"
+#include "GLTexture2D.h"
 
 namespace Sorex::Graphics
 {
@@ -56,10 +57,10 @@ public:
 
     void SetColor(const Color value) { mColor = value; }
 
-    // Status SetTexture(size_t slot, const GLTexture2D& texture);
+    Status SetTexture(size_t slot, const GLTexture2D& texture);
     // error_t SetTextureSampler(size_t slot, const TextureSampler& sampler);
 
-    // bool ActivateTexture(GLenum slot, Error* error);
+    Status ActivateTexture(GLenum slot);
 
 private:
     // void ApplyBlendMode(BlendMode mode);
@@ -68,19 +69,19 @@ private:
                              bool                  bMipmaps = false);
 */
 private:
-    // const GLRenderDevice& mDevice;
+    const GLRenderDevice& mDevice;
 
     Color mColor;
     // Blend mBlend;
 
-    /*     struct TextureSample
-        {
-          const GLTexture2D* texture = nullptr;
+    struct TextureSample
+    {
+      const GLTexture2D* texture = nullptr;
 
-          TextureSampler sampler;
-          bool           bUpdateSampler = true;
-        };
+      // TextureSampler sampler;
+      // bool bUpdateSampler = true;
+    };
 
-        TVector<TextureSample> _textures; */
+    TVector<TextureSample> mTextures;
   };
 }

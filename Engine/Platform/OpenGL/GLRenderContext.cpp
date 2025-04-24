@@ -104,8 +104,8 @@ namespace Sorex::Graphics
 {
   GLRenderContext::GLRenderContext(const GLRenderDevice& renderDevice)
     SRX_NOEXCEPT
-    // : mDevice(renderDevice)
-    : mColor(Color(0x1D, 0x18, 0x1D))
+    : mDevice(renderDevice)
+    , mColor(Color(0x1D, 0x18, 0x1D))
   {
     GLint maxTextureUnits = 0;
     SRX_OPENGL_CALL(
@@ -224,15 +224,16 @@ namespace Sorex::Graphics
     OPENGL_CALL(glTexParameteri(target, GL_TEXTURE_MAG_FILTER, magf));
   } */
 
-  /* error_t GLRenderContext::SetTexture(size_t slot, const GLTexture2D*
-  texture)
+  Status GLRenderContext::SetTexture(size_t slot, const GLTexture2D& texture)
   {
-    if (slot >= _textures.size())
-      return Error::Out_Of_Range;
+    if (slot >= mTextures.size())
+      return SRX_STATUS_MSG(EStatusCode::Out_Of_Range,
+                            "texture sample slot {} is out of range",
+                            slot);
 
-    _textures[slot].texture = texture;
-    return Error::Ok;
-  } */
+    mTextures[slot].texture = &texture;
+    return SRX_OK;
+  }
 
   /* error_t GLRenderContext::SetTextureSampler(size_t                slot,
                                              const TextureSampler& sampler)
@@ -251,36 +252,34 @@ namespace Sorex::Graphics
     return Error::Ok;
   } */
 
-  /* bool GLRenderContext::ActivateTexture(GLenum slot, Error* error)
+  Status GLRenderContext::ActivateTexture(GLenum slot)
   {
-    if (slot >= _textures.size())
-    {
-      RFY_MAKE_ERR(error, Error::Out_Of_Range, "invalid texture slot");
-      return false;
-    }
+    if (slot >= mTextures.size())
+      return SRX_STATUS(EStatusCode::Out_Of_Range);
 
-    const TextureSample& texSlot = _textures[slot];
+    const TextureSample& texSlot = mTextures[slot];
     const GLResource*    texture =
       texSlot.texture
-           ? _glDevice.GetResource(texSlot.texture->GetResourceToken())
+           ? mDevice.GetDeviceResource(texSlot.texture->GetResourceToken())
            : nullptr;
 
     if (texture == nullptr || texture->type != GLResourceType::Texture2D
-        || !texture->isInited)
+        || !texture->inited)
     {
-      RFY_MAKE_ERR(error, Error::Invalid_State, "invalid texture");
-      return false;
+      SRX_NOENTRY("render context invalid texture");
+      return SRX_STATUS_MSG(EStatusCode::Invalid_State,
+                            "invalid texture state");
     }
 
-    OPENGL_CALL(glActiveTexture(GL_TEXTURE0 + slot));
-    OPENGL_CALL(glBindTexture(texture->target, texture->id));
+    SRX_OPENGL_CALL(glActiveTexture(GL_TEXTURE0 + slot));
+    SRX_OPENGL_CALL(glBindTexture(texture->target, texture->id));
 
-    if (texSlot.bUpdateSampler)
-      ApplyTextureSampler(texture->target,
-                          texSlot.sampler,
-                          texSlot.texture->HasMipmaps());
-
-    return true;
-  } */
+    /*     if (texSlot.bUpdateSampler)
+          ApplyTextureSampler(texture->target,
+                              texSlot.sampler,
+                              texSlot.texture->HasMipmaps());
+     */
+    return SRX_OK;
+  }
 
 }  // namespace

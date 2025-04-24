@@ -145,19 +145,9 @@ namespace Sorex::Graphics
     /* if (sampler == nullptr)
       sampler = texture->GetSampler(); */
 
-    status =
-      glRenderDevice->SetTexture2D(index,
-                                   texture,
-                                   sampler ? sampler : &s_kDefaultTexSampler);
-    if (rc != Error::Ok)
-    {
-      RFY_MAKE_ERR(error, rc, "set texture to render device failed");
-      return false;
-    }
-
-    return true;
+    // FIXME:     // sampler ? sampler : &s_kDefaultTexSampler
+    return glRenderDevice->SetTexture2D(index, &texture);
   }
-
 
   Status GLShaderProgram::SetTexCoordTransform(uint32         index,
                                                const Vector2& transform)
@@ -176,14 +166,13 @@ namespace Sorex::Graphics
     return SRX_OK;
   }
 
-  GLUniform* GLShaderProgram::FindUniform(const hash_t hash) const
+  GLUniform* GLShaderProgram::FindUniform(const hash_t hash)
   {
-    auto it = std::find_if(mUniforms.begin(),
-                           mUniforms.end(),
-                           [hash](const GLUniform* uniform) {
-                             return uniform && uniform->GetHash() == hash;
-                           });
+    auto it = std::find_if(
+      mUniforms.begin(),
+      mUniforms.end(),
+      [hash](const GLUniform& uniform) { return uniform.GetHash() == hash; });
 
-    return it != mUniforms.end() ? *it : nullptr;
+    return it != mUniforms.end() ? &(*it) : nullptr;
   }
 }  // namespace

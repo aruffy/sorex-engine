@@ -328,6 +328,24 @@ namespace Sorex::Graphics
     return SRX_OK;
   }
 
+  Status GLRenderDevice::SetTexture2D(GLuint slot, const Texture2D* texture)
+  {
+    if (texture == nullptr)
+      return SRX_STATUS(EStatusCode::Invalid_Argument);
+
+    if (!mRenderContext)
+      return SRX_STATUS(EStatusCode::Invalid_State);
+
+    SRX_CHECK(texture->IsA<GLTexture2D>());
+
+    // if (sampler)
+    //   _renderContext->SetTextureSampler(slot, *sampler);
+
+    return mRenderContext->SetTexture(
+      slot,
+      *(static_cast<const GLTexture2D*>(texture)));
+  }
+
   Status GLRenderDevice::BuildShaderProgram(
     const GLShaderProgram& shaderProgram,
     TVector<GLUniform>&    uniforms) SRX_NOEXCEPT
@@ -537,6 +555,7 @@ namespace Sorex::Graphics
     return SRX_OK;
   }
 
+  // FIXME: Should be a render context function, as it set the context
   Status GLRenderDevice::ActivateShaderProgram(GLenum& mode) SRX_NOEXCEPT
   {
     SRX_CHECK(Thread::IsMainThread());
@@ -588,13 +607,13 @@ namespace Sorex::Graphics
                               uniform.GetType(),
                               uniform.GetLocation());
 
-      // @FIXME:
       if (uniform.GetType() == GL_SAMPLER_2D)
       {
-        // GLenum textureIndex;
-        // uniform->GetValue(textureIndex);
-        // if (_renderContext->ActivateTexture(textureIndex, error) == false)
-        // return false;
+        GLenum textureIndex;
+        uniform.GetValue(textureIndex);
+        if (auto status = mRenderContext->ActivateTexture(textureIndex);
+            !status.Ok())
+          return status;
       }
     }
 
