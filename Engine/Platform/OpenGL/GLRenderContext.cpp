@@ -110,8 +110,8 @@ namespace Sorex::Graphics
     GLint maxTextureUnits = 0;
     SRX_OPENGL_CALL(
       glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &maxTextureUnits));
-    // _textures.resize(maxTextureUnits);
 
+    mTextures.resize(maxTextureUnits);
     Reset();
   }
 

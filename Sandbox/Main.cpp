@@ -45,15 +45,15 @@ class MyDirector final: public Director
     status = filesystem->Mount(SRX_PATH("Textures"), SRX_PATH("/Textures"));
     SRX_ASSERT(status.Ok());
 
-    /*     auto asset2 = mAssetManager->LoadAsync<Graphics::Texture2D>(
-          SRX_PATH("/Textures/image2.tga"),
-          nullptr,
-          nullptr);
+    /* auto asset2 = mAssetManager->LoadAsync<Graphics::Texture2D>(
+      SRX_PATH("/Textures/image2.tga"),
+      nullptr,
+      nullptr); */
 
-        mTexture =
-          mAssetManager->Load<Graphics::Texture2D>(SRX_PATH("/Textures/image.tga"),
-                                                   nullptr,
-                                                   nullptr); */
+    mTexture =
+      mAssetManager->Load<Graphics::Texture2D>(SRX_PATH("/Textures/image.tga"),
+                                               nullptr,
+                                               nullptr);
     return status;
   }
 
@@ -71,8 +71,8 @@ class MyDirector final: public Director
                     Color::Yellow);
     canvas.DrawCircle(Point(300.f, 400.f), 64.f, 32, Color::Red);
 
-    /* if (mTexture)
-      canvas.DrawTexture(mTexture.get(), Point(200.f, 25.f)); */
+    if (mTexture)
+      canvas.DrawTexture(mTexture.get(), Point(200.f, 25.f));
   }
 
   private:

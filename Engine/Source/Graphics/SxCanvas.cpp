@@ -40,11 +40,15 @@ namespace Sorex
     mTextureRenderer =
       mRenderDevice.CreateRenderer<Graphics::TextureRenderer>();
 
-    if (mPrimitiveRenderer == nullptr)
+    if (!mPrimitiveRenderer || !mTextureRenderer)
       return SRX_STATUS_MSG(EStatusCode::Not_Supported,
                             "renderer creation failed");
 
-    return mPrimitiveRenderer->Initialize();
+  // FIXME:
+     SRX_VERIFY(mPrimitiveRenderer->Initialize().Ok());
+     SRX_VERIFY(mTextureRenderer->Initialize().Ok());
+
+    return SRX_OK;
   }
 
   void Canvas::DrawLine(const Point& begin,

@@ -49,34 +49,18 @@ namespace Sorex::Graphics
                                 OpenGL::Shader::kTextureFragmentShaderSource,
                                 status);
     }
-    // _technique.blend   = BlendMode::Alpha;
-    // _technique.program = _shaderProgram.get();
 
-    // return (_shaderProgram != nullptr);
-    return SRX_STATUS(EStatusCode::Not_Implemented);
+    mRenderTechnique.program = mShaderProgram.get();
+    return status;
   }
 
   Status GLTextureRenderer::Activate() SRX_NOEXCEPT
   {
-    SRX_CLSFUN_TRACE();  // @FIXME: remove
-
     GLRenderDevice* glDevice = GetRenderDevice();
-
-    /*
-    if (!glDevice || !_shaderProgram)
-    {
-      RFY_MAKE_ERR(error, Error::Invalid_State, "invalid gl resource");
-      return false;
-    }
+    if (!glDevice || !mShaderProgram)
+      return SRX_STATUS(EStatusCode::Invalid_Format);
 
     Reset();
-
-    _canvasState     = &state;
-    _technique.blend = state.blendMode;
-
-    // _glDevice->SetShaderParam(kUniformCamera, mat4x4, ) @todo
-    */
-
     return glDevice->ApplyRenderTechnique(mRenderTechnique);
   }
 
