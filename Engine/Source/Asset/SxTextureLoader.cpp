@@ -123,11 +123,13 @@ namespace Sorex::Resource
       return SRX_OK;
     }
 
-    mLoader = mCreator.CreateImageLoader(extansion);
+    mLoader = mCreator.CreateImageLoader(extansion.substr(1));
     if (!mLoader)
-      return SRX_STATUS_MSG(EStatusCode::Not_Found,
-                            "image data loader for '{}' not found",
-                            GetAssetName());
+      return SRX_STATUS_MSG(
+        EStatusCode::Not_Found,
+        "image data loader for '{}' key not found, asset: '{}'",
+        extansion,
+        GetAssetName());
     return SRX_OK;
   }
 
@@ -168,10 +170,8 @@ namespace Sorex::Resource
               GetTypeName<Graphics::Texture2D>(),
               GetAssetName());
 
-    // @TODO: Can We call OpenGL texture related calls not in the main thread?
     Graphics::Texture2D* texture =
       static_cast<Graphics::Texture2D*>(GetAssetPtr());
-
     return texture->Initialize(std::move(mBitmap));
   }
 }  // namespace

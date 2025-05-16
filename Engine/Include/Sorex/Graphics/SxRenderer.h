@@ -162,15 +162,15 @@ public:
                              Color            color) SRX_NOEXCEPT = 0;
 
     virtual void DrawTexture(const Texture2D* texture,
+                             const Rect&      texRect,
+                             const Point&     position,
+                             Color            color) SRX_NOEXCEPT = 0;
+
+    virtual void DrawTexture(const Texture2D* texture,
                              const Point&     position,
                              const Vec2&      scale,
                              EAnchorPoint     anchor,
                              scalar_t         rotation,
-                             Color            color) SRX_NOEXCEPT = 0;
-
-    virtual void DrawTexture(const Texture2D* texture,
-                             const Rect&      texRect,
-                             const Point&     position,
                              Color            color) SRX_NOEXCEPT = 0;
   };
 }  // namespace

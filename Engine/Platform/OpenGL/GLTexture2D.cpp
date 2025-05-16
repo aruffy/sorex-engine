@@ -28,6 +28,7 @@
 #include "GLTexture2D.h"
 
 #include "GLRenderDevice.h"
+#include "Sorex/Math/SxMaths.h"
 
 namespace
 {
@@ -80,14 +81,24 @@ namespace Sorex::Graphics
       return SRX_STATUS_MSG(EStatusCode::Invalid_Format,
                             "texture format: not supported or invalid");
 
-    const SizeInt& origSize = bitmap->GetSize();
+    if (!mToken)
+      mToken = AllocateResource(&mRenderDevice, GLResourceType::Texture2D);
+
+    SRX_ASSERT(mToken);
+
+    const SizeInt origSize = bitmap->GetSize();
     if (mWidth != origSize.width || mHeight != origSize.height)
     {
       SRX_CHECK(mWidth > origSize.width && mHeight > origSize.height);
 
-      // @NOTE: make texture size power of two
       TextureBitmap tmpBitmap{ mWidth, mHeight, bitmap->GetPixelFormat() };
+
+#ifdef SOREX_DEBUG_MEDIUM
       tmpBitmap.Fill(0xff);
+#else
+      tmpBitmap.Fill(0);
+#endif
+
       for (int32 scanline = 0; scanline < origSize.height; ++scanline)
       {
         std::copy_n(bitmap->GetScanLine(scanline).data(),
@@ -106,8 +117,7 @@ namespace Sorex::Graphics
     mContentRect = Rect(Point(0.f, 0.f),
                         Size(static_cast<float>(origSize.width),
                              static_cast<float>(origSize.height)));
-    if (!mToken)
-      mToken = AllocateResource(&mRenderDevice, GLResourceType::Texture2D);
+    mData        = reinterpret_cast<const GLubyte*>(bitmap->GetData());
 
     Status status = mRenderDevice.InitializeTexture(*this, mMipmaps);
     if (!status.Ok())
@@ -200,7 +210,6 @@ namespace Sorex::Graphics
     mHeight =
       IsPowerOfTwo(size.height) ? size.height : GetPowerOfTwo(size.height);
     mAligment = GetDataAlignment(bitmap);
-    mData     = reinterpret_cast<const GLubyte*>(bitmap.GetData());
     return true;
   }
 

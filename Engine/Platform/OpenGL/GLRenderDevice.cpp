@@ -35,6 +35,7 @@
 #include <gtc/type_ptr.hpp>
 
 #include "GLPrimitiveRenderer.h"
+#include "GLTextureRenderer.h"
 #include "GLTexture2D.h"
 #include "GLTypes.h"
 
@@ -328,6 +329,24 @@ namespace Sorex::Graphics
     return SRX_OK;
   }
 
+  Status GLRenderDevice::SetTexture2D(GLuint slot, const Texture2D* texture)
+  {
+    if (texture == nullptr)
+      return SRX_STATUS(EStatusCode::Invalid_Argument);
+
+    if (!mRenderContext)
+      return SRX_STATUS(EStatusCode::Invalid_State);
+
+    SRX_CHECK(texture->IsA<GLTexture2D>());
+
+    // if (sampler)
+    //   _renderContext->SetTextureSampler(slot, *sampler);
+
+    return mRenderContext->SetTexture(
+      slot,
+      *(static_cast<const GLTexture2D*>(texture)));
+  }
+
   Status GLRenderDevice::BuildShaderProgram(
     const GLShaderProgram& shaderProgram,
     TVector<GLUniform>&    uniforms) SRX_NOEXCEPT
@@ -365,7 +384,6 @@ namespace Sorex::Graphics
     }
 
     // TODO: From shader_program [attrib, name]
-    // TODO: Default Uniform Block
     SRX_OPENGL_CALL(glBindAttribLocation(program->id,
                                          (GLuint)EVertexAttrib::Position,
                                          "a_position"));
@@ -513,7 +531,7 @@ namespace Sorex::Graphics
 
       uniform.location =
         SRX_OPENGL_CALL(glGetUniformLocation(program.id, name));
-      uniform.hash = Sorex::Utils::GetHash(StringView(name));
+      uniform.hash = Sorex::Utils::GetHash(GLStringView(name));
 
 #ifdef SOREX_DEBUG_MEDIUM
       uniform.name.assign(name);
@@ -537,6 +555,7 @@ namespace Sorex::Graphics
     return SRX_OK;
   }
 
+  // FIXME: Should be a render context function, as it set the context
   Status GLRenderDevice::ActivateShaderProgram(GLenum& mode) SRX_NOEXCEPT
   {
     SRX_CHECK(Thread::IsMainThread());
@@ -588,17 +607,35 @@ namespace Sorex::Graphics
                               uniform.GetType(),
                               uniform.GetLocation());
 
-      // @FIXME:
       if (uniform.GetType() == GL_SAMPLER_2D)
       {
-        // GLenum textureIndex;
-        // uniform->GetValue(textureIndex);
-        // if (_renderContext->ActivateTexture(textureIndex, error) == false)
-        // return false;
+        GLenum textureIndex;
+        uniform.GetValue(textureIndex);
+        if (auto status = mRenderContext->ActivateTexture(textureIndex);
+            !status.Ok())
+          return status;
       }
     }
 
     return SRX_OK;
+  }
+
+  Status GLRenderDevice::Bind(const OpenGL::Buffer& buffer) const SRX_NOEXCEPT
+  {
+    GLResource* bo = GetResource(buffer.GetResourceToken());
+    if (bo == nullptr)
+      return SRX_STATUS_MSG(EStatusCode::Invalid_State,
+                            "{} has expired resource reference",
+                            ToString(buffer.GetType()));
+
+    SRX_OPENGL_CALL(glBindBuffer(bo->target, bo->id));
+    if (bo->inited)
+    {
+      UpdateBufferData(*bo, buffer.GetData());
+      return SRX_OK;
+    }
+
+    return InitializeBuffer(*bo, buffer.GetData());
   }
 
   Status GLRenderDevice::InitializeBuffer(GLResource&         resource,
@@ -678,11 +715,13 @@ namespace Sorex::Graphics
                                            ssize_t capacity) SRX_NOEXCEPT
   {
     if (capacity == SRX_UNKNOWN_SIZE)
-      capacity = 2048;  // @TODO: Magic constant
+      capacity = 2048;  // @FIXME: Magic constant
 
-    // @TODO: Factory
+    // @FIXME: Factory, remove new
     if (cls.IsA(GetRuntimeType<Graphics::PrimitiveRenderer>()))
       return new GLPrimitiveRenderer(this, capacity);
+    else if (cls.IsA(GetRuntimeType<Graphics::TextureRenderer>()))
+      return new GLTextureRenderer(*this, capacity);
 
     return nullptr;
   }

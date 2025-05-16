@@ -151,7 +151,8 @@ namespace Sorex::Math
 
   template<typename T>
     requires std::is_integral_v<T>
-  SRX_API SRX_INLINE T Random(const T max) SRX_NOEXCEPT
+  SRX_API SRX_INLINE T Random(const T max = std::numeric_limits<T>::max())
+    SRX_NOEXCEPT
   {
     static_assert(std::is_same_v<T, bool> == false, "invalid integer type");
 

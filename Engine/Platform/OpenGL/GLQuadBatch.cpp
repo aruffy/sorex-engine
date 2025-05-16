@@ -25,77 +25,62 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#pragma once
-
-#include <Sorex/Graphics/SxTexture2D.h>
-
-#include "GLResourceToken.h"
-#include "GLShader.h"
-#include "GLUniform.h"
-
-// #include "GLTexture2D.h"
+#include "GLQuadBatch.h"
+#include "GLRenderDevice.h"
 
 namespace Sorex::Graphics
 {
-  // @note: used as array index
-  enum class ERenderingMode : uint32
+  GLTexBatch::GLTexBatch(GLRenderDevice& glDevice, size_t capacity) SRX_NOEXCEPT
+    : GLQuadBatch<VertexType>(glDevice, capacity)
+  {}
+
+  Status GLTexBatch::Flush()
   {
-    None = 0u,
-    Points,
-    Lines,
-    Triangles,
-    TriangleStrip
-  };
+    if (!IsEmpty())
+    {
+      Status status = SRX_STATUS(EStatusCode::Invalid_State);
+      if (auto glDevice = GetRenderDevice())
+        status = glDevice->Draw(GetVertexArray());
 
-  class GLRenderDevice;
-  class GLShaderProgram final
+      Clear();
+      return status;
+    }
+
+    return SRX_OK;
+  }
+
+  void GLTexBatch::Draw(const TArray<Point, 4>& texcoord,
+                        const TArray<Point, 4>& screenPoints,
+                        Color                   color)
   {
-public:
-    static TUniquePointer<GLShaderProgram> Create(
-      GLRenderDevice&       glRenderDevice,
-      const GLShaderSource& vert,
-      const GLShaderSource& frag,
-      Status&               status) SRX_NOEXCEPT;
+    if (GetSize() >= GetCapacity())
+      Flush();
 
-    GLShaderProgram(GLRenderDevice* glRenderDevice,
-                    GLShaderPtr     vert,
-                    GLShaderPtr     frag) SRX_NOEXCEPT;
+    Quad quad;
+    SRX_VERIFY(Allocate(quad).Ok());
 
-    GLShaderProgram(const GLShaderProgram& other)      = delete;
-    GLShaderProgram& operator=(GLShaderProgram& other) = delete;
+    quad.tl->position[0] = screenPoints[0].x;
+    quad.tl->position[1] = screenPoints[0].y;
+    quad.tl->texCoord[0] = texcoord[0].x;
+    quad.tl->texCoord[1] = texcoord[0].y;
+    quad.tl->color       = color.value;
 
-    Status Initialize() SRX_NOEXCEPT;
+    quad.bl->position[0] = screenPoints[1].x;
+    quad.bl->position[1] = screenPoints[1].y;
+    quad.bl->texCoord[0] = texcoord[1].x;
+    quad.bl->texCoord[1] = texcoord[1].y;
+    quad.bl->color       = color.value;
 
-    const GLResourceReference* GetResourceToken() const { return mToken.get(); }
-    SRX_INLINE GLRenderDevice* GetRenderDevice();
+    quad.br->position[0] = screenPoints[2].x;
+    quad.br->position[1] = screenPoints[2].y;
+    quad.br->texCoord[0] = texcoord[2].x;
+    quad.br->texCoord[1] = texcoord[2].y;
+    quad.br->color       = color.value;
 
-    ERenderingMode GetRenderingMode() const { return mMode; }
-    void SetRenderingMode(const ERenderingMode value) { mMode = value; }
-
-    TSpan<const GLShaderPtr> GetShaders() const { return mShaders; }
-    GLShaderPtr              GetShader(EShaderType shaderType) SRX_NOEXCEPT;
-
-    TSpan<const GLUniform> GetUniforms() const { return mUniforms; }
-    // cppcheck-suppress functionConst
-    TSpan<GLUniform> GetUniforms() { return mUniforms; }
-
-    Status SetTexture(uint32 index, const Texture2D& texture);
-
-private:
-    GLUniform* FindUniform(const hash_t hash);
-    Status     SetTexCoordTransform(uint32 index, const Vector2& transform);
-
-private:
-    GLResourceToken mToken;
-
-    ERenderingMode       mMode;
-    TVector<GLShaderPtr> mShaders;
-
-    TVector<GLUniform> mUniforms;
-  };
-
-  SRX_INLINE GLRenderDevice* GLShaderProgram::GetRenderDevice()
-  {
-    return mToken ? mToken->GetRenderDevice() : nullptr;
+    quad.tr->position[0] = screenPoints[3].x;
+    quad.tr->position[1] = screenPoints[3].y;
+    quad.tr->texCoord[0] = texcoord[3].x;
+    quad.tr->texCoord[1] = texcoord[3].y;
+    quad.tr->color       = color.value;
   }
 }  // namespace

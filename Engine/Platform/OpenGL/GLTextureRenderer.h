@@ -1,3 +1,4 @@
+
 /**************************************************************************/
 /*                         This file is part of:                          */
 /*                                SOREX                                   */
@@ -27,75 +28,71 @@
 
 #pragma once
 
-#include <Sorex/Graphics/SxTexture2D.h>
+#include <Sorex/Graphics/SxRenderer.h>
 
-#include "GLResourceToken.h"
-#include "GLShader.h"
-#include "GLUniform.h"
-
-// #include "GLTexture2D.h"
+#include "GLQuadBatch.h"
+#include "GLShaderProgram.h"
+#include "GLRenderTechnique.h"
 
 namespace Sorex::Graphics
 {
-  // @note: used as array index
-  enum class ERenderingMode : uint32
-  {
-    None = 0u,
-    Points,
-    Lines,
-    Triangles,
-    TriangleStrip
-  };
-
   class GLRenderDevice;
-  class GLShaderProgram final
+  class GLTextureRenderer final: public TextureRenderer
   {
+    SRX_RTTI(Graphics::GLTextureRenderer, Graphics::TextureRenderer);
+
 public:
-    static TUniquePointer<GLShaderProgram> Create(
-      GLRenderDevice&       glRenderDevice,
-      const GLShaderSource& vert,
-      const GLShaderSource& frag,
-      Status&               status) SRX_NOEXCEPT;
+    GLTextureRenderer(GLRenderDevice& glRenderDevice, size_t maxQuadNumber);
 
-    GLShaderProgram(GLRenderDevice* glRenderDevice,
-                    GLShaderPtr     vert,
-                    GLShaderPtr     frag) SRX_NOEXCEPT;
+    virtual Status Initialize() SRX_NOEXCEPT override;
+    // virtual Status Initialize() override SRX_NOEXCEPT;
+    virtual Status Activate() SRX_NOEXCEPT override;
 
-    GLShaderProgram(const GLShaderProgram& other)      = delete;
-    GLShaderProgram& operator=(GLShaderProgram& other) = delete;
+    virtual void Flush() SRX_NOEXCEPT override;
+    virtual void Reset() SRX_NOEXCEPT override;
 
-    Status Initialize() SRX_NOEXCEPT;
+    virtual bool IsEmpty() const SRX_NOEXCEPT override
+    {
+      return mQuadBatch.IsEmpty();
+    }
 
-    const GLResourceReference* GetResourceToken() const { return mToken.get(); }
-    SRX_INLINE GLRenderDevice* GetRenderDevice();
+    SRX_INLINE GLRenderDevice* GetRenderDevice()
+    {
+      return mQuadBatch.GetRenderDevice();
+    }
 
-    ERenderingMode GetRenderingMode() const { return mMode; }
-    void SetRenderingMode(const ERenderingMode value) { mMode = value; }
+    // API TextureRenderer
+    virtual void DrawTexture(const Texture2D* texture,
+                             const Point&     position,
+                             Color            color) SRX_NOEXCEPT override;
 
-    TSpan<const GLShaderPtr> GetShaders() const { return mShaders; }
-    GLShaderPtr              GetShader(EShaderType shaderType) SRX_NOEXCEPT;
+    virtual void DrawTexture(const Texture2D* texture,
+                             const Rect&      texRect,
+                             const Point&     position,
+                             Color            color) SRX_NOEXCEPT override;
 
-    TSpan<const GLUniform> GetUniforms() const { return mUniforms; }
-    // cppcheck-suppress functionConst
-    TSpan<GLUniform> GetUniforms() { return mUniforms; }
-
-    Status SetTexture(uint32 index, const Texture2D& texture);
+    virtual void DrawTexture(const Texture2D* texture,
+                             const Point&     position,
+                             const Vector2&   scale,
+                             EAnchorPoint     anchor,
+                             scalar_t         rotation,
+                             Color            color) SRX_NOEXCEPT override;
 
 private:
-    GLUniform* FindUniform(const hash_t hash);
-    Status     SetTexCoordTransform(uint32 index, const Vector2& transform);
+    void DrawQuad(const Texture2D* texture, Color color);
 
 private:
-    GLResourceToken mToken;
+    GLTexBatch                      mQuadBatch;
+    TUniquePointer<GLShaderProgram> mShaderProgram;
+    GLRenderTechnique               mRenderTechnique;
 
-    ERenderingMode       mMode;
-    TVector<GLShaderPtr> mShaders;
 
-    TVector<GLUniform> mUniforms;
+    const Texture2D* mActiveTexture;
+    // const CanvasState* _canvasState;
+
+    TArray<Point, 4> mScreenPoints;
+    TArray<Point, 4> mTexPoints;
+
+    // Error                           _error;
   };
-
-  SRX_INLINE GLRenderDevice* GLShaderProgram::GetRenderDevice()
-  {
-    return mToken ? mToken->GetRenderDevice() : nullptr;
-  }
-}  // namespace
+}

@@ -27,13 +27,12 @@ class MyDirector final: public Director
   {
     auto filesystem = AddComponent<DirectorFileSystem>();
     SRX_ASSERT(filesystem);
+
     mAssetStorage = MakeUnique<Resource::AssetFileSystemStorage>(*filesystem);
-    // TODO: Add asset registry
     mAssetManager =
       AddComponent<Resource::AssetManager>(*mAssetStorage, nullptr);
 
-    Status status;
-    status = Director::Initialize();
+    Status status = Director::Initialize();
     if (!status.Ok())
       return status;
 
@@ -46,12 +45,12 @@ class MyDirector final: public Director
     status = filesystem->Mount(SRX_PATH("Textures"), SRX_PATH("/Textures"));
     SRX_ASSERT(status.Ok());
 
-    auto asset2 = mAssetManager->LoadAsync<Graphics::Texture2D>(
+    /* auto asset2 = mAssetManager->LoadAsync<Graphics::Texture2D>(
       SRX_PATH("/Textures/image2.tga"),
       nullptr,
-      nullptr);
+      nullptr); */
 
-    auto asset =
+    mTexture =
       mAssetManager->Load<Graphics::Texture2D>(SRX_PATH("/Textures/image.tga"),
                                                nullptr,
                                                nullptr);
@@ -71,29 +70,25 @@ class MyDirector final: public Director
     canvas.DrawRect(Rect(Point(200.f, 400.f), Size(64.f, 128.f)),
                     Color::Yellow);
     canvas.DrawCircle(Point(300.f, 400.f), 64.f, 32, Color::Red);
+
+    if (mTexture)
+      canvas.DrawTexture(mTexture.get(), Point(200.f, 25.f));
   }
 
   private:
   TUniquePointer<Resource::AssetStorage> mAssetStorage;
   SxAssetManager*                        mAssetManager = nullptr;
+  TSharedPointer<Graphics::Texture2D>    mTexture;
 };
 
 int main(const int argc, const char* argv[])
 {
   if (!(JournalManager::GetInstance()
-          .RegisterLogger<JournalManager::kEngineLogger>("MyEngine", true)
+          .RegisterLogger<JournalManager::kEngineLogger>("SorexEngine", true)
           .Ok()))
     return 1;
 
-  JournalManager::GetInstance().PushRecord(JournalManager::kEngineLogger,
-                                           ELogLevel::Info,
-                                           "Hello, world!");
-  JournalManager::GetInstance().PushRecord(JournalManager::kEngineLogger,
-                                           ELogLevel::Warning,
-                                           "Oops code:{} text:{}",
-                                           400,
-                                           "BAD_REQUEST");
-
   Platform::DesktopLauncher().Run<MyDirector>();
+
   return 0;
 }

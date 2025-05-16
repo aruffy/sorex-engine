@@ -1,13 +1,43 @@
-/* #include <Graphics/OpenGL/GLShaderSource.h>
+/**************************************************************************/
+/*                         This file is part of:                          */
+/*                                SOREX                                   */
+/*                 Simple OpenGL Rendering Engine eXtended                */
+/**************************************************************************/
+/* Copyright (c) 2022 Aleksandr Ershov (Ruffy).                           */
+/*                                                                        */
+/* Permission is hereby granted, free of charge, to any person obtaining  */
+/* a copy of this software and associated documentation files (the        */
+/* "Software"), to deal in the Software without restriction, including    */
+/* without limitation the rights to use, copy, modify, merge, publish,    */
+/* distribute, sublicense, and/or sell copies of the Software, and to     */
+/* permit persons to whom the Software is furnished to do so, subject to  */
+/* the following conditions:                                              */
+/*                                                                        */
+/* The above copyright notice and this permission notice shall be         */
+/* included in all copies or substantial portions of the Software.        */
+/*                                                                        */
+/* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,        */
+/* EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF     */
+/* MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. */
+/* IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY   */
+/* CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,   */
+/* TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE      */
+/* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
+/**************************************************************************/
+
+#include <GLShader.h>
+
+using namespace Sorex::Graphics;
 
 namespace
 {
-    const Ruffy::String __kTextureVertexShaderSource = R"(
+  const GLString __kTextureVertexShaderSource = R"(
         #version 330 core
 
         in mediump vec2 a_position;
         in mediump vec2 a_texcoord;
-        in lowp vec4 a_color;
+
+        in mediump vec4 a_color;
 
         uniform mediump mat4 u_mvp;
         uniform mediump vec2 u_scale_tex_0;
@@ -26,7 +56,7 @@ namespace
     )";
 
 
-    const Ruffy::String __kTextureFragmentShaderSource = R"(
+  const GLString __kTextureFragmentShaderSource = R"(
         #version 330 core
 
         in lowp vec4 v_color;
@@ -38,24 +68,16 @@ namespace
 
         void main()
         {
-            out_color = texture2D(u_sampler_0, v_texcoord) * v_color;
+            out_color = texture(u_sampler_0, v_texcoord) * v_color;
         }
     )";
 }
 
-namespace Ruffy::Graphics
+namespace Sorex::Graphics::OpenGL
 {
-    const GLShaderSource::Instance GLShaderSource::kTextureVertexShaderSource{
-        GLShaderSource::GetHash("kTextureVertexShaderSource"),
-        EShaderType::Vertex_Shader,
-        __kTextureVertexShaderSource
-    };
+  const GLShaderSource Shader::kTextureVertexShaderSource =
+    GLShaderSource{ EShaderType::Vertex, __kTextureVertexShaderSource };
 
-
-    const GLShaderSource::Instance GLShaderSource::kTextureFragmentShaderSource{
-GLShaderSource::GetHash("kTextureFragmentShaderSource"),
-  EShaderType::Fragment_Shader, __kTextureFragmentShaderSource
-}
-;
+  const GLShaderSource Shader::kTextureFragmentShaderSource =
+    GLShaderSource{ EShaderType::Fragment, __kTextureFragmentShaderSource };
 }  // namespace
-*/
