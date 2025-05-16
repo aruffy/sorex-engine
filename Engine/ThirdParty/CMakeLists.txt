@@ -102,6 +102,18 @@ list(APPEND THIRD_PARTY_LIBRARIES glfw)
 message(CHECK_PASS "done")
 
 # ##############################################################################
+# stblib https://github.com/nothings/stb
+# ##############################################################################
+set(STB_SUBDIR "stb")
+
+message(STATUS "[${STB_SUBDIR}] library headers included")
+
+target_include_directories(${ENGINE_TARGET}
+    PRIVATE
+    "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/${STB_SUBDIR}>"
+)
+
+# ##############################################################################
 set(ENGINE_THIRD_PARTY_INCLUDE_DIRECTORIES
     ${THIRD_PARTY_INCLUDE_DIRECTORIES}
     PARENT_SCOPE
