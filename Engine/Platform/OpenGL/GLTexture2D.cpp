@@ -86,7 +86,7 @@ namespace Sorex::Graphics
 
     SRX_ASSERT(mToken);
 
-    const SizeInt& origSize = bitmap->GetSize();
+    const SizeInt origSize = bitmap->GetSize();
     if (mWidth != origSize.width || mHeight != origSize.height)
     {
       SRX_CHECK(mWidth > origSize.width && mHeight > origSize.height);
