@@ -152,7 +152,7 @@ namespace Sorex::Graphics
   Status GLShaderProgram::SetTexCoordTransform(uint32         index,
                                                const Vector2& transform)
   {
-    if (index > kTextCoordTransform.size())
+    if (index >= kTextCoordTransform.size())
       return SRX_STATUS_MSG(EStatusCode::Out_Of_Range,
                             "invalid texcoord uniform index={}",
                             index);
