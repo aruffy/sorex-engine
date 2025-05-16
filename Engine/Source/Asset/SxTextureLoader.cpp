@@ -170,10 +170,8 @@ namespace Sorex::Resource
               GetTypeName<Graphics::Texture2D>(),
               GetAssetName());
 
-    // @TODO: Can We call OpenGL texture related calls not in the main thread?
     Graphics::Texture2D* texture =
       static_cast<Graphics::Texture2D*>(GetAssetPtr());
-
     return texture->Initialize(std::move(mBitmap));
   }
 }  // namespace
