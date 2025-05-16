@@ -44,9 +44,9 @@ namespace Sorex
       return SRX_STATUS_MSG(EStatusCode::Not_Supported,
                             "renderer creation failed");
 
-  // FIXME:
-     SRX_VERIFY(mPrimitiveRenderer->Initialize().Ok());
-     SRX_VERIFY(mTextureRenderer->Initialize().Ok());
+    // FIXME:
+    SRX_VERIFY(mPrimitiveRenderer->Initialize().Ok());
+    SRX_VERIFY(mTextureRenderer->Initialize().Ok());
 
     return SRX_OK;
   }

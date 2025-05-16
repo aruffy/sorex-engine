@@ -129,8 +129,8 @@ private:
   template<typename VertexType>
   GLQuadBatch<VertexType>::GLQuadBatch(GLRenderDevice& glDevice,
                                        size_t          capacity) SRX_NOEXCEPT
-    : mCapacity(ClampQuadNumber<IndexType>(capacity, 8))
-    , mVtxArray(&glDevice)
+    : mVtxArray(&glDevice)
+    , mCapacity(ClampQuadNumber<IndexType>(capacity, 8))
   {
     SRX_CHECK(capacity == mCapacity);
     SRX_VERIFY(mVtxArray
