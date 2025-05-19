@@ -29,6 +29,7 @@
 
 #include <Sorex/FileSystem/SxPathUtils.h>
 #include <Asset/SxTgaImageLoader.h>
+#include <Asset/SxDefaultImageLoader.h>
 
 namespace
 {
@@ -51,13 +52,8 @@ namespace Sorex::Resource
   TextureCreator::TextureCreator(Graphics::RenderDevice& renderDevice,
                                  const bool bEnableDefaultImageLoader)
     : mRenderDevice(renderDevice)
-  {
-    if (bEnableDefaultImageLoader)
-    {
-      RegisterImageLoader("tga",
-                          MakeUnique<ImageLoaderCreator<TgaImageLoader>>());
-    }
-  }
+    , mEnableDefaultImageLoader(bEnableDefaultImageLoader)
+  {}
 
   void TextureCreator::RegisterImageLoader(
     const String&                               extenstion,
@@ -71,7 +67,13 @@ namespace Sorex::Resource
     const String& key) const
   {
     SharedLock _lock(mMutex);  // TODO: Do we need mutex at this class?
-    return mImgLoadersFactory.Create(key);
+    if (auto loader = mImgLoadersFactory.Create(key))
+      return loader;
+
+    // @TODO: Maybe it makes sense to set it only for known extensions: PNG,
+    // TGA, JPEG
+    return mEnableDefaultImageLoader ? MakeUnique<DefaultImageLoader>()
+                                     : nullptr;
   }
 
   AssetCreator::AssetInstance TextureCreator::CreateAssetInstance(

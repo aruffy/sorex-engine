@@ -7,3 +7,6 @@
 [submodule "Engine/ThirdParty/glfw"]
 	path = Engine/ThirdParty/glfw
 	url = https://github.com/glfw/glfw
+[submodule "Engine/ThirdParty/stb"]
+	path = Engine/ThirdParty/stb
+	url = https://github.com/nothings/stb.git
