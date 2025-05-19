@@ -41,6 +41,7 @@ namespace Sorex::Graphics
 public:
     enum class EFactor : uint8
     {
+      None = 0u,
       Zero = 1u,
       One,
       Src_Color,
@@ -59,13 +60,13 @@ public:
 
     enum class EOperation : uint8
     {
-      Add = 1u,
+      None = 0u,
+      Add  = 1u,
       Subtract,
       Reverse_Subtract,
       Min,
       Max
     };
-
 
 public:
     static const BlendMode None;
@@ -100,24 +101,19 @@ public:
       return static_cast<EOperation>(operations & 0xf);
     }
 
-    EFactor GetSrcFactor() const { return static_cast<EFactor>(cfactors >> 4); }
-
-    EFactor GetDstFactor() const
+    SRX_INLINE TPair<EFactor, EFactor> GetColorFactors() SRX_NOEXCEPT
     {
-      return static_cast<EFactor>(cfactors & 0xf);
+      return std::make_pair(static_cast<EFactor>(cfactors >> 4),
+                            static_cast<EFactor>(cfactors & 0xf));
     }
 
-    EFactor GetSrcAlphaFactor() const
+    SRX_INLINE TPair<EFactor, EFactor> GetAlphaFactors() SRX_NOEXCEPT
     {
-      return static_cast<EFactor>(afactors >> 4);
+      return std::make_pair(static_cast<EFactor>(afactors >> 4),
+                            static_cast<EFactor>(afactors & 0xf));
     }
 
-    EFactor GetDstAlphaFactor() const
-    {
-      return static_cast<EFactor>(afactors & 0xf);
-    }
-
-    inline uint32 GetValue() const { return mValue; }
+    SRX_INLINE uint32 GetValue() const { return mValue; }
 
 private:
     static SRX_INLINE uint8 Combine(EFactor sfactor,
