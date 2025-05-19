@@ -26,13 +26,54 @@
 /**************************************************************************/
 
 #include "SxDefaultImageLoader.h"
+#include "Sorex/Graphics/SxTextureBitmap.h"
 
 #define STBI_NO_PSD
 #define STBI_NO_GIF
 #define STBI_NO_HDR
 #define STBI_NO_PNM
+#define STBI_NO_STDIO
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
+
+namespace
+{
+  int StbReadCallback(void* file, char* data, int size)
+  {
+    SRX_CHECK(file && data && size > 0);
+
+    if (size <= 0)
+      return 0;
+
+    Sorex::Stream* const stream = reinterpret_cast<Sorex::Stream*>(file);
+
+    const Sorex::ssize_t n = stream->Read(
+      Sorex::TSpan<Sorex::byte>{ reinterpret_cast<Sorex::byte*>(data),
+                                 static_cast<size_t>(size) });
+
+    if (n == SRX_READ_ERROR)
+      return -1;
+
+    return static_cast<int>(n);
+  }
+
+  void StbSkipCallback(void* file, int n)
+  {
+    SRX_CHECK(file);
+    Sorex::Stream* const stream = reinterpret_cast<Sorex::Stream*>(file);
+    SRX_VERIFY(stream->Seek(n, Sorex::ESeekMode::Current));
+  }
+
+  int StbEndOfFileCallback(void* file)
+  {
+    SRX_CHECK(file);
+    return reinterpret_cast<const Sorex::Stream*>(file)->EndOfFile();
+  }
+
+  const stbi_io_callbacks stbiCallbacks = { StbReadCallback,
+                                            StbSkipCallback,
+                                            StbEndOfFileCallback };
+}
 
 namespace Sorex::Resource
 {
@@ -40,7 +81,56 @@ namespace Sorex::Resource
     Stream& stream,
     Status* status)
   {
-    SRX_STATUS_PTR_MSG(status, EStatusCode::Not_Implemented, "");
-    return nullptr;
+    int      x = 0, y = 0, channels = 0;
+    stbi_uc* imgData = stbi_load_from_callbacks(&stbiCallbacks,
+                                                (void*)(&stream),
+                                                &x,
+                                                &y,
+                                                &channels,
+                                                0);
+
+    if (!imgData)
+    {
+      SRX_STATUS_PTR_MSG(status,
+                         EStatusCode::Not_Available,
+                         "stb image laoding failed");
+      return nullptr;
+    }
+
+    SRX_CHECK(x > 0 && y > 0 && channels > 0);
+    Graphics::EPixelFormat pxlFormat = Graphics::EPixelFormat::None;
+    switch (channels)
+    {
+    case 1:
+      pxlFormat = Graphics::EPixelFormat::A8;
+      break;
+    case 2:
+      pxlFormat = Graphics::EPixelFormat::RGBA4;
+      break;
+    case 3:
+      pxlFormat = Graphics::EPixelFormat::RGB8;
+      break;
+    case 4:
+      pxlFormat = Graphics::EPixelFormat::RGBA8;
+      break;
+    default:
+      SRX_NOENTRY("ivalid number of image channels");
+      SRX_STATUS_PTR_MSG(status,
+                         EStatusCode::Invalid_Format,
+                         "stb image channels number is not supported");
+      stbi_image_free(imgData);
+      return nullptr;
+    }
+
+    TUniquePointer<Graphics::TextureBitmap> bitmap =
+      MakeUnique<Graphics::TextureBitmap>(x, y, pxlFormat);
+
+    const size_t dataSize = static_cast<size_t>(x) * y * channels;
+    SRX_ASSERT(bitmap->GetBytesNumber() == dataSize);
+
+    bitmap->Copy({ static_cast<const byte*>(imgData), dataSize });
+    stbi_image_free(imgData);
+
+    return bitmap;
   }
 }  // namespace

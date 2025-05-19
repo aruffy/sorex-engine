@@ -77,6 +77,8 @@ private:
 
     Graphics::RenderDevice&     mRenderDevice;
     TObjectFactory<ImageLoader> mImgLoadersFactory;
+
+    bool mEnableDefaultImageLoader;
   };
 
   class TextureLoader final: public AssetLoader

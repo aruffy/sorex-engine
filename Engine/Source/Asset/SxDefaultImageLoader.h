@@ -31,12 +31,11 @@
 
 namespace Sorex::Resource
 {
-  class DefaultImageLoader final: ImageLoader
+  class DefaultImageLoader final: public ImageLoader
   {
 public:
     virtual TUniquePointer<Graphics::TextureBitmap> LoadImage(
       Stream& stream,
       Status* status) override;
   };
-
 }  // namespace
