@@ -89,7 +89,7 @@ jobs:
       - name: Install VC++ Redistributable
         shell: cmd
         run: |
-          .\vc_redist.x64.exe /quiet /norestart
+          .\vc_redist.x64.exe /quiet /norestart || IF %ERRORLEVEL% EQU 3010 EXIT 0
 
       - name: Verify VC++ Installation
         shell: cmd

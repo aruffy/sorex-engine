@@ -64,6 +64,7 @@ namespace
     SRX_VERIFY(stream->Seek(n, Sorex::ESeekMode::Current));
   }
 
+  // cppcheck-suppress constParameterPointer
   int StbEndOfFileCallback(void* file)
   {
     SRX_CHECK(file);
@@ -83,7 +84,7 @@ namespace Sorex::Resource
   {
     int      x = 0, y = 0, channels = 0;
     stbi_uc* imgData = stbi_load_from_callbacks(&stbiCallbacks,
-                                                (void*)(&stream),
+                                                static_cast<void*>(&stream),
                                                 &x,
                                                 &y,
                                                 &channels,
