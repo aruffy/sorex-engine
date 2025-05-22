@@ -54,7 +54,7 @@ namespace Sorex::Graphics
     return status;
   }
 
-  Status GLTextureRenderer::Activate() SRX_NOEXCEPT
+  Status GLTextureRenderer::Activate(const CanvasPencil* pencil) SRX_NOEXCEPT
   {
     GLRenderDevice* glDevice = GetRenderDevice();
     if (!glDevice || !mShaderProgram)

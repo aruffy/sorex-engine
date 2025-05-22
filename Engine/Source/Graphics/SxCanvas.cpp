@@ -51,6 +51,63 @@ namespace Sorex
     return SRX_OK;
   }
 
+  void Canvas::PopPencil()
+  {
+    if (mPencilStack.empty())
+    {
+      SRX_NOENTRY("canvas pencil stack empty");
+      return;
+    }
+
+    Flush();
+
+    mPencil = mPencilStack.top();
+    mPencilStack.pop();
+  }
+
+  void Canvas::Rotate(scalar_t rotation)
+  {
+    if (rotation)
+      mPencil.transform = Mat3::Rotation(Math::Radians(rotation))
+                          * mPencil.transform.value_or(Mat3::Identity());
+  }
+
+  void Canvas::Rotate(scalar_t rotation, const Point& anchor)
+  {
+    if (rotation == 0.f)
+      return;
+
+    Mat3 t = mPencil.transform.value_or(Mat3::Identity());
+
+    t.Translate(anchor.x, anchor.y);
+    t.Rotate(Math::Radians(rotation));
+    t.Translate(-anchor.x, -anchor.y);
+
+    mPencil.transform = t;
+  }
+  /*
+    void Canvas::Translate(float x, float y)
+    {
+      _state.transform.Translate(x, y);
+      _state.bUseTransform = true;
+    }
+
+    void Canvas::Scale(float sx, float sy)
+    {
+      _state.transform.Scale(sx, sy);
+      _state.bUseTransform = true;
+    }
+
+    void Canvas::SetBlendMode(Graphics::BlendMode mode)
+    {
+      if (_state.blendMode == mode)
+        return;
+
+      Flush();
+      _state.blendMode = mode;
+    } */
+
+
   void Canvas::DrawLine(const Point& begin,
                         const Point& end,
                         const Color* color,
@@ -86,7 +143,7 @@ namespace Sorex
     if (!mRenderer)
       return false;
 
-    auto status = mRenderer->Activate();
+    auto status = mRenderer->Activate(&mPencil);
     if (!status.Ok())
     {
       SRX_WARN("[Canvas] Renderer activation failed: {}", status.ToString());

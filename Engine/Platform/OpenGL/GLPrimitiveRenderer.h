@@ -50,7 +50,7 @@ public:
 
     // API Render
     virtual Status Initialize() SRX_NOEXCEPT override;
-    virtual Status Activate() SRX_NOEXCEPT override;
+    virtual Status Activate(const CanvasPencil* pencil) SRX_NOEXCEPT override;
     virtual void   Flush() SRX_NOEXCEPT override;
     virtual void   Reset() SRX_NOEXCEPT override;
     virtual bool   IsEmpty() const SRX_NOEXCEPT override
@@ -83,7 +83,6 @@ private:
 
 private:
     GLRenderDevice* mRenderDevice;
-    // const CanvasState* mCanvasState;
 
     TArray<Point, 4>  mPoints;
     GLRenderTechnique mTechnique;
@@ -92,5 +91,6 @@ private:
     size_t      mVtxCapacity;
 
     TUniquePointer<GLShaderProgram> mShaderProgram;
+    const CanvasPencil*             mPencil;
   };
 }

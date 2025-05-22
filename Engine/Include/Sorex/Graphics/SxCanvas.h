@@ -32,6 +32,7 @@
 
 #include "SxRenderDevice.h"
 #include "SxRenderer.h"
+#include "SxCanvasPencil.h"
 
 namespace Sorex
 {
@@ -91,10 +92,6 @@ public:
 
             void        Clear();
 
-            // State Contol
-           SRX_INLINE void PushState() { _stateStack.push(_state); }
-            void        PopState();
-
             void Rotate(float rotation);
             void Rotate(float rotation, const Point& anchor);  // @todo:
            EAnchorPoint ?
@@ -107,6 +104,13 @@ public:
 
             void SetBlendMode(Graphics::BlendMode mode);
          */
+
+    void Rotate(scalar_t rotation);
+    void Rotate(scalar_t     rotation,
+                const Point& anchor);  // @TODO:    EAnchorPoint ?
+
+    SRX_INLINE void PushPencil() { mPencilStack.push(mPencil); }
+    void            PopPencil();
 
     void            Clear() SRX_NOEXCEPT;
     SRX_INLINE void Flush() { ActivateRenderer(nullptr); }
@@ -131,8 +135,8 @@ private:
     TUniquePointer<Graphics::TextureRenderer>   mTextureRenderer;
     // TUniquePointer<Graphics::TextRenderer>      _textRenderer;
 
-    // Graphics::CanvasState         _state;
-    // TStack<Graphics::CanvasState> _stateStack;
+    Graphics::CanvasPencil         mPencil;
+    TStack<Graphics::CanvasPencil> mPencilStack;
   };
 
   SRX_INLINE void Canvas::DrawLine(const Point& begin,

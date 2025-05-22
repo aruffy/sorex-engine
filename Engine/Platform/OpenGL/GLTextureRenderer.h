@@ -46,7 +46,7 @@ public:
 
     virtual Status Initialize() SRX_NOEXCEPT override;
     // virtual Status Initialize() override SRX_NOEXCEPT;
-    virtual Status Activate() SRX_NOEXCEPT override;
+    virtual Status Activate(const CanvasPencil* pencil) SRX_NOEXCEPT override;
 
     virtual void Flush() SRX_NOEXCEPT override;
     virtual void Reset() SRX_NOEXCEPT override;
