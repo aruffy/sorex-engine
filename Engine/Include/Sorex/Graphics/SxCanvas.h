@@ -29,7 +29,7 @@
 
 #include <Sorex/SxCoreMinimal.h>
 #include <Sorex/Math/SxMatrix3x3.h>
-#include <Sorex/SxAnchorPoint.h>
+#include <Sorex/Graphics/SxGraphicsTypes.h>
 
 #include "SxRenderDevice.h"
 #include "SxRenderer.h"
@@ -64,15 +64,14 @@ public:
     void DrawTexture(const Graphics::Texture2D* texture,
                      const Point&               location,
                      Color                      color = Color::White);
-    /*
-               void DrawSprite(const Graphics::Sprite& sprite);
-            void DrawTexture(const Graphics::Texture2D* texture,
-                             const Point&               location,
-                             float                      rotation = 0.f,
-                             const Vector2              scale    = Vec2::One(),
-                             const Color&               color    =
-       Color::White);
 
+    void DrawTexture(const Graphics::Texture2D* texture,
+                     const Point&               location,
+                     scalar_t                   rotation,
+                     Vec2                       scale = Vec2::One(),
+                     Color                      color = Color::White);
+
+    /*
             void DrawText(const Graphics::Font& font,
                           StringView            text,
                           const Point&          pos,
@@ -106,7 +105,7 @@ public:
     SRX_INLINE void Scale(const Vec2& v) { Scale(v.x, v.y); }
 
     void Rotate(scalar_t rotation);
-    void Rotate(scalar_t rotation, const EAnchorPoint anchor);
+    void Rotate(scalar_t rotation, const Graphics::EAnchorPoint anchor);
 
     void SetBlendMode(const Graphics::BlendMode mode) SRX_NOEXCEPT;
 

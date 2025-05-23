@@ -35,7 +35,7 @@ namespace Sorex::Graphics
 {
   struct GLRenderTechnique
   {
-    BlendMode        blend;
+    BlendMode        blendMode;
     GLShaderProgram* program = nullptr;
   };
 }

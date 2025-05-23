@@ -157,7 +157,7 @@ namespace Sorex::Graphics
 
   void GLRenderContext::Apply(const GLRenderTechnique& technique) SRX_NOEXCEPT
   {
-    ApplyBlendMode(technique.blend);
+    ApplyBlendMode(technique.blendMode);
   }
 
   void GLRenderContext::ApplyBlendMode(BlendMode mode)
