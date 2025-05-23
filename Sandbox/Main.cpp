@@ -69,10 +69,11 @@ class MyDirector final: public Director
     canvas.DrawRect(Rect(Point(f, 325.f), Size(64.f, 64.f)), Color::Green);
     canvas.DrawRect(Rect(Point(200.f, 400.f), Size(64.f, 128.f)),
                     Color::Yellow);
+
     canvas.DrawCircle(Point(300.f, 400.f), 64.f, 32, Color::Red);
 
-    if (mTexture)
-      canvas.DrawTexture(mTexture.get(), Point(200.f, 25.f));
+    // if (mTexture)
+    // canvas.DrawTexture(mTexture.get(), Point(200.f, 25.f));
   }
 
   private:

@@ -29,6 +29,7 @@
 
 #include <Sorex/SxCoreMinimal.h>
 #include <Sorex/Math/SxMatrix3x3.h>
+#include <Sorex/SxAnchorPoint.h>
 
 #include "SxRenderDevice.h"
 #include "SxRenderer.h"
@@ -81,7 +82,7 @@ public:
                           WStringView           text,
                           const Point&          pos,
                           Color                 color = Color::White,
-                          float                 scale = 1.f);
+            float                 scale = 1.f);
 
             void DrawText(const Graphics::FontDecorator& decorator,
                           StringView                     text,
@@ -92,23 +93,24 @@ public:
 
             void        Clear();
 
-            void Rotate(float rotation);
-            void Rotate(float rotation, const Point& anchor);  // @todo:
-           EAnchorPoint ?
 
-            void        Translate(float x, float y);
-           SRX_INLINE void Translate(const Vector2& v) { Translate(v.x, v.y); }
 
-            void        Scale(float sx, float sy);
-           SRX_INLINE void Scale(const Vector2& v) { Scale(v.x, v.y); }
 
-            void SetBlendMode(Graphics::BlendMode mode);
+
          */
 
-    void Rotate(scalar_t rotation);
-    void Rotate(scalar_t     rotation,
-                const Point& anchor);  // @TODO:    EAnchorPoint ?
+    void            Translate(scalar_t x, scalar_t y);
+    SRX_INLINE void Translate(const Vec2& v) { Translate(v.x, v.y); }
 
+    void            Scale(scalar_t sx, scalar_t sy);
+    SRX_INLINE void Scale(const Vec2& v) { Scale(v.x, v.y); }
+
+    void Rotate(scalar_t rotation);
+    void Rotate(scalar_t rotation, const EAnchorPoint anchor);
+
+    void SetBlendMode(const Graphics::BlendMode mode) SRX_NOEXCEPT;
+
+    SRX_INLINE void SetPencil(const SxPencil& pencil) { mPencil = pencil; }
     SRX_INLINE void PushPencil() { mPencilStack.push(mPencil); }
     void            PopPencil();
 

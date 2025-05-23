@@ -72,12 +72,13 @@ namespace Sorex
                           * mPencil.transform.value_or(Mat3::Identity());
   }
 
-  void Canvas::Rotate(scalar_t rotation, const Point& anchor)
+  void Canvas::Rotate(scalar_t rotation, const EAnchorPoint anchorPoint)
   {
     if (rotation == 0.f)
       return;
 
     Mat3 t = mPencil.transform.value_or(Mat3::Identity());
+    const Vec2 anchor = Utils::ToVec2(anchorPoint);
 
     t.Translate(anchor.x, anchor.y);
     t.Rotate(Math::Radians(rotation));
@@ -85,28 +86,31 @@ namespace Sorex
 
     mPencil.transform = t;
   }
-  /*
-    void Canvas::Translate(float x, float y)
+
+    void Canvas::Translate(scalar_t x, scalar_t y)
     {
-      _state.transform.Translate(x, y);
-      _state.bUseTransform = true;
+      if (mPencil.transform.has_value() == false)
+        mPencil.transform = Mat3::Identity();
+
+      mPencil.transform->Translate(x, y);
     }
 
-    void Canvas::Scale(float sx, float sy)
+    void Canvas::Scale(scalar_t sx, scalar_t sy)
     {
-      _state.transform.Scale(sx, sy);
-      _state.bUseTransform = true;
+      if (mPencil.transform.has_value() == false)
+        mPencil.transform = Mat3::Identity();
+
+      mPencil.transform->Scale(sx, sy);
     }
 
     void Canvas::SetBlendMode(Graphics::BlendMode mode)
     {
-      if (_state.blendMode == mode)
+      if (mPencil.blendMode == mode)
         return;
 
       Flush();
-      _state.blendMode = mode;
-    } */
-
+      mPencil.blendMode = mode;
+    }
 
   void Canvas::DrawLine(const Point& begin,
                         const Point& end,
