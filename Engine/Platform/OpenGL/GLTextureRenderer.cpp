@@ -61,6 +61,9 @@ namespace Sorex::Graphics
       return SRX_STATUS(EStatusCode::Invalid_Format);
 
     Reset();
+
+    mPencil = pencil;
+    mRenderTechnique.blend = mPencil ? mPencil->blendMode : BlendMode::Alpha;
     return glDevice->ApplyRenderTechnique(mRenderTechnique);
   }
 
@@ -187,13 +190,13 @@ namespace Sorex::Graphics
         mActiveTexture = nullptr;
     }
 
-    /* if (_canvasState && _canvasState->bUseTransform)
+     if (mPencil && mPencil->transform.has_value())
     {
-      for (Point& sp : _screenPoints)  // cppcheck-suppress useStlAlgorithm
-        sp = Matrix3x3::Transform(_canvasState->transform, sp);
-    } */
+      for (Point& sp : mScreenPoints)  // cppcheck-suppress useStlAlgorithm
+        sp = Mat3::Transform(*(mPencil->transform), sp);
+    } 
 
     SRX_CHECK_MSG(mActiveTexture, "no texture to draw");
     mQuadBatch.Draw(mTexPoints, mScreenPoints, color);
   }
-}
+} // namespace

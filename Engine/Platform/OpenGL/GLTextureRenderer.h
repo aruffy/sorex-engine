@@ -87,8 +87,8 @@ private:
     GLRenderTechnique               mRenderTechnique;
 
 
-    const Texture2D* mActiveTexture;
-    // const CanvasState* _canvasState;
+    const Texture2D*    mActiveTexture;
+    const CanvasPencil* mPencil;
 
     TArray<Point, 4> mScreenPoints;
     TArray<Point, 4> mTexPoints;

@@ -5,99 +5,100 @@
 
 namespace
 {
-  /*   GLenum ConvBlendFactor(EBlendFactor factor)
+  using namespace Sorex::Graphics;
+  GLenum ConvBlendFactor(const BlendMode::EFactor factor)
+  {
+    switch (factor)
     {
-      switch (factor)
-      {
-      case EBlendFactor::Zero:
-        return GL_ZERO;
-      case EBlendFactor::One:
-        return GL_ONE;
-      case EBlendFactor::Src_Color:
-        return GL_SRC_COLOR;
-      case EBlendFactor::One_Minus_Src_Color:
-        return GL_ONE_MINUS_SRC_COLOR;
-      case EBlendFactor::Dst_Color:
-        return GL_DST_COLOR;
-      case EBlendFactor::One_Minus_Dst_Color:
-        return GL_ONE_MINUS_DST_COLOR;
-      case EBlendFactor::Src_Alpha:
-        return GL_SRC_ALPHA;
-      case EBlendFactor::One_Minus_Src_Alpha:
-        return GL_ONE_MINUS_SRC_ALPHA;
-      case EBlendFactor::Dst_Alpha:
-        return GL_DST_ALPHA;
-      case EBlendFactor::One_Minus_Dst_Alpha:
-        return GL_ONE_MINUS_DST_ALPHA;
-      case EBlendFactor::Const_Color:
-        return GL_CONSTANT_COLOR;
-      case EBlendFactor::One_Minus_Const_Color:
-        return GL_ONE_MINUS_CONSTANT_COLOR;
-      case EBlendFactor::Const_Alpha:
-        return GL_CONSTANT_ALPHA;
-      case EBlendFactor::One_Minus_Const_Alpha:
-        return GL_ONE_MINUS_CONSTANT_ALPHA;
-      default:
-        RFY_NOENTRY("invalid blend factor");
-        return GL_ZERO;
-      }
+    case BlendMode::EFactor::Zero:
+      return GL_ZERO;
+    case BlendMode::EFactor::One:
+      return GL_ONE;
+    case BlendMode::EFactor::Src_Color:
+      return GL_SRC_COLOR;
+    case BlendMode::EFactor::One_Minus_Src_Color:
+      return GL_ONE_MINUS_SRC_COLOR;
+    case BlendMode::EFactor::Dst_Color:
+      return GL_DST_COLOR;
+    case BlendMode::EFactor::One_Minus_Dst_Color:
+      return GL_ONE_MINUS_DST_COLOR;
+    case BlendMode::EFactor::Src_Alpha:
+      return GL_SRC_ALPHA;
+    case BlendMode::EFactor::One_Minus_Src_Alpha:
+      return GL_ONE_MINUS_SRC_ALPHA;
+    case BlendMode::EFactor::Dst_Alpha:
+      return GL_DST_ALPHA;
+    case BlendMode::EFactor::One_Minus_Dst_Alpha:
+      return GL_ONE_MINUS_DST_ALPHA;
+    case BlendMode::EFactor::Const_Color:
+      return GL_CONSTANT_COLOR;
+    case BlendMode::EFactor::One_Minus_Const_Color:
+      return GL_ONE_MINUS_CONSTANT_COLOR;
+    case BlendMode::EFactor::Const_Alpha:
+      return GL_CONSTANT_ALPHA;
+    case BlendMode::EFactor::One_Minus_Const_Alpha:
+      return GL_ONE_MINUS_CONSTANT_ALPHA;
+    default:
+      SRX_NOENTRY("invalid blend factor");
+      return GL_ZERO;
     }
+  }
 
-    GLenum ConvBlendOperation(EBlendOperation op)
+  GLenum ConvBlendOperation(const BlendMode::EOperation op)
+  {
+    switch (op)
     {
-      switch (op)
-      {
-      case EBlendOperation::Add:
-        return GL_FUNC_ADD;
-      case EBlendOperation::Subtract:
-        return GL_FUNC_SUBTRACT;
-      case EBlendOperation::Reverse_Subtract:
-        return GL_FUNC_REVERSE_SUBTRACT;
-      case EBlendOperation::Min:
-        return GL_MIN;
-      case EBlendOperation::Max:
-        return GL_MAX;
-      default:
-        RFY_NOENTRY("invalid blend operation");
-        return GL_FUNC_ADD;
-      }
+    case BlendMode::EOperation::Add:
+      return GL_FUNC_ADD;
+    case BlendMode::EOperation::Subtract:
+      return GL_FUNC_SUBTRACT;
+    case BlendMode::EOperation::Reverse_Subtract:
+      return GL_FUNC_REVERSE_SUBTRACT;
+    case BlendMode::EOperation::Min:
+      return GL_MIN;
+    case BlendMode::EOperation::Max:
+      return GL_MAX;
+    default:
+      SRX_NOENTRY("invalid blend operation");
+      return GL_FUNC_ADD;
     }
+  }
+  /*
+  inline GLenum ConvTexFilter(ETextureFilter filter)
+  {
+    RFY_CHECK(filter == ETextureFilter::Nearest
+              || filter == ETextureFilter::Linear);
+    return (filter == ETextureFilter::Linear) ? GL_LINEAR : GL_NEAREST;
+  }
 
-    inline GLenum ConvTexFilter(ETextureFilter filter)
+  inline GLenum ConvTexMipmapFilter(ETextureFilter texel, ETextureFilter mipmap)
+  {
+    if (texel == ETextureFilter::Linear)
+      return (mipmap == ETextureFilter::Linear) ? GL_LINEAR_MIPMAP_LINEAR
+                                                : GL_NEAREST_MIPMAP_LINEAR;
+    else
+      return (mipmap == ETextureFilter::Linear) ? GL_LINEAR_MIPMAP_NEAREST
+                                                : GL_NEAREST_MIPMAP_NEAREST;
+  }
+
+  GLenum ConvTexWrap(ETextureWrapping wrap)
+  {
+    switch (wrap)
     {
-      RFY_CHECK(filter == ETextureFilter::Nearest
-                || filter == ETextureFilter::Linear);
-      return (filter == ETextureFilter::Linear) ? GL_LINEAR : GL_NEAREST;
+    case ETextureWrapping::Repeat:
+      return GL_REPEAT;
+    case ETextureWrapping::Mirrored_Repeat:
+      return GL_MIRRORED_REPEAT;
+    case ETextureWrapping::Clamp_To_Edge:
+      return GL_CLAMP_TO_EDGE;
+    case ETextureWrapping::Clamp_To_Border:
+      return GL_CLAMP_TO_BORDER;
+    default:
+      RFY_NOENTRY("invalide texture wrapping");
+      return GL_REPEAT;
     }
-
-    inline GLenum ConvTexMipmapFilter(ETextureFilter texel, ETextureFilter
-    mipmap)
-    {
-      if (texel == ETextureFilter::Linear)
-        return (mipmap == ETextureFilter::Linear) ? GL_LINEAR_MIPMAP_LINEAR
-                                                  : GL_NEAREST_MIPMAP_LINEAR;
-      else
-        return (mipmap == ETextureFilter::Linear) ? GL_LINEAR_MIPMAP_NEAREST
-                                                  : GL_NEAREST_MIPMAP_NEAREST;
-    }
-
-    GLenum ConvTexWrap(ETextureWrapping wrap)
-    {
-      switch (wrap)
-      {
-      case ETextureWrapping::Repeat:
-        return GL_REPEAT;
-      case ETextureWrapping::Mirrored_Repeat:
-        return GL_MIRRORED_REPEAT;
-      case ETextureWrapping::Clamp_To_Edge:
-        return GL_CLAMP_TO_EDGE;
-      case ETextureWrapping::Clamp_To_Border:
-        return GL_CLAMP_TO_BORDER;
-      default:
-        RFY_NOENTRY("invalide texture wrapping");
-        return GL_REPEAT;
-      }
-    } */
+  }
+  */
 }
 
 namespace Sorex::Graphics
@@ -156,17 +157,16 @@ namespace Sorex::Graphics
 
   void GLRenderContext::Apply(const GLRenderTechnique& technique) SRX_NOEXCEPT
   {
-    // ApplyBlendMode(technique.blend);
+    ApplyBlendMode(technique.blend);
   }
 
-  /* void GLRenderContext::ApplyBlendMode(BlendMode mode)
+  void GLRenderContext::ApplyBlendMode(BlendMode mode)
   {
-    if (_blend.mode == mode)
+    if (mBlend.mode == mode)
       return;
 
-    _blend.mode = mode;
-
-    if (!mode.IsEnable())
+    mBlend.mode = mode;
+    if (mode == BlendMode::None)
     {
       glDisable(GL_BLEND);
       return;
@@ -174,15 +174,17 @@ namespace Sorex::Graphics
 
     glEnable(GL_BLEND);
 
+    const auto [srcBlendAlpha, dstBlendAlpha] = mode.GetAlphaFactors();
     const GLenum alphaOp  = ConvBlendOperation(mode.GetAlphaOperation());
-    const GLenum srcAlpha = ConvBlendFactor(mode.GetSrcAlphaFactor());
-    const GLenum dstAlpha = ConvBlendFactor(mode.GetDstAlphaFactor());
+    const GLenum srcAlpha = ConvBlendFactor(srcBlendAlpha);
+    const GLenum dstAlpha = ConvBlendFactor(dstBlendAlpha);
 
     if (mode.IsSeparate())
     {
+      const auto [srcBlendColor, dstBlendColor] = mode.GetColorFactors();
       const GLenum colorOp  = ConvBlendOperation(mode.GetColorOperation());
-      const GLenum srcColor = ConvBlendFactor(mode.GetSrcFactor());
-      const GLenum dstColor = ConvBlendFactor(mode.GetDstFactor());
+      const GLenum srcColor = ConvBlendFactor(srcBlendColor);
+      const GLenum dstColor = ConvBlendFactor(dstBlendColor);
 
       glBlendFuncSeparate(srcColor, dstColor, srcAlpha, dstAlpha);
       glBlendEquationSeparate(colorOp, alphaOp);
@@ -192,7 +194,7 @@ namespace Sorex::Graphics
       glBlendFunc(srcAlpha, dstAlpha);
       glBlendEquation(alphaOp);
     }
-  } */
+  }
 
   /* void GLRenderContext::ApplyTextureSampler(GLenum                target,
                                             const TextureSampler& sampler,

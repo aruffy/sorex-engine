@@ -43,8 +43,8 @@ namespace Sorex::Graphics
 public:
     struct Blend
     {
-      // BlendMode mode;
-      // Color     color;
+      BlendMode mode;
+      // Color     color; // Default color Cc
     };
 
 public:
@@ -63,7 +63,7 @@ public:
     Status ActivateTexture(GLenum slot);
 
 private:
-    // void ApplyBlendMode(BlendMode mode);
+     void ApplyBlendMode(BlendMode mode);
     /* void ApplyTextureSampler(GLenum                target,
                              const TextureSampler& sampler,
                              bool                  bMipmaps = false);
@@ -72,7 +72,7 @@ private:
     const GLRenderDevice& mDevice;
 
     Color mColor;
-    // Blend mBlend;
+    Blend mBlend;
 
     struct TextureSample
     {

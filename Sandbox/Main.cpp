@@ -50,10 +50,10 @@ class MyDirector final: public Director
       nullptr,
       nullptr); */
 
-    mTexture =
-      mAssetManager->Load<Graphics::Texture2D>(SRX_PATH("/Textures/image.tga"),
-                                               nullptr,
-                                               nullptr);
+    mTexture = mAssetManager->Load<Graphics::Texture2D>(
+      SRX_PATH("/Textures/awesomeface.png"),
+      nullptr,
+      nullptr);
     return status;
   }
 
@@ -72,8 +72,11 @@ class MyDirector final: public Director
 
     canvas.DrawCircle(Point(300.f, 400.f), 64.f, 32, Color::Red);
 
-    // if (mTexture)
-    // canvas.DrawTexture(mTexture.get(), Point(200.f, 25.f));
+    canvas.PushPencil();
+    canvas.SetBlendMode(Graphics::BlendMode::Alpha);
+    if (mTexture)
+      canvas.DrawTexture(mTexture.get(), Point(200.f, 25.f));
+    canvas.PopPencil();
   }
 
   private:

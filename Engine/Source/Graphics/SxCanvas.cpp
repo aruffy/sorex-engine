@@ -103,7 +103,7 @@ namespace Sorex
       mPencil.transform->Scale(sx, sy);
     }
 
-    void Canvas::SetBlendMode(Graphics::BlendMode mode)
+    void Canvas::SetBlendMode(const Graphics::BlendMode mode) SRX_NOEXCEPT
     {
       if (mPencil.blendMode == mode)
         return;

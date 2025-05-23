@@ -552,6 +552,8 @@ namespace Sorex::Graphics
                             "invalid technique shader program");
 
     mActiveShaderProgram = technique.program;
+    mRenderContext->Apply(technique);
+
     return SRX_OK;
   }
 

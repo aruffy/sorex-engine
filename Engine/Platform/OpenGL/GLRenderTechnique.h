@@ -27,13 +27,15 @@
 
 #pragma once
 
+#include <Sorex/Graphics/SxBlendMode.h>
+
 #include "GLShaderProgram.h"
 
 namespace Sorex::Graphics
 {
   struct GLRenderTechnique
   {
-    // BlendMode        blend;
+    BlendMode        blend;
     GLShaderProgram* program = nullptr;
   };
 }
