@@ -29,9 +29,11 @@
 
 #include <Sorex/SxCoreMinimal.h>
 #include <Sorex/Math/SxMatrix3x3.h>
+#include <Sorex/Graphics/SxGraphicsTypes.h>
 
 #include "SxRenderDevice.h"
 #include "SxRenderer.h"
+#include "SxCanvasPencil.h"
 
 namespace Sorex
 {
@@ -62,15 +64,14 @@ public:
     void DrawTexture(const Graphics::Texture2D* texture,
                      const Point&               location,
                      Color                      color = Color::White);
-    /*
-               void DrawSprite(const Graphics::Sprite& sprite);
-            void DrawTexture(const Graphics::Texture2D* texture,
-                             const Point&               location,
-                             float                      rotation = 0.f,
-                             const Vector2              scale    = Vec2::One(),
-                             const Color&               color    =
-       Color::White);
 
+    void DrawTexture(const Graphics::Texture2D* texture,
+                     const Point&               location,
+                     scalar_t                   rotation,
+                     Vec2                       scale = Vec2::One(),
+                     Color                      color = Color::White);
+
+    /*
             void DrawText(const Graphics::Font& font,
                           StringView            text,
                           const Point&          pos,
@@ -80,7 +81,7 @@ public:
                           WStringView           text,
                           const Point&          pos,
                           Color                 color = Color::White,
-                          float                 scale = 1.f);
+            float                 scale = 1.f);
 
             void DrawText(const Graphics::FontDecorator& decorator,
                           StringView                     text,
@@ -91,22 +92,26 @@ public:
 
             void        Clear();
 
-            // State Contol
-           SRX_INLINE void PushState() { _stateStack.push(_state); }
-            void        PopState();
 
-            void Rotate(float rotation);
-            void Rotate(float rotation, const Point& anchor);  // @todo:
-           EAnchorPoint ?
 
-            void        Translate(float x, float y);
-           SRX_INLINE void Translate(const Vector2& v) { Translate(v.x, v.y); }
 
-            void        Scale(float sx, float sy);
-           SRX_INLINE void Scale(const Vector2& v) { Scale(v.x, v.y); }
 
-            void SetBlendMode(Graphics::BlendMode mode);
          */
+
+    void            Translate(scalar_t x, scalar_t y);
+    SRX_INLINE void Translate(const Vec2& v) { Translate(v.x, v.y); }
+
+    void            Scale(scalar_t sx, scalar_t sy);
+    SRX_INLINE void Scale(const Vec2& v) { Scale(v.x, v.y); }
+
+    void Rotate(scalar_t rotation);
+    void Rotate(scalar_t rotation, const Graphics::EAnchorPoint anchor);
+
+    void SetBlendMode(const Graphics::BlendMode mode) SRX_NOEXCEPT;
+
+    SRX_INLINE void SetPencil(const SxPencil& pencil) { mPencil = pencil; }
+    SRX_INLINE void PushPencil() { mPencilStack.push(mPencil); }
+    void            PopPencil();
 
     void            Clear() SRX_NOEXCEPT;
     SRX_INLINE void Flush() { ActivateRenderer(nullptr); }
@@ -131,8 +136,8 @@ private:
     TUniquePointer<Graphics::TextureRenderer>   mTextureRenderer;
     // TUniquePointer<Graphics::TextRenderer>      _textRenderer;
 
-    // Graphics::CanvasState         _state;
-    // TStack<Graphics::CanvasState> _stateStack;
+    Graphics::CanvasPencil         mPencil;
+    TStack<Graphics::CanvasPencil> mPencilStack;
   };
 
   SRX_INLINE void Canvas::DrawLine(const Point& begin,

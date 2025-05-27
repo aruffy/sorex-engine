@@ -25,17 +25,62 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#pragma once
-
 #include <Sorex/Graphics/SxBlendMode.h>
-
-#include "GLShaderProgram.h"
 
 namespace Sorex::Graphics
 {
-  struct GLRenderTechnique
+  const BlendMode BlendMode::None;
+  const BlendMode BlendMode::Alpha(EFactor::Src_Alpha,
+                                   EFactor::One_Minus_Src_Alpha,
+                                   EOperation::Add);
+  const BlendMode BlendMode::Additive(EFactor::Src_Alpha,
+                                      EFactor::One,
+                                      EOperation::Add,
+                                      EFactor::Zero,
+                                      EFactor::One,
+                                      EOperation::Add);
+  const BlendMode BlendMode::Multiply(EFactor::Dst_Color,
+                                      EFactor::Zero,
+                                      EOperation::Add,
+                                      EFactor::One,
+                                      EFactor::One,
+                                      EOperation::Max);
+
+  BlendMode::BlendMode()
+    : mValue(0u)
+  {}
+
+  BlendMode::BlendMode(EFactor sfactor, EFactor dfactor, EOperation op)
+    : afactors(Combine(sfactor, dfactor))
+    , cfactors(0u)
+    , operations(static_cast<uint8>(op))
+    , bSeparate(0u)
+  {}
+
+  BlendMode::BlendMode(EFactor    srcFactor,
+                       EFactor    dstFactor,
+                       EOperation op,
+                       EFactor    srcAlphaFactor,
+                       EFactor    dstAlphaFactor,
+                       EOperation opAlpha)
+    : afactors(Combine(srcAlphaFactor, dstAlphaFactor))
+    , cfactors(Combine(srcFactor, dstFactor))
+    , operations(Combine(op, opAlpha))
+    , bSeparate(1u)
+  {}
+
+  BlendMode::BlendMode(uint32 value)
+    : mValue(value)
+  {}
+
+  BlendMode::BlendMode(const BlendMode& other) noexcept
+    : mValue(other.mValue)
+  {}
+
+  BlendMode& BlendMode::operator=(const BlendMode& other) noexcept
   {
-    BlendMode        blendMode;
-    GLShaderProgram* program = nullptr;
-  };
-}
+    mValue = other.mValue;
+    return *this;
+  }
+
+}  // namespace

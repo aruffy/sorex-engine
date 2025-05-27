@@ -36,9 +36,9 @@ namespace Sorex::Graphics
   GLPrimitiveRenderer::GLPrimitiveRenderer(GLRenderDevice* glRenderDevice,
                                            size_t vtxCapacity /*= 1024*/)
     : mRenderDevice(glRenderDevice)
-    // , _canvasState(nullptr)
     , mVtxArray(glRenderDevice)
     , mVtxCapacity(std::max<size_t>(vtxCapacity, 8u))
+    , mPencil(nullptr)
   {}
 
   Status GLPrimitiveRenderer::Initialize() SRX_NOEXCEPT
@@ -65,7 +65,7 @@ namespace Sorex::Graphics
     return status;
   }
 
-  Status GLPrimitiveRenderer::Activate() SRX_NOEXCEPT
+  Status GLPrimitiveRenderer::Activate(const CanvasPencil* pencil) SRX_NOEXCEPT
   {
     SRX_CHECK(mShaderProgram && mRenderDevice);
     if (!mShaderProgram || !mRenderDevice)
@@ -73,7 +73,7 @@ namespace Sorex::Graphics
 
     Flush();
 
-    // _canvasState = &state;
+    mPencil = pencil;
     return mRenderDevice->ApplyRenderTechnique(mTechnique);
   }
 
@@ -101,11 +101,12 @@ namespace Sorex::Graphics
   {
     SwitchRenderingMode(ERenderingMode::Lines);
 
-    /* if (_canvasState && _canvasState->bUseTransform)
+    if (mPencil && mPencil->transform.has_value())
     {
-      begin = Matrix3x3::Transform(_canvasState->transform, begin);
-      end   = Matrix3x3::Transform(_canvasState->transform, end);
-    } */
+      const auto& transform = mPencil->transform.value();
+      begin                 = Mat3::Transform(transform, begin);
+      end                   = Mat3::Transform(transform, end);
+    }
 
     if (!color || !colorNumber)
     {
@@ -150,11 +151,11 @@ namespace Sorex::Graphics
     if (vertices == nullptr)
       return;
 
-    /* if (_canvasState && _canvasState->bUseTransform)
+    if (mPencil && mPencil->transform.has_value())
     {
       for (Point& p : mPoints)  // cppcheck-suppress useStlAlgorithm
-        p = Matrix3x3::Transform(_canvasState->transform, p);
-    } */
+        p = Mat3::Transform(*mPencil->transform, p);
+    }
 
     if (!color || !colorNumber)
     {
@@ -193,11 +194,11 @@ namespace Sorex::Graphics
   {
     SwitchRenderingMode(ERenderingMode::Triangles);
 
-    /* if (_canvasState && _canvasState->bUseTransform)
+    if (mPencil && mPencil->transform.has_value())
     {
       for (Point& p : mPoints)  // cppcheck-suppress useStlAlgorithm
-        p = Matrix3x3::Transform(_canvasState->transform, p);
-    } */
+        p = Mat3::Transform(*mPencil->transform, p);
+    }
 
     if (!color || !colorNumber)
     {
@@ -238,8 +239,8 @@ namespace Sorex::Graphics
 
     SwitchRenderingMode(ERenderingMode::Lines);
 
-    /* if (_canvasState && _canvasState->bUseTransform)
-      center = Mat3::Transform(_canvasState->transform, center); */
+    if (mPencil && mPencil->transform.has_value())
+      center = Mat3::Transform(*mPencil->transform, center);
 
     const int32 n    = std::max<int32>(segments, 4);
     const float coef = 2.f * (float)M_PI / n;

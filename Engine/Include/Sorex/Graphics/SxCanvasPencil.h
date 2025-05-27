@@ -27,15 +27,25 @@
 
 #pragma once
 
-#include <Sorex/Graphics/SxBlendMode.h>
+#include <Sorex/SxCoreMinimal.h>
+#include <Sorex/Math/SxMatrix3x3.h>
 
-#include "GLShaderProgram.h"
+#include "SxBlendMode.h"
 
 namespace Sorex::Graphics
 {
-  struct GLRenderTechnique
+  struct CanvasPencil
   {
-    BlendMode        blendMode;
-    GLShaderProgram* program = nullptr;
+    SRX_INLINE CanvasPencil() SRX_NOEXCEPT
+      : transform(std::nullopt)
+      , blendMode(BlendMode::None)
+    {}
+
+    TOptional<Mat3> transform;
+
+    BlendMode blendMode;
+    Color     color;
   };
-}
+}  // namespace
+
+using SxPencil = Sorex::Graphics::CanvasPencil;

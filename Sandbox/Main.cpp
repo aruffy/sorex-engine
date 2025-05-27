@@ -50,10 +50,10 @@ class MyDirector final: public Director
       nullptr,
       nullptr); */
 
-    mTexture =
-      mAssetManager->Load<Graphics::Texture2D>(SRX_PATH("/Textures/image.tga"),
-                                               nullptr,
-                                               nullptr);
+    mTexture = mAssetManager->Load<Graphics::Texture2D>(
+      SRX_PATH("/Textures/awesomeface.png"),
+      nullptr,
+      nullptr);
     return status;
   }
 
@@ -69,11 +69,14 @@ class MyDirector final: public Director
     canvas.DrawRect(Rect(Point(f, 325.f), Size(64.f, 64.f)), Color::Green);
     canvas.DrawRect(Rect(Point(200.f, 400.f), Size(64.f, 128.f)),
                     Color::Yellow);
+
     canvas.DrawCircle(Point(300.f, 400.f), 64.f, 32, Color::Red);
 
-    if (mTexture)
-      canvas.DrawTexture(mTexture.get(), Point(200.f, 25.f));
+    DrawTextures(canvas);
   }
+
+  private:
+  void DrawTextures(Canvas& canvas);
 
   private:
   TUniquePointer<Resource::AssetStorage> mAssetStorage;
@@ -91,4 +94,37 @@ int main(const int argc, const char* argv[])
   Platform::DesktopLauncher().Run<MyDirector>();
 
   return 0;
+}
+
+
+void MyDirector::DrawTextures(Canvas& canvas)
+{
+  if (!mTexture || !mTexture->IsReady())
+    return;
+
+  // 1. scaled texture
+  canvas.DrawTexture(mTexture.get(),
+                     Point(5.f, 5.f),
+                     scalar_t(0),
+                     Vec2(0.5f, 0.5f));
+
+  // 2. Blending
+  canvas.PushPencil();
+  canvas.SetBlendMode(Graphics::BlendMode::Alpha);
+  canvas.DrawTexture(mTexture.get(), Point(200.f, 25.f));
+
+  // 3. rotated, blended, colored, scaled
+  static float s_angle = 0.f;
+  if (s_angle >= 360.f)
+    s_angle = 0.f;
+  else
+    s_angle += 1.f;
+
+  canvas.DrawTexture(mTexture.get(),
+                     Point(50.f, 250.f),
+                     s_angle * 2.f,
+                     Vec2(0.25f, 0.25f),
+                     Color(Color::Purple, 128));
+
+  canvas.PopPencil();
 }

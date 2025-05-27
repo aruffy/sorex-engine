@@ -30,6 +30,7 @@
 #include <Sorex/SxCoreMinimal.h>
 
 #include "SxGraphicsTypes.h"
+#include "SxCanvasPencil.h"
 
 namespace Sorex::Graphics
 {
@@ -58,7 +59,7 @@ public:
      *
      * @return status of activation;
      */
-    virtual Status Activate() SRX_NOEXCEPT = 0;
+    virtual Status Activate(const CanvasPencil* pencil) SRX_NOEXCEPT = 0;
 
     /**
      * @brief Flush all data to a render device.

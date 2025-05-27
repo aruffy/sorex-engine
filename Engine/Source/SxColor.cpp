@@ -46,6 +46,7 @@ namespace
 
 namespace Sorex
 {
+  const Color Color::None(0u, 0u, 0u, 0u);
   const Color Color::Black(0u, 0u, 0u);
   const Color Color::White(255u, 255u, 255u);
   const Color Color::Gray(128u, 128u, 128u);

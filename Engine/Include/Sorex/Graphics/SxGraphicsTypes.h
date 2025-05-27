@@ -46,7 +46,7 @@ namespace Sorex::Graphics
 
   namespace Utils
   {
-    SRX_API Vec2 ToVector(const EAnchorPoint anchor) SRX_NOEXCEPT;
+    Vec2 ToVec2(const EAnchorPoint anchor) SRX_NOEXCEPT;
   }
 
 }  // namespace

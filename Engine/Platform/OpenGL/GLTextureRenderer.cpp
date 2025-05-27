@@ -34,6 +34,7 @@ namespace Sorex::Graphics
                                        size_t          maxQuadNumber)
     : mQuadBatch(glRenderDevice, maxQuadNumber)
     , mActiveTexture(nullptr)
+    , mPencil(nullptr)
   {}
 
   Status GLTextureRenderer::Initialize() SRX_NOEXCEPT
@@ -54,13 +55,16 @@ namespace Sorex::Graphics
     return status;
   }
 
-  Status GLTextureRenderer::Activate() SRX_NOEXCEPT
+  Status GLTextureRenderer::Activate(const CanvasPencil* pencil) SRX_NOEXCEPT
   {
     GLRenderDevice* glDevice = GetRenderDevice();
     if (!glDevice || !mShaderProgram)
       return SRX_STATUS(EStatusCode::Invalid_Format);
 
     Reset();
+
+    mPencil                    = pencil;
+    mRenderTechnique.blendMode = mPencil ? mPencil->blendMode : BlendMode::None;
     return glDevice->ApplyRenderTechnique(mRenderTechnique);
   }
 
@@ -99,23 +103,27 @@ namespace Sorex::Graphics
                                       scalar_t         rotation,
                                       Color            color) SRX_NOEXCEPT
   {
-    /* Rect rect = texture->GetContentRect();
-    rect.ToArray(_texPoints);
+    if (!texture)
+      return;
+
+    Rect rect = texture->GetContentRect();
+    rect.ToArray(mTexPoints);
 
     rect.SetLocation(0.f, 0.f);
-    rect.ToArray(_screenPoints);
+    rect.ToArray(mScreenPoints);
 
-    const Point shift(anchor.x * rect.width, anchor.y * rect.height);
+    const Vec2  anchorVec = Graphics::Utils::ToVec2(anchor);
+    const Point shift(anchorVec.x * rect.width, anchorVec.y * rect.height);
     const Mat3  m = Mat3::Create(Vec2(position.x + shift.x * scale.x,
                                      position.y + shift.y * scale.y),
                                 Math::Radians(rotation),
                                 scale)
                    * Mat3::Translation(-shift.x, -shift.y);
 
-    for (Point& sp : _screenPoints)
+    for (Point& sp : mScreenPoints)
       sp = Mat3::Transform(m, sp);
 
-    DrawQuad(texture, color); */
+    DrawQuad(texture, color);
   }
 
   void GLTextureRenderer::DrawTexture(const Texture2D* texture,
@@ -123,16 +131,16 @@ namespace Sorex::Graphics
                                       const Point&     position,
                                       Color            color) SRX_NOEXCEPT
   {
-    /* if (!texture || !texture->GetContentRect().Contains(texRect))
+    if (!texture || !texture->GetContentRect().Contains(texRect))
     {
-      RFY_NOENTRY("invalid texture region");
+      SRX_NOENTRY("invalid texture region");
       return;
     }
 
-    texRect.ToArray(_texPoints);
-    Rect(position, texRect.GetSize()).ToArray(_screenPoints);
+    texRect.ToArray(mTexPoints);
+    Rect(position, texRect.GetSize()).ToArray(mScreenPoints);
 
-    DrawQuad(texture, color); */
+    DrawQuad(texture, color);
   }
 
   /*void GLTextureRenderer::DrawSprite(const Sprite* sprite)
@@ -187,13 +195,13 @@ namespace Sorex::Graphics
         mActiveTexture = nullptr;
     }
 
-    /* if (_canvasState && _canvasState->bUseTransform)
+    if (mPencil && mPencil->transform.has_value())
     {
-      for (Point& sp : _screenPoints)  // cppcheck-suppress useStlAlgorithm
-        sp = Matrix3x3::Transform(_canvasState->transform, sp);
-    } */
+      for (Point& sp : mScreenPoints)  // cppcheck-suppress useStlAlgorithm
+        sp = Mat3::Transform(*(mPencil->transform), sp);
+    }
 
     SRX_CHECK_MSG(mActiveTexture, "no texture to draw");
     mQuadBatch.Draw(mTexPoints, mScreenPoints, color);
   }
-}
+}  // namespace

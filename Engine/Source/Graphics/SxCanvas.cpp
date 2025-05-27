@@ -51,6 +51,68 @@ namespace Sorex
     return SRX_OK;
   }
 
+  void Canvas::PopPencil()
+  {
+    if (mPencilStack.empty())
+    {
+      SRX_NOENTRY("canvas pencil stack empty");
+      return;
+    }
+
+    Flush();
+
+    mPencil = mPencilStack.top();
+    mPencilStack.pop();
+  }
+
+  void Canvas::Rotate(scalar_t rotation)
+  {
+    if (rotation)
+      mPencil.transform = Mat3::Rotation(Math::Radians(rotation))
+                          * mPencil.transform.value_or(Mat3::Identity());
+  }
+
+  void Canvas::Rotate(scalar_t                     rotation,
+                      const Graphics::EAnchorPoint anchorPoint)
+  {
+    if (rotation == 0.f)
+      return;
+
+    Mat3       t      = mPencil.transform.value_or(Mat3::Identity());
+    const Vec2 anchor = Graphics::Utils::ToVec2(anchorPoint);
+
+    t.Translate(anchor.x, anchor.y);
+    t.Rotate(Math::Radians(rotation));
+    t.Translate(-anchor.x, -anchor.y);
+
+    mPencil.transform = t;
+  }
+
+  void Canvas::Translate(scalar_t x, scalar_t y)
+  {
+    if (mPencil.transform.has_value() == false)
+      mPencil.transform = Mat3::Identity();
+
+    mPencil.transform->Translate(x, y);
+  }
+
+  void Canvas::Scale(scalar_t sx, scalar_t sy)
+  {
+    if (mPencil.transform.has_value() == false)
+      mPencil.transform = Mat3::Identity();
+
+    mPencil.transform->Scale(sx, sy);
+  }
+
+  void Canvas::SetBlendMode(const Graphics::BlendMode mode) SRX_NOEXCEPT
+  {
+    if (mPencil.blendMode == mode)
+      return;
+
+    Flush();
+    mPencil.blendMode = mode;
+  }
+
   void Canvas::DrawLine(const Point& begin,
                         const Point& end,
                         const Color* color,
@@ -86,7 +148,7 @@ namespace Sorex
     if (!mRenderer)
       return false;
 
-    auto status = mRenderer->Activate();
+    auto status = mRenderer->Activate(&mPencil);
     if (!status.Ok())
     {
       SRX_WARN("[Canvas] Renderer activation failed: {}", status.ToString());
@@ -112,6 +174,21 @@ namespace Sorex
   {
     if (ActivateRenderer(mTextureRenderer.get()))
       mTextureRenderer->DrawTexture(texture, location, color);
+  }
+
+  void Canvas::DrawTexture(const Graphics::Texture2D* texture,
+                           const Point&               location,
+                           scalar_t                   rotation,
+                           Vec2                       scale /* = Vec2::One() */,
+                           Color color /* = Color::White */)
+  {
+    if (ActivateRenderer(mTextureRenderer.get()))
+      mTextureRenderer->DrawTexture(texture,
+                                    location,
+                                    scale,
+                                    Graphics::EAnchorPoint::Middle,
+                                    rotation,
+                                    color);
   }
 
   void Canvas::Clear() SRX_NOEXCEPT
