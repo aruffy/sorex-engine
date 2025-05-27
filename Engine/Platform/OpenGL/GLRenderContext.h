@@ -63,7 +63,7 @@ public:
     Status ActivateTexture(GLenum slot);
 
 private:
-     void ApplyBlendMode(BlendMode mode);
+    void ApplyBlendMode(BlendMode mode);
     /* void ApplyTextureSampler(GLenum                target,
                              const TextureSampler& sampler,
                              bool                  bMipmaps = false);

@@ -111,8 +111,7 @@ void MyDirector::DrawTextures(Canvas& canvas)
   // 2. Blending
   canvas.PushPencil();
   canvas.SetBlendMode(Graphics::BlendMode::Alpha);
-  if (mTexture)
-    canvas.DrawTexture(mTexture.get(), Point(200.f, 25.f));
+  canvas.DrawTexture(mTexture.get(), Point(200.f, 25.f));
 
   // 3. rotated, blended, colored, scaled
   static float s_angle = 0.f;
