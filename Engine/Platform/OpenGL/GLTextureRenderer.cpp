@@ -34,6 +34,7 @@ namespace Sorex::Graphics
                                        size_t          maxQuadNumber)
     : mQuadBatch(glRenderDevice, maxQuadNumber)
     , mActiveTexture(nullptr)
+    , mPencil(nullptr)
   {}
 
   Status GLTextureRenderer::Initialize() SRX_NOEXCEPT

@@ -101,13 +101,13 @@ public:
       return static_cast<EOperation>(operations & 0xf);
     }
 
-    SRX_INLINE TPair<EFactor, EFactor> GetColorFactors() SRX_NOEXCEPT
+    SRX_INLINE TPair<EFactor, EFactor> GetColorFactors() const SRX_NOEXCEPT
     {
       return std::make_pair(static_cast<EFactor>(cfactors >> 4),
                             static_cast<EFactor>(cfactors & 0xf));
     }
 
-    SRX_INLINE TPair<EFactor, EFactor> GetAlphaFactors() SRX_NOEXCEPT
+    SRX_INLINE TPair<EFactor, EFactor> GetAlphaFactors() const SRX_NOEXCEPT
     {
       return std::make_pair(static_cast<EFactor>(afactors >> 4),
                             static_cast<EFactor>(afactors & 0xf));

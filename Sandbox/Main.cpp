@@ -99,7 +99,7 @@ int main(const int argc, const char* argv[])
 
 void MyDirector::DrawTextures(Canvas& canvas)
 {
-  if (!mTexture && mTexture->IsReady())
+  if (!mTexture || !mTexture->IsReady())
     return;
 
   // 1. scaled texture
@@ -107,7 +107,7 @@ void MyDirector::DrawTextures(Canvas& canvas)
                      Point(5.f, 5.f),
                      scalar_t(0),
                      Vec2(0.5f, 0.5f));
-  
+
   // 2. Blending
   canvas.PushPencil();
   canvas.SetBlendMode(Graphics::BlendMode::Alpha);
@@ -121,7 +121,7 @@ void MyDirector::DrawTextures(Canvas& canvas)
   else
     s_angle += 1.f;
 
-   canvas.DrawTexture(mTexture.get(),
+  canvas.DrawTexture(mTexture.get(),
                      Point(50.f, 250.f),
                      s_angle * 2.f,
                      Vec2(0.25f, 0.25f),
