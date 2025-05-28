@@ -6,9 +6,9 @@ permissions:
 
 on:
   pull_request:
-    branches: ["master", "develop", "release/**"]
+    branches: ["main", "release/**"]
   push:
-    branches: ["master", "develop"]
+    branches: ["main", "develop"]
 
 env:
   CI_ENGINE_GTEST_EXE: SorexEngineUnitTests
