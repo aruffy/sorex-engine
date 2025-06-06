@@ -131,11 +131,10 @@ namespace Sorex::Graphics
       return SRX_STATUS_MSG(rc, "writing uniform value failed");
 
     // @note: Convert from ST texture coordinates to UV.
-    SizeInt    texSize = texture.GetSize();
-    const Vec2 texCoordScale =
-      sampler ? sampler->GetTexCoordScale() : Vec2::One();
-    const Vec2 texCoordTransform(texCoordScale.x / texSize.width,
-                                 texCoordScale.y / texSize.height);
+    SizeInt    texSize   = texture.GetSize();
+    const Vec2 texCoords = sampler ? sampler->GetTexCoords() : Vec2::One();
+    const Vec2 texCoordTransform(texCoords.x / texSize.width,
+                                 texCoords.y / texSize.height);
 
     Status status = SetTexCoordTransform(0, texCoordTransform);
 

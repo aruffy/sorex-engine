@@ -85,11 +85,8 @@ public:
     }
     SRX_INLINE void SetFilter(EFilterType t, ETextureFilter f);
 
-    SRX_INLINE void SetTexCoordScale(const Vec2& scale)
-    {
-      mTexCoordScale = scale;
-    }
-    SRX_INLINE const Vec2& GetTexCoordScale() const { return mTexCoordScale; }
+    SRX_INLINE void        SetTexCoords(const Vec2& v) { mTexCoords = v; }
+    SRX_INLINE const Vec2& GetTexCoords() const { return mTexCoords; }
 
     SRX_INLINE void  SetBorderColor(Color c) { mBorderColor = c; }
     SRX_INLINE Color GetBorderColor() const { return mBorderColor; }
@@ -97,7 +94,7 @@ public:
 private:
     TArray<ETextureWrapping, 2> mWrap;
     TArray<ETextureFilter, 3>   mFIlters;
-    Vec2                        mTexCoordScale;
+    Vec2                        mTexCoords;
     Color                       mBorderColor;
   };
 

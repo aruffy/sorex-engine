@@ -51,7 +51,7 @@ class MyDirector final: public Director
       nullptr); */
 
     mTexture = mAssetManager->Load<Graphics::Texture2D>(
-      SRX_PATH("/Textures/Blue-Rectangle.png"),
+      SRX_PATH("/Textures/awesomeface.png"),
       nullptr,
       nullptr);
     return status;
@@ -66,12 +66,15 @@ class MyDirector final: public Director
     // canvas.DrawTexture(mTexture.get(), Point(10.f, 10.f));
 
     canvas.PushPencil();
-    Graphics::TextureSampler sampler(Graphics::ETextureWrapping::Repeat,
-                                     Graphics::ETextureFilter::Nearest);
+    Graphics::TextureSampler sampler(
+      Graphics::ETextureWrapping::Mirrored_Repeat,
+      Graphics::ETextureFilter::Nearest);
 
-    sampler.SetTexCoordScale(Vec2(2.f, 2.f));
+    sampler.SetTexCoords(Vec2(2.f, 2.f));
     canvas.SetTextureSampler(sampler);
-    canvas.DrawTexture(mTexture.get(), Point(0.f, 0.f));
+    canvas.SetBlendMode(Graphics::BlendMode::Alpha);
+
+    canvas.DrawTexture(mTexture.get(), Point(5.f, 5.f));
     canvas.PopPencil();
   }
 

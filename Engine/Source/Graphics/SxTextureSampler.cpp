@@ -30,7 +30,7 @@
 namespace Sorex::Graphics
 {
   TextureSampler::TextureSampler()
-    : mTexCoordScale(Vec2::One())
+    : mTexCoords(Vec2::One())
     , mBorderColor(Color::Black)
   {
     SetTexWrap(ETextureWrapping::Repeat);
@@ -39,7 +39,7 @@ namespace Sorex::Graphics
 
   TextureSampler::TextureSampler(ETextureWrapping wrap,
                                  Color            color /* = Color::Black */)
-    : mTexCoordScale(Vec2::One())
+    : mTexCoords(Vec2::One())
     , mBorderColor(color)
   {
     SetTexWrap(wrap);
@@ -50,7 +50,7 @@ namespace Sorex::Graphics
     ETextureWrapping wrap,
     ETextureFilter   filters,
     ETextureFilter   fmipmap /* = ETextureFilter::Nearest */)
-    : mTexCoordScale(Vec2::One())
+    : mTexCoords(Vec2::One())
     , mBorderColor(Color::Black)
   {
     SetTexWrap(wrap);
