@@ -329,7 +329,9 @@ namespace Sorex::Graphics
     return SRX_OK;
   }
 
-  Status GLRenderDevice::SetTexture2D(GLuint slot, const Texture2D* texture)
+  Status GLRenderDevice::SetTexture2D(GLuint                slot,
+                                      const Texture2D*      texture,
+                                      const TextureSampler* sampler)
   {
     if (texture == nullptr)
       return SRX_STATUS(EStatusCode::Invalid_Argument);
@@ -339,12 +341,10 @@ namespace Sorex::Graphics
 
     SRX_CHECK(texture->IsA<GLTexture2D>());
 
-    // if (sampler)
-    //   _renderContext->SetTextureSampler(slot, *sampler);
-
     return mRenderContext->SetTexture(
       slot,
-      *(static_cast<const GLTexture2D*>(texture)));
+      *(static_cast<const GLTexture2D*>(texture)),
+      sampler);
   }
 
   Status GLRenderDevice::BuildShaderProgram(

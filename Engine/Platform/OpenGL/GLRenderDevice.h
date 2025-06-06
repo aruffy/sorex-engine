@@ -62,7 +62,9 @@ public:
     virtual TUniquePointer<Texture2D> CreateTexture2D(Path path) override;
     // cppcheck-suppress functionConst
     Status InitializeTexture(const GLTexture2D& texture, bool bMinmaps = false);
-    Status SetTexture2D(GLuint index, const Texture2D* texture);
+    Status SetTexture2D(GLuint                index,
+                        const Texture2D*      texture,
+                        const TextureSampler* sampler = nullptr);
 
     /**
      * @brief Allocate new OpenGL resource.

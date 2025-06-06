@@ -51,7 +51,7 @@ class MyDirector final: public Director
       nullptr); */
 
     mTexture = mAssetManager->Load<Graphics::Texture2D>(
-      SRX_PATH("/Textures/awesomeface.png"),
+      SRX_PATH("/Textures/Blue-Rectangle.png"),
       nullptr,
       nullptr);
     return status;
@@ -60,22 +60,23 @@ class MyDirector final: public Director
   protected:
   virtual void OnDraw(Canvas& canvas) override
   {
-    static float f = 0.f;
-    f += 5.f;
-    if (f >= 400.f)
-      f = 0.f;
+    // DrawPrimitives(canvas);
+    // DrawTextures(canvas);
 
-    canvas.DrawLine(Point(f, 200.f), Point(f + 200.f, 200.f), Color::Purple);
-    canvas.DrawRect(Rect(Point(f, 325.f), Size(64.f, 64.f)), Color::Green);
-    canvas.DrawRect(Rect(Point(200.f, 400.f), Size(64.f, 128.f)),
-                    Color::Yellow);
+    // canvas.DrawTexture(mTexture.get(), Point(10.f, 10.f));
 
-    canvas.DrawCircle(Point(300.f, 400.f), 64.f, 32, Color::Red);
+    canvas.PushPencil();
+    Graphics::TextureSampler sampler(Graphics::ETextureWrapping::Repeat,
+                                     Graphics::ETextureFilter::Nearest);
 
-    DrawTextures(canvas);
+    sampler.SetTexCoordScale(Vec2(2.f, 2.f));
+    canvas.SetTextureSampler(sampler);
+    canvas.DrawTexture(mTexture.get(), Point(0.f, 0.f));
+    canvas.PopPencil();
   }
 
   private:
+  void DrawPrimitives(Canvas& canvas);
   void DrawTextures(Canvas& canvas);
 
   private:
@@ -92,10 +93,22 @@ int main(const int argc, const char* argv[])
     return 1;
 
   Platform::DesktopLauncher().Run<MyDirector>();
-
   return 0;
 }
 
+void MyDirector::DrawPrimitives(Canvas& canvas)
+{
+  static float f = 0.f;
+  f += 5.f;
+  if (f >= 400.f)
+    f = 0.f;
+
+  canvas.DrawLine(Point(f, 200.f), Point(f + 200.f, 200.f), Color::Purple);
+  canvas.DrawRect(Rect(Point(f, 325.f), Size(64.f, 64.f)), Color::Green);
+  canvas.DrawRect(Rect(Point(200.f, 400.f), Size(64.f, 128.f)), Color::Yellow);
+
+  canvas.DrawCircle(Point(300.f, 400.f), 64.f, 32, Color::Red);
+}
 
 void MyDirector::DrawTextures(Canvas& canvas)
 {

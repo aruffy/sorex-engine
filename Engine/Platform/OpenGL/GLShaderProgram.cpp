@@ -54,13 +54,7 @@ namespace
     MakeUniformId("u_scale_tex_0"),
     MakeUniformId("u_scale_tex_1")
   };
-
-  /*
-        const Graphics::TextureSampler s_kDefaultTexSampler(
-          Graphics::ETextureWrapping::Repeat,
-          Graphics::ETextureFilter::Linear,
-          Graphics::ETextureFilter::Linear); */
-}
+}  // namespace
 
 namespace Sorex::Graphics
 {
@@ -114,7 +108,9 @@ namespace Sorex::Graphics
     return (it != mShaders.end() ? (*it) : nullptr);
   }
 
-  Status GLShaderProgram::SetTexture(uint32 index, const Texture2D& texture)
+  Status GLShaderProgram::SetTexture(uint32                index,
+                                     const Texture2D&      texture,
+                                     const TextureSampler* sampler)
   {
     if (index >= kSamplers.size())
       return SRX_STATUS_MSG(EStatusCode::Out_Of_Range, "invalid sample index");
@@ -136,17 +132,17 @@ namespace Sorex::Graphics
 
     // @note: Convert from ST texture coordinates to UV.
     SizeInt    texSize = texture.GetSize();
-    const Vec2 texCoordTransform(1.f / texSize.width, 1.f / texSize.height);
-    Status     status = SetTexCoordTransform(0, texCoordTransform);
+    const Vec2 texCoordScale =
+      sampler ? sampler->GetTexCoordScale() : Vec2::One();
+    const Vec2 texCoordTransform(texCoordScale.x / texSize.width,
+                                 texCoordScale.y / texSize.height);
+
+    Status status = SetTexCoordTransform(0, texCoordTransform);
 
     if (!status.Ok())
       return status;
 
-    /* if (sampler == nullptr)
-      sampler = texture->GetSampler(); */
-
-    // FIXME:     // sampler ? sampler : &s_kDefaultTexSampler
-    return glRenderDevice->SetTexture2D(index, &texture);
+    return glRenderDevice->SetTexture2D(index, &texture, sampler);
   }
 
   Status GLShaderProgram::SetTexCoordTransform(uint32         index,
