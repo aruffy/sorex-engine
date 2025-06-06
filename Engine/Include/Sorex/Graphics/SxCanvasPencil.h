@@ -31,6 +31,7 @@
 #include <Sorex/Math/SxMatrix3x3.h>
 
 #include "SxBlendMode.h"
+#include "SxTextureSampler.h"
 
 namespace Sorex::Graphics
 {
@@ -43,8 +44,10 @@ namespace Sorex::Graphics
 
     TOptional<Mat3> transform;
 
-    BlendMode blendMode;
-    Color     color;
+    BlendMode      blendMode;
+    TextureSampler texSampler;
+
+    Color color;
   };
 }  // namespace
 

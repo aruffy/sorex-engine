@@ -86,13 +86,10 @@ private:
     TUniquePointer<GLShaderProgram> mShaderProgram;
     GLRenderTechnique               mRenderTechnique;
 
-
     const Texture2D*    mActiveTexture;
     const CanvasPencil* mPencil;
 
     TArray<Point, 4> mScreenPoints;
     TArray<Point, 4> mTexPoints;
-
-    // Error                           _error;
   };
 }

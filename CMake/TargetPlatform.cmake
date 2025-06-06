@@ -44,6 +44,7 @@ endfunction(sorex_target_compile_definitions)
 
 function(sorex_target_compile_options TARGET_NAME)
   # TODO:Disable rtti
+  # TODO: Dissable exceptions
   if(MSVC)
     add_compile_options("/permissive-")
     target_compile_options(${TARGET_NAME} PRIVATE "/WX" "/FS" "/utf-8")

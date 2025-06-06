@@ -108,6 +108,8 @@ public:
     void Rotate(scalar_t rotation, const Graphics::EAnchorPoint anchor);
 
     void SetBlendMode(const Graphics::BlendMode mode) SRX_NOEXCEPT;
+    void SetTextureSampler(const Graphics::TextureSampler& sampler)
+      SRX_NOEXCEPT;
 
     SRX_INLINE void SetPencil(const SxPencil& pencil) { mPencil = pencil; }
     SRX_INLINE void PushPencil() { mPencilStack.push(mPencil); }

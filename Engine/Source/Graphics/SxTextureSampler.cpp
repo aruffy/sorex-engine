@@ -25,71 +25,37 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#pragma once
-
-#include <Sorex/SxCoreMinimal.h>
-#include <Sorex/Graphics/SxBlendMode.h>
 #include <Sorex/Graphics/SxTextureSampler.h>
-
-#include "GLTypes.h"
-#include "GLRenderTechnique.h"
-#include "GLTexture2D.h"
 
 namespace Sorex::Graphics
 {
-  class GLRenderDevice;
-  class GLRenderContext
+  TextureSampler::TextureSampler()
+    : mTexCoords(Vec2::One())
+    , mBorderColor(Color::Black)
   {
-public:
-    struct Blend
-    {
-      BlendMode mode;
-      // Color     color; // Default color Cc
-    };
+    SetTexWrap(ETextureWrapping::Repeat);
+    mFIlters.fill(ETextureFilter::Nearest);
+  }
 
-public:
-    explicit GLRenderContext(const GLRenderDevice& renderDevice) SRX_NOEXCEPT;
+  TextureSampler::TextureSampler(ETextureWrapping wrap,
+                                 Color            color /* = Color::Black */)
+    : mTexCoords(Vec2::One())
+    , mBorderColor(color)
+  {
+    SetTexWrap(wrap);
+    mFIlters.fill(ETextureFilter::Nearest);
+  }
 
-    void Apply(const GLRenderTechnique& technique) SRX_NOEXCEPT;
+  TextureSampler::TextureSampler(
+    ETextureWrapping wrap,
+    ETextureFilter   filters,
+    ETextureFilter   fmipmap /* = ETextureFilter::Nearest */)
+    : mTexCoords(Vec2::One())
+    , mBorderColor(Color::Black)
+  {
+    SetTexWrap(wrap);
+    mFIlters[0] = mFIlters[1] = filters;
+    mFIlters[2]               = fmipmap;
+  }
 
-    void Reset() SRX_NOEXCEPT;
-    void Clear() SRX_NOEXCEPT;  // cppcheck-suppress functionStatic
-
-    void SetColor(const Color value) { mColor = value; }
-
-    Status SetTexture(size_t                slot,
-                      const GLTexture2D&    texture,
-                      const TextureSampler* sampler = nullptr);
-
-    Status ActivateTexture(GLenum slot);
-
-private:
-    void ApplyBlendMode(BlendMode mode);
-    void ApplyTextureSampler(GLenum                target,
-                             const TextureSampler& sampler,
-                             bool                  bMipmaps = false);
-
-private:
-    const GLRenderDevice& mDevice;
-
-    Color mColor;
-    Blend mBlend;
-
-    struct TextureSample
-    {
-      enum class EState : uint8
-      {
-        None            = 0u,
-        Active          = 1u,
-        Sampler_Changed = 2u,
-        SRX_ENUM_BITMASK
-      };
-
-      const GLTexture2D*    texture = nullptr;
-      const TextureSampler* sampler = nullptr;
-      EState                state   = EState::None;
-    };
-
-    TVector<TextureSample> mTextures;
-  };
 }  // namespace Sorex::Graphics

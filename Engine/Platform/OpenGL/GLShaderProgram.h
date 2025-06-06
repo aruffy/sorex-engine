@@ -28,6 +28,7 @@
 #pragma once
 
 #include <Sorex/Graphics/SxTexture2D.h>
+#include <Sorex/Graphics/SxTextureSampler.h>
 
 #include "GLResourceToken.h"
 #include "GLShader.h"
@@ -79,7 +80,9 @@ public:
     // cppcheck-suppress functionConst
     TSpan<GLUniform> GetUniforms() { return mUniforms; }
 
-    Status SetTexture(uint32 index, const Texture2D& texture);
+    Status SetTexture(uint32                index,
+                      const Texture2D&      texture,
+                      const TextureSampler* sampler = nullptr);
 
 private:
     GLUniform* FindUniform(const hash_t hash);

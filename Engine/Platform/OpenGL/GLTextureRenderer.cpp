@@ -189,7 +189,10 @@ namespace Sorex::Graphics
     if (mActiveTexture != texture)
     {
       Flush();
-      if (texture && mShaderProgram->SetTexture(0, *texture).Ok())
+
+      // TODO: Adjust sampler without changing texture.
+      const TextureSampler* sampler = mPencil ? &mPencil->texSampler : nullptr;
+      if (texture && mShaderProgram->SetTexture(0, *texture, sampler).Ok())
         mActiveTexture = texture;
       else
         mActiveTexture = nullptr;

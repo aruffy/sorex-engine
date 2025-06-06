@@ -113,6 +113,15 @@ namespace Sorex
     mPencil.blendMode = mode;
   }
 
+  void Canvas::SetTextureSampler(const Graphics::TextureSampler& sampler)
+    SRX_NOEXCEPT
+  {
+    // FIXME: Don't flush if sampler is the same. Or only tex coord scale
+    // changed.
+    Flush();
+    mPencil.texSampler = sampler;
+  }
+
   void Canvas::DrawLine(const Point& begin,
                         const Point& end,
                         const Color* color,

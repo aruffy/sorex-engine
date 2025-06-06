@@ -63,7 +63,7 @@ namespace Sorex::Math
     TVector2& operator=(const TVector2& other) = default;
 
     SRX_INLINE static TVector2 Zero() { return TVector2(); }
-    SRX_INLINE static TVector2 One() { return TVector2(1.f, 1.f); }
+    SRX_INLINE static TVector2 One() { return TVector2(T(1.0), T(1.0)); }
     SRX_INLINE static TVector2 AxisX() { return TVector2(1.0, 0.0); }
     SRX_INLINE static TVector2 AxisY() { return TVector2(0.0, 1.0); }
 

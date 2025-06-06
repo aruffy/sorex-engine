@@ -63,10 +63,13 @@ namespace
       return GL_FUNC_ADD;
     }
   }
-  /*
+  const TextureSampler kDefaultTexSampler(ETextureWrapping::Repeat,
+                                          ETextureFilter::Linear,
+                                          ETextureFilter::Linear);
+
   inline GLenum ConvTexFilter(ETextureFilter filter)
   {
-    RFY_CHECK(filter == ETextureFilter::Nearest
+    SRX_CHECK(filter == ETextureFilter::Nearest
               || filter == ETextureFilter::Linear);
     return (filter == ETextureFilter::Linear) ? GL_LINEAR : GL_NEAREST;
   }
@@ -92,13 +95,14 @@ namespace
     case ETextureWrapping::Clamp_To_Edge:
       return GL_CLAMP_TO_EDGE;
     case ETextureWrapping::Clamp_To_Border:
-      return GL_CLAMP_TO_BORDER;
+      // FIMXE: OpenGL ES 2.0 does not support GL_CLAMP_TO_BORDER
+      // return GL_CLAMP_TO_BORDER;
+      [[fallthrough]];
     default:
-      RFY_NOENTRY("invalide texture wrapping");
+      SRX_NOENTRY("invalide texture wrapping");
       return GL_REPEAT;
     }
   }
-  */
 }
 
 namespace Sorex::Graphics
@@ -196,22 +200,23 @@ namespace Sorex::Graphics
     }
   }
 
-  /* void GLRenderContext::ApplyTextureSampler(GLenum                target,
+  void GLRenderContext::ApplyTextureSampler(GLenum                target,
                                             const TextureSampler& sampler,
                                             bool                  bMipmaps)
   {
-    const GLenum s = ConvTexWrap(sampler.GetWrapS());
-    const GLenum t = ConvTexWrap(sampler.GetWrapT());
+    const auto [wS, wT] = sampler.GetWrap();
+    const GLenum s      = ConvTexWrap(wS);
+    const GLenum t      = ConvTexWrap(wT);
 
-    OPENGL_CALL(glTexParameteri(target, GL_TEXTURE_WRAP_S, s));
-    OPENGL_CALL(glTexParameteri(target, GL_TEXTURE_WRAP_T, t));
+    SRX_OPENGL_CALL(glTexParameteri(target, GL_TEXTURE_WRAP_S, s));
+    SRX_OPENGL_CALL(glTexParameteri(target, GL_TEXTURE_WRAP_T, t));
 
-    if (s == GL_CLAMP_TO_BORDER || t == GL_CLAMP_TO_BORDER)
+    /* if (s == GL_CLAMP_TO_BORDER || t == GL_CLAMP_TO_BORDER)
     {
       const Vec4 color = sampler.GetBorderColor().ToVector();
-      OPENGL_CALL(
+      SRX_OPENGL_CALL(
         glTexParameterfv(target, GL_TEXTURE_BORDER_COLOR, &color.data[0]));
-    }
+    } */
 
     const GLenum minf =
       bMipmaps ? ConvTexMipmapFilter(
@@ -222,11 +227,13 @@ namespace Sorex::Graphics
     const GLenum magf =
       ConvTexFilter(sampler.GetFilter(TextureSampler::EFilterType::Magnifying));
 
-    OPENGL_CALL(glTexParameteri(target, GL_TEXTURE_MIN_FILTER, minf));
-    OPENGL_CALL(glTexParameteri(target, GL_TEXTURE_MAG_FILTER, magf));
-  } */
+    SRX_OPENGL_CALL(glTexParameteri(target, GL_TEXTURE_MIN_FILTER, minf));
+    SRX_OPENGL_CALL(glTexParameteri(target, GL_TEXTURE_MAG_FILTER, magf));
+  }
 
-  Status GLRenderContext::SetTexture(size_t slot, const GLTexture2D& texture)
+  Status GLRenderContext::SetTexture(size_t                slot,
+                                     const GLTexture2D&    texture,
+                                     const TextureSampler* sampler)
   {
     if (slot >= mTextures.size())
       return SRX_STATUS_MSG(EStatusCode::Out_Of_Range,
@@ -234,25 +241,18 @@ namespace Sorex::Graphics
                             slot);
 
     mTextures[slot].texture = &texture;
-    return SRX_OK;
-  }
 
-  /* error_t GLRenderContext::SetTextureSampler(size_t                slot,
-                                             const TextureSampler& sampler)
-  {
-    if (slot >= _textures.size())
-      return Error::Out_Of_Range;
+    if (sampler == nullptr)
+      sampler = &kDefaultTexSampler;
 
-    auto& inst = _textures[slot];
-
-    if (inst.sampler != sampler)
+    if (mTextures[slot].sampler != sampler)
     {
-      inst.bUpdateSampler = true;
-      inst.sampler        = sampler;
+      mTextures[slot].sampler = sampler;
+      mTextures[slot].state |= TextureSample::EState::Sampler_Changed;
     }
 
-    return Error::Ok;
-  } */
+    return SRX_OK;
+  }
 
   Status GLRenderContext::ActivateTexture(GLenum slot)
   {
@@ -277,10 +277,13 @@ namespace Sorex::Graphics
     SRX_OPENGL_CALL(glBindTexture(texture->target, texture->id));
 
     /*     if (texSlot.bUpdateSampler)
-          ApplyTextureSampler(texture->target,
-                              texSlot.sampler,
-                              texSlot.texture->HasMipmaps());
+     *texSlot.texture->HasMipmaps()
      */
+
+    SRX_CHECK(texSlot.sampler != nullptr);
+    // FIXME: mipmaps
+    ApplyTextureSampler(texture->target, *texSlot.sampler, false);
+
     return SRX_OK;
   }
 
