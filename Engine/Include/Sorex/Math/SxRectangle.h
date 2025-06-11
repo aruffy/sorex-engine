@@ -33,6 +33,179 @@
 namespace Sorex::Math
 {
   template<typename T>
+  struct TIntegerRectangle
+  {
+    static_assert(TIsIntegral_Value<T>,
+                  "[TIntegerRectangle] Invalid template type");
+
+    T x = 0, y = 0;
+    T width = 0, height = 0;
+
+    TIntegerRectangle() = default;
+    TIntegerRectangle(T aX, T aY, T w, T h)
+      : x(aX)
+      , y(aY)
+      , width(w)
+      , height(h)
+    {}
+
+    TIntegerRectangle(const TIntegerPoint<T>& loc, const TIntegerSize<T>& size)
+      : x(loc.x)
+      , y(loc.y)
+      , width(size.width)
+      , height(size.height)
+    {}
+
+    inline TIntegerPoint<T> GetLocation() const
+    {
+      return TIntegerPoint<T>(x, y);
+    }
+    inline TIntegerSize<T> GetSize() const
+    {
+      return TIntegerSize<T>(width, height);
+    }
+
+    bool              Intersects(const TIntegerRectangle& rect) const noexcept;
+    TIntegerRectangle Intersection(
+      const TIntegerRectangle& rect) const noexcept;
+
+    bool Contains(const TIntegerPoint<T>& p) const
+    {
+      return Contains(p.x, p.y);
+    }
+    bool Contains(const TIntegerRectangle& rect) const;
+    bool Contains(T _x, T _y) const noexcept;
+
+    void Expand(const TIntegerPoint<T>& point);
+    void Squeeze(T _x, T _y);
+
+    inline TIntegerPoint<T> TopLeft() const { return TIntegerPoint<T>(x, y); }
+    inline TIntegerPoint<T> TopRight() const
+    {
+      return TIntegerPoint<T>(x + width, y);
+    }
+    inline TIntegerPoint<T> BottomLeft() const
+    {
+      return TIntegerPoint<T>(x, y + height);
+    }
+    inline TIntegerPoint<T> BottomRight() const
+    {
+      return TIntegerPoint<T>(x + width, y + height);
+    }
+    inline TIntegerPoint<T> Center() const
+    {
+      return TIntegerPoint<T>(x + width / T{ 2 }, y + height / T{ 2 });
+    }
+
+    bool operator==(const TIntegerRectangle& rc) const
+    {
+      return ((x == rc.x) && (y == rc.y) && (width == rc.width)
+              && (height == rc.height));
+    }
+    bool operator!=(const TIntegerRectangle& rc) const
+    {
+      return !(*this == rc);
+    }
+  };
+
+  template<typename T>
+  inline TIntegerRectangle<T> operator*(const TIntegerRectangle<T>& rc, T f)
+  {
+    return { rc.x * f, rc.y * f, rc.width * f, rc.height * f };
+  }
+
+  template<typename T>
+  inline TIntegerRectangle<T> operator*(T f, const TIntegerRectangle<T>& rc)
+  {
+    return operator*(rc, f);
+  }
+
+  template<typename T>
+  bool TIntegerRectangle<T>::Intersects(
+    const TIntegerRectangle<T>& rect) const noexcept
+  {
+    if (x + width <= rect.x)
+      return false;
+
+    if (x >= rect.x + rect.width)
+      return false;
+
+    if (y + height <= rect.y)
+      return false;
+
+    if (y >= rect.y + rect.height)
+      return false;
+
+    return true;
+  }
+
+  template<typename T>
+  TIntegerRectangle<T> TIntegerRectangle<T>::Intersection(
+    const TIntegerRectangle<T>& other) const noexcept
+  {
+    constexpr T kNull = T{ 0 };
+
+    T x1 = std::max<T>(x, other.x);
+    T x2 = std::min<T>(x + width, other.x + other.width);
+
+    T y1 = std::max<T>(y, other.y);
+    T y2 = std::min<T>(y + height, other.y + other.height);
+
+    if (((x2 - x1) < kNull) || ((y2 - y1) < kNull))
+      return TIntegerRectangle<T>();
+    else
+      return TIntegerRectangle<T>(x1, y1, x2 - x1, y2 - y1);
+  }
+
+  template<typename T>
+  bool TIntegerRectangle<T>::Contains(T _x, T _y) const noexcept
+  {
+    return (_x >= x && _y >= y && _x < (x + width) && _y < (y + height));
+  }
+
+  template<typename T>
+  bool TIntegerRectangle<T>::Contains(const TIntegerRectangle<T>& rect) const
+  {
+    return (x <= rect.x) && (rect.x + rect.width <= x + width) && (y <= rect.y)
+           && (rect.y + rect.height <= y + height);
+  }
+
+  template<typename T>
+  void TIntegerRectangle<T>::Expand(const TIntegerPoint<T>& p)
+  {
+    if (p.x < x)
+      x = p.x;
+    else if (p.x - x > width)
+      width = p.x - x;
+
+    if (p.y < y)
+      y = p.y;
+    else if (p.y - y > height)
+      height = p.y - y;
+  }
+
+  template<typename T>
+  void TIntegerRectangle<T>::Squeeze(T _x, T _y)
+  {
+    constexpr T kNull   = T{ 0 };
+    constexpr T kDouble = T{ 2 };
+
+    x += _x;
+    width -= _x * kDouble;
+
+    y += _y;
+    height -= _y * kDouble;
+
+    if (width < kNull)
+      width = kNull;
+
+    if (height < kNull)
+      height = kNull;
+  }
+
+  // --------------- Floating Rectangle ---------------- //
+
+  template<typename T>
   struct TFloatingRectangle
   {
     static_assert(std::is_floating_point_v<T>,
@@ -260,6 +433,7 @@ namespace Sorex::Math
 
 namespace Sorex
 {
+  typedef Math::TIntegerRectangle<int32>            RectInt;
   typedef Math::TFloatingRectangle<Sorex::scalar_t> Rectangle;
   typedef Rectangle                                 Rect;
 }
