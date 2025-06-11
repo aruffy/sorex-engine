@@ -112,8 +112,8 @@ public:
     };
 
 public:
-    explicit Font(StringView name)
-      : Resource::Asset(name)
+    explicit Font(Path name)
+      : Resource::Asset(std::move(name))
     {}
 
     static Charset GetCharset(ECharset charset) SRX_NOEXCEPT;
@@ -130,11 +130,11 @@ public:
     }
     const String& GetFamily() const
     {
-      return mData ? mData->family : Utils::kEmptyString;
+      return mData ? mData->family : Sorex::Utils::kEmptyString;
     }
     const String& GetStyle() const
     {
-      return mData ? mData->style : Utils::kEmptyString;
+      return mData ? mData->style : Sorex::Utils::kEmptyString;
     }
 
     uint16 GetSize() const { return mData ? mData->size : 0u; }

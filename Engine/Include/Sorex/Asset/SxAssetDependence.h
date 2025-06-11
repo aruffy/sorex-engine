@@ -87,8 +87,12 @@ public:
       requires std::is_base_of_v<Asset, T>
     bool Push(const String& name)
     {
-      const RuntimeClass* const rt = GetRuntimeType<T>();
-      if (mResources[rt].emplace(name, AssetDependence(*rt, name)).second)
+      const RuntimeClass& type     = GetRuntimeType<T>();
+      const hash_t        rttiHash = type.GetHash();
+      // FIXME: PATH
+      if (mResources[rttiHash]
+            .emplace(std::make_pair(name, AssetDependence(type, Path(name))))
+            .second)
       {
         mSize++;
         return true;
@@ -101,8 +105,8 @@ public:
       requires std::is_base_of_v<Asset, T>
     TSharedPointer<T> GetAsset(const String& name) const
     {
-      const RuntimeClass* rt     = GetRuntimeType<T>();
-      auto                dictIt = mResources.find(rt);
+      const hash_t rttiHash = GetRuntimeType<T>().GetHash();
+      auto         dictIt   = mResources.find(rttiHash);
 
       if (dictIt == mResources.end())
         return nullptr;
@@ -152,7 +156,7 @@ public:
     SRX_INLINE void Clear() { mResources.clear(); }
 
 private:
-    size_t                                                           mSize = 0;
-    THashMap<const RuntimeClass*, THashMap<String, AssetDependence>> mResources;
+    size_t                                              mSize = 0;
+    THashMap<hash_t, THashMap<String, AssetDependence>> mResources;
   };
 }  // namespace

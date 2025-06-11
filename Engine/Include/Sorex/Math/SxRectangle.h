@@ -35,7 +35,7 @@ namespace Sorex::Math
   template<typename T>
   struct TIntegerRectangle
   {
-    static_assert(TIsIntegral_Value<T>,
+    static_assert(std::is_integral_v<T>,
                   "[TIntegerRectangle] Invalid template type");
 
     T x = 0, y = 0;
