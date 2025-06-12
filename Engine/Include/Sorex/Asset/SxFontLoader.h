@@ -102,6 +102,8 @@ private:
 
     TUniquePointer<IFontDataLoader> mLoader;
 
+    int32 mFontBitmapId = -1;
+
     TUniquePointer<Graphics::FontData>      mFontData;
     TUniquePointer<Graphics::TextureBitmap> mBitmap;
   };

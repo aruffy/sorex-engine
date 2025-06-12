@@ -85,6 +85,7 @@ namespace Sorex::Resource
                          TSharedPointer<Graphics::Font> font)
     : AssetLoader(std::move(font))
     , mCreator(creator)
+    , mFontBitmapId(-1)
   {}
 
   Status FontLoader::Preload(AssetStorage&  storage,
@@ -135,11 +136,15 @@ namespace Sorex::Resource
     if (!fontData)
       return status;
 
-    // TODO: check the push result
     if (!bitmap)
-      dependencies.Push<Graphics::Texture2D>(
-        GetAssetName());  // FIXME: dependencies should store path, name will
-                          // not work for Win32
+    {
+      Path bitmapPath = GetAssetPath();
+      bitmapPath.replace_extension("png");  // @FIXME: hardcoded extension
+
+      mFontBitmapId =
+        dependencies.Push<Graphics::Texture2D>(std::move(bitmapPath));
+      SRX_CHECK(mFontBitmapId >= 0);  // NOTE: Push should always succeed
+    }
 
     mFontData = std::move(fontData);
     mBitmap   = std::move(bitmap);
@@ -168,7 +173,7 @@ namespace Sorex::Resource
     }
     else
     {
-      auto texture = dependencies.GetAsset<Graphics::Texture2D>(name);
+      texture = dependencies.GetAsset<Graphics::Texture2D>(mFontBitmapId);
     }
 
     if (!texture)
