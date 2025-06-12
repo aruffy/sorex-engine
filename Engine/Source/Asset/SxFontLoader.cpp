@@ -30,6 +30,7 @@
 #include <Sorex/Asset/SxFontLoader.h>
 #include <Sorex/Graphics/SxTexture2D.h>
 
+#include <Asset/Font/SxXmlFontDataLoader.h>
 #include <Utils/XmlReader.h>
 
 namespace Sorex::Resource
@@ -37,11 +38,12 @@ namespace Sorex::Resource
   FontCreator::FontCreator(Graphics::RenderDevice& renderDevice)
     : mRenderDevice(renderDevice)
   {
-    /* mFactory.RegisterCreator<Details::XMLFontLoaderCreator>("xml");
-    mFactory.RegisterCreator<Details::TrueTypeFontLoaderCreator>("ttf"); */
+    mFactory.RegisterCreator<
+      DefaultObjectCreator<XMLFontDataLoader, IFontDataLoader>>("xml");
+    /* mFactory.RegisterCreator<Details::TrueTypeFontLoaderCreator>("ttf"); */
   }
 
-  void FontCreator::RegisterImageLoader(
+  void FontCreator::RegisterFontLoader(
     const String&                                   extenstion,
     TUniquePointer<TObjectCreator<IFontDataLoader>> creator)
   {
@@ -129,7 +131,7 @@ namespace Sorex::Resource
     if (stream == nullptr)
       return status;
 
-    auto [fontData, bitmap] = mLoader->Load(*stream, &status);
+    auto [fontData, bitmap] = mLoader->LoadFont(*stream, &status);
     if (!fontData)
       return status;
 

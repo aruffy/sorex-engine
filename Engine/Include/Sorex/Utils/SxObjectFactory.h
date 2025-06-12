@@ -44,6 +44,19 @@ private:
     TSharedPointer<T> mObject;
   };
 
+  template<typename T, typename Base>
+  class DefaultObjectCreator final: public TObjectCreator<Base>
+  {
+    static_assert(std::is_base_of_v<Base, T>,
+                  __FILE__ "DefaultObjectCreator: invalid type");
+
+public:
+    virtual TUniquePointer<Base> Create() const override
+    {
+      return MakeUnique<T>();
+    }
+  };
+
   template<typename T, typename Key = String>
   class TObjectFactory final
   {

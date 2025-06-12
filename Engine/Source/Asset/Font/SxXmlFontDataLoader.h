@@ -27,82 +27,16 @@
 
 #pragma once
 
-#include <Sorex/SxCoreMinimal.h>
-#include <Sorex/Graphics/SxFont.h>
-#include <Sorex/Graphics/SxRenderDevice.h>
+#include <Sorex/Asset/SxFontLoader.h>
 #include <Sorex/Utils/SxObjectFactory.h>
-
-#include <Sorex/Asset/SxAssetCreator.h>
-#include <Sorex/Asset/SxAssetLoader.h>
 
 namespace Sorex::Resource
 {
-  class IFontDataLoader
+  class XMLFontDataLoader final: public IFontDataLoader
   {
 public:
-    using glyph_t = Graphics::glyph_t;
-
-public:
-    virtual ~IFontDataLoader() {}
-
     virtual TPair<TUniquePointer<Graphics::FontData>,
                   TUniquePointer<Graphics::TextureBitmap>>
-    LoadFont(Stream& stream, Status* status) = 0;
+    LoadFont(Stream& stream, Status* status) override;
   };
-
-  class FontCreator final: public AssetCreator
-  {
-public:
-    explicit FontCreator(Graphics::RenderDevice& renderDevice);
-
-    FontCreator(const FontCreator& other)            = delete;
-    FontCreator& operator=(const FontCreator& other) = delete;
-
-    /**
-     * @copydoc AssetCreator::CreateAssetInstance
-     */
-    virtual AssetInstance CreateAssetInstance(Path           path,
-                                              AssetRegistry* registry,
-                                              Status*        status) override;
-
-    void RegisterFontLoader(
-      const String&                                   extenstion,
-      TUniquePointer<TObjectCreator<IFontDataLoader>> creator);
-
-    TUniquePointer<IFontDataLoader> CreateFontDataLoader(
-      const String& name) const;
-
-    Graphics::RenderDevice& GetRenderDevice() const { return mRenderDevice; }
-
-private:
-    mutable ShMutex mMutex;
-
-    Graphics::RenderDevice&         mRenderDevice;
-    TObjectFactory<IFontDataLoader> mFactory;
-  };
-
-  class FontLoader final: public AssetLoader
-  {
-public:
-    FontLoader(const FontCreator& creator, TSharedPointer<Graphics::Font> font);
-
-    virtual Status Preload(AssetStorage&  storage,
-                           AssetRegistry* registry,
-                           TVector<Path>& missingFiles) override;
-
-    virtual Status Load(AssetStorage&       storage,
-                        const AssetOptions* options,
-                        AssetDependencies&  dependencies) override;
-
-    virtual Status Finalize(AssetRegistry*           registry,
-                            const AssetDependencies& dependencies) override;
-
-private:
-    const FontCreator& mCreator;
-
-    TUniquePointer<IFontDataLoader> mLoader;
-
-    TUniquePointer<Graphics::FontData>      mFontData;
-    TUniquePointer<Graphics::TextureBitmap> mBitmap;
-  };
-}
+}  // namespace Sorex::Resource::Details

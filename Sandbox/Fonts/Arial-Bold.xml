@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Font family="Arial" style="Bold" type="bitmap" size="34">
+	<Metrics ascent="32" descent="7" top="34" leading="39"  />
+	<Glyphs>
+		<Char code=" " x="0"   y="0" height="8" width="8" advance="13" />
+		<Char code="," x="1"   y="26" height="14" width="7" advance="13" bx="2" by="7" />
+		<Char code="." x="9"   y="26" height="7" width="6"  advance="13" bx="3" by="7" />
+		<Char code="0" x="16"  y="0" height="32" width="21" advance="25" bx="2" by="32" />
+		<Char code="1" x="38"  y="0" height="32" width="14" advance="22" bx="4" by="32" />
+		<Char code="2" x="53"  y="0" height="32" width="21" advance="25" bx="2" by="32" />
+		<Char code="3" x="75"  y="0" height="32" width="21" advance="25" bx="2" by="32" />
+		<Char code="4" x="97"  y="0" height="32" width="23" advance="25" bx="1" by="32" />
+		<Char code="5" x="121" y="0" height="32" width="22" advance="25" bx="1" by="32" />
+		<Char code="6" x="144" y="0" height="32" width="21" advance="25" bx="2" by="32" />
+		<Char code="7" x="166" y="0" height="32" width="21" advance="25" bx="2" by="32" />
+		<Char code="8" x="188" y="0" height="32" width="21" advance="25" bx="2" by="32" />
+		<Char code="9" x="210" y="0" height="32" width="21" advance="25" bx="2" by="32" />
+	</Glyphs>
+</Font>

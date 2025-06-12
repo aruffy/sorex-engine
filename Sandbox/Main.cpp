@@ -13,8 +13,10 @@
 #include <Sorex/Asset/SxAsset.h>
 #include <Sorex/Asset/SxAssetManager.h>
 #include <Sorex/Asset/SxAssetFileSystemStorage.h>
-#include <Sorex/Asset/SxTextureLoader.h>
 #include <Sorex/FileSystem/SxPathUtils.h>
+
+#include <Sorex/Asset/SxTextureLoader.h>
+#include <Sorex/Asset/SxFontLoader.h>
 
 #include <Sorex/SxDesktopLauncher.h>
 
@@ -36,13 +38,17 @@ class MyDirector final: public Director
     if (!status.Ok())
       return status;
 
-    auto glRenderDevice = GetComponent<Graphics::RenderDevice>();
-    SRX_ASSERT(glRenderDevice);
+    auto renderDevice = GetComponent<Graphics::RenderDevice>();
+    SRX_ASSERT(renderDevice);
 
     mAssetManager->Register<Graphics::Texture2D>(
-      MakeUnique<Resource::TextureCreator>(*glRenderDevice));
+      MakeUnique<Resource::TextureCreator>(*renderDevice));
+    mAssetManager->Register<Graphics::Font>(
+      MakeUnique<Resource::FontCreator>(*renderDevice));
 
     status = filesystem->Mount(SRX_PATH("Textures"), SRX_PATH("/Textures"));
+    SRX_ASSERT(status.Ok());
+    status = filesystem->Mount(SRX_PATH("Fonts"), SRX_PATH("/Fonts"));
     SRX_ASSERT(status.Ok());
 
     /* auto asset2 = mAssetManager->LoadAsync<Graphics::Texture2D>(
@@ -54,6 +60,9 @@ class MyDirector final: public Director
       SRX_PATH("/Textures/awesomeface.png"),
       nullptr,
       nullptr);
+
+    mFont = mAssetManager->LoadAsync<Graphics::Font>(
+      SRX_PATH("/Fonts/Arial-Bold.xml"));
     return status;
   }
 
@@ -86,6 +95,7 @@ class MyDirector final: public Director
   TUniquePointer<Resource::AssetStorage> mAssetStorage;
   SxAssetManager*                        mAssetManager = nullptr;
   TSharedPointer<Graphics::Texture2D>    mTexture;
+  TSharedPointer<Graphics::Font>         mFont;
 };
 
 int main(const int argc, const char* argv[])
