@@ -2,7 +2,7 @@
 <Font family="Arial" style="Bold" type="bitmap" size="34">
 	<Metrics ascent="32" descent="7" top="34" leading="39"  />
 	<Glyphs>
-		<Char code=" " x="0"   y="0" height="8" width="8" advance="13" />
+		<Char code=" " x="0"   y="0" height="4" width="4" advance="13" />
 		<Char code="," x="1"   y="26" height="14" width="7" advance="13" bx="2" by="7" />
 		<Char code="." x="9"   y="26" height="7" width="6"  advance="13" bx="3" by="7" />
 		<Char code="0" x="16"  y="0" height="32" width="21" advance="25" bx="2" by="32" />
