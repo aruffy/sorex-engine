@@ -57,7 +57,7 @@ namespace Sorex
 
 
     SRX_INLINE Color() SRX_NOEXCEPT;
-    Color(const Color& base, int alpha) SRX_NOEXCEPT;
+    Color(const Color& base, scalar_t alpha) SRX_NOEXCEPT;
     Color(const int red, const int green, const int blue, const int alpha = 255)
       SRX_NOEXCEPT;
 

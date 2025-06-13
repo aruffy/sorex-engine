@@ -164,10 +164,10 @@ void MyDirector::DrawText(Canvas& canvase)
 
   canvase.PushPencil();
   canvase.SetBlendMode(Graphics::BlendMode::Alpha);
-  static byte alpha = 0u;
-  alpha++;
-  if (alpha > 255)
-    alpha = 0u;
+  static float alpha = 0.f;
+  alpha += 0.01f;
+  if (alpha > 1.f)
+    alpha = 0.f;
 
   canvase.DrawText(*mFont,
                    "0123 456.001, 321.11987",
