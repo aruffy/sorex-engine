@@ -55,7 +55,7 @@ namespace
       else if (Utils::CompareNoCase(attrib.name, "bottom"))
         Utils::ToInteger(attrib.value, metrics.bottom);
 
-      else if (attrib.name == "leading")
+      else if (Utils::CompareNoCase(attrib.name, "leading"))
         Utils::ToInteger(attrib.value, metrics.leading);
     }
 

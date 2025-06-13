@@ -157,22 +157,24 @@ void MyDirector::DrawTextures(Canvas& canvas)
   canvas.PopPencil();
 }
 
-void MyDirector::DrawText(Canvas& canvase)
+void MyDirector::DrawText(Canvas& canvas)
 {
   if (!mFont || !mFont->IsReady())
     return;
 
-  canvase.PushPencil();
-  canvase.SetBlendMode(Graphics::BlendMode::Alpha);
+  canvas.PushPencil();
+  canvas.SetBlendMode(Graphics::BlendMode::Alpha);
   static float alpha = 0.f;
-  alpha += 0.01f;
+  alpha += 0.005f;
   if (alpha > 1.f)
     alpha = 0.f;
 
-  canvase.DrawText(*mFont,
-                   "0123 456.001, 321.11987",
-                   Point(10.f, 10.f),
-                   Color(Color::Blue, alpha),
-                   1.f);
-  canvase.PopPencil();
+  scalar_t ypos = 40.f - mFont->GetSize();
+  canvas.DrawRect(Rect(Point(10.f, ypos), Size(590.f, 32.f)), Color::Blue);
+  canvas.DrawText(*mFont,
+                  "0123 456.001, 321.11987",
+                  Point(15.f, 40.f),
+                  Color(Color::Yellow, 1.f),
+                  1.f);
+  canvas.PopPencil();
 }

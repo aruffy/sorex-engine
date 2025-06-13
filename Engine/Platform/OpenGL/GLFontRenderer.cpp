@@ -106,9 +106,6 @@ namespace Sorex::Graphics
     // DisableOutline();
 
     Point position = pos;
-    if (auto metrics = font.GetMetrics())
-      position.y += metrics->leading;
-
     for (const char ch : text)
       if (const FontGlyph* glyph = font.GetGlyph(static_cast<glyph_t>(ch)))
         position.x = DrawGlyph(*glyph,
