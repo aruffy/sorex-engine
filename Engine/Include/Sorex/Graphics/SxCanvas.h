@@ -71,12 +71,13 @@ public:
                      Vec2                       scale = Vec2::One(),
                      Color                      color = Color::White);
 
+    void DrawText(const Graphics::Font& font,
+                  StringView            text,
+                  const Point&          pos,
+                  Color                 color = Color::White,
+                  float                 scale = 1.f);
+
     /*
-            void DrawText(const Graphics::Font& font,
-                          StringView            text,
-                          const Point&          pos,
-                          Color                 color = Color::White,
-                          float                 scale = 1.f);
             void DrawText(const Graphics::Font& font,
                           WStringView           text,
                           const Point&          pos,
@@ -136,7 +137,7 @@ private:
 
     TUniquePointer<Graphics::PrimitiveRenderer> mPrimitiveRenderer;
     TUniquePointer<Graphics::TextureRenderer>   mTextureRenderer;
-    // TUniquePointer<Graphics::TextRenderer>      _textRenderer;
+    TUniquePointer<Graphics::TextRenderer>      mTextRenderer;
 
     Graphics::CanvasPencil         mPencil;
     TStack<Graphics::CanvasPencil> mPencilStack;

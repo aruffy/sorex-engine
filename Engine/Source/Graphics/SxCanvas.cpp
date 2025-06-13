@@ -39,14 +39,16 @@ namespace Sorex
       mRenderDevice.CreateRenderer<Graphics::PrimitiveRenderer>();
     mTextureRenderer =
       mRenderDevice.CreateRenderer<Graphics::TextureRenderer>();
+    mTextRenderer = mRenderDevice.CreateRenderer<Graphics::TextRenderer>();
 
-    if (!mPrimitiveRenderer || !mTextureRenderer)
+    if (!mPrimitiveRenderer || !mTextureRenderer || !mTextRenderer)
       return SRX_STATUS_MSG(EStatusCode::Not_Supported,
                             "renderer creation failed");
 
-    // FIXME:
+    // @FIXME: orginize renderers
     SRX_VERIFY(mPrimitiveRenderer->Initialize().Ok());
     SRX_VERIFY(mTextureRenderer->Initialize().Ok());
+    SRX_VERIFY(mTextRenderer->Initialize().Ok());
 
     return SRX_OK;
   }
@@ -198,6 +200,16 @@ namespace Sorex
                                     Graphics::EAnchorPoint::Middle,
                                     rotation,
                                     color);
+  }
+
+  void Canvas::DrawText(const Graphics::Font& font,
+                        StringView            text,
+                        const Point&          pos,
+                        Color                 color,
+                        float                 scale)
+  {
+    if (ActivateRenderer(mTextRenderer.get()))
+      mTextRenderer->DrawText(font, text, pos, scale, color);
   }
 
   void Canvas::Clear() SRX_NOEXCEPT

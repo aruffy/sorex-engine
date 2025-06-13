@@ -174,6 +174,35 @@ public:
                              scalar_t         rotation,
                              Color            color) SRX_NOEXCEPT = 0;
   };
+
+  class Font;
+  // class FontDecorator;
+  class TextRenderer: public Renderer
+  {
+    SRX_RTTI(Graphics::TextRenderer, Graphics::Renderer);
+
+public:
+    virtual ~TextRenderer() override = default;
+
+    virtual void DrawText(const Font&  font,
+                          StringView   text,
+                          const Point& pos,
+                          float        scale,
+                          Color        color) = 0;
+    virtual void DrawText(const Font&  font,
+                          WStringView  wtext,
+                          const Point& pos,
+                          float        scale,
+                          Color        color) = 0;
+
+    /* virtual void DrawText(const FontDecorator& decorator,
+                          StringView           text,
+                          const Point&         pos) = 0;
+    virtual void DrawText(const FontDecorator& decorator,
+                          WStringView          wtext,
+                          const Point&         pos) = 0; */
+  };
+
 }  // namespace
 
 using SxRenderer = Sorex::Graphics::Renderer;

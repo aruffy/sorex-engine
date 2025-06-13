@@ -25,63 +25,68 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#include "GLQuadBatch.h"
-#include "GLRenderDevice.h"
+#include <GLShader.h>
 
-namespace Sorex::Graphics
+using namespace Sorex::Graphics;
+
+namespace
 {
-  GLTexQuadBatch::GLTexQuadBatch(GLRenderDevice& glDevice,
-                                 size_t          capacity) SRX_NOEXCEPT
-    : GLQuadBatch<VertexType>(glDevice, capacity)
-  {}
+  const Sorex::String __kBitmapFontFragmentShaderSource = R"(
+        #version 330
 
-  Status GLTexQuadBatch::Flush()
-  {
-    if (!IsEmpty())
-    {
-      Status status = SRX_STATUS(EStatusCode::Invalid_State);
-      if (auto glDevice = GetRenderDevice())
-        status = glDevice->Draw(GetVertexArray());
+        in lowp vec4 v_color;
+        in mediump vec2 v_texcoord;
 
-      Clear();
-      return status;
-    }
+        uniform sampler2D u_sampler_0;
 
-    return SRX_OK;
-  }
+        out lowp vec4 out_color;
 
-  void GLTexQuadBatch::Draw(const TArray<Point, 4>& texcoord,
-                            const TArray<Point, 4>& screenPoints,
-                            Color                   color)
-  {
-    if (GetSize() >= GetCapacity())
-      Flush();
+        void main()
+        {
+            vec4 color_alpha = vec4(1.f, 1.f, 1.f, texture(u_sampler_0, v_texcoord).r);
+            out_color = v_color * color_alpha;
+        }
+    )";
 
-    Quad quad;
-    SRX_VERIFY(Allocate(quad).Ok());
+  const Sorex::String __kSignedDistanceFieldFragmentShaderSource = R"(
+        #version 330
 
-    quad.tl->position[0] = screenPoints[0].x;
-    quad.tl->position[1] = screenPoints[0].y;
-    quad.tl->texCoord[0] = texcoord[0].x;
-    quad.tl->texCoord[1] = texcoord[0].y;
-    quad.tl->color       = color.value;
+        in lowp vec4 v_color;
+        in mediump vec2 v_texcoord;
 
-    quad.bl->position[0] = screenPoints[1].x;
-    quad.bl->position[1] = screenPoints[1].y;
-    quad.bl->texCoord[0] = texcoord[1].x;
-    quad.bl->texCoord[1] = texcoord[1].y;
-    quad.bl->color       = color.value;
+        uniform sampler2D u_sampler_0;
 
-    quad.br->position[0] = screenPoints[2].x;
-    quad.br->position[1] = screenPoints[2].y;
-    quad.br->texCoord[0] = texcoord[2].x;
-    quad.br->texCoord[1] = texcoord[2].y;
-    quad.br->color       = color.value;
+        uniform lowp float u_onedge = 0.5f;
+        uniform mediump float u_smoothing = 0.0f;
 
-    quad.tr->position[0] = screenPoints[3].x;
-    quad.tr->position[1] = screenPoints[3].y;
-    quad.tr->texCoord[0] = texcoord[3].x;
-    quad.tr->texCoord[1] = texcoord[3].y;
-    quad.tr->color       = color.value;
-  }
+        uniform float u_outline;
+        uniform vec4  u_outline_color;
+
+        out lowp vec4 out_color;
+
+        void main()
+        {
+            float distance = texture(u_sampler_0, v_texcoord).r;
+            float width = u_smoothing == 0.f ? fwidth(distance) : u_smoothing;
+
+            float alpha = smoothstep(u_onedge - width, u_onedge + width, distance);
+            vec4 color = v_color;
+
+            if (u_outline >= 0.f) {
+                color = mix(u_outline_color, v_color, alpha);
+                alpha = smoothstep(u_outline - width, u_outline + width, distance);
+            }
+
+            out_color = vec4(color.rgb, color.a * alpha);
+        }
+    )";
+}
+
+namespace Sorex::Graphics::OpenGL
+{
+  const GLShaderSource Shader::kFontBitmapFragmentShaderSource =
+    GLShaderSource{ EShaderType::Fragment, __kBitmapFontFragmentShaderSource };
+
+  /* const GLShaderSource Shader::kTextureFragmentShaderSource =
+    GLShaderSource{ EShaderType::Fragment, __kTextureFragmentShaderSource }; */
 }  // namespace

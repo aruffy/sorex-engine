@@ -76,6 +76,7 @@ public:
     TSpan<const GLShaderPtr> GetShaders() const { return mShaders; }
     GLShaderPtr              GetShader(EShaderType shaderType) SRX_NOEXCEPT;
 
+    GLUniform*             GetUniform(const GLStringView& name);
     TSpan<const GLUniform> GetUniforms() const { return mUniforms; }
     // cppcheck-suppress functionConst
     TSpan<GLUniform> GetUniforms() { return mUniforms; }

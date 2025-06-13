@@ -73,23 +73,25 @@ class MyDirector final: public Director
     // DrawTextures(canvas);
 
     // canvas.DrawTexture(mTexture.get(), Point(10.f, 10.f));
+    DrawText(canvas);
 
-    canvas.PushPencil();
-    Graphics::TextureSampler sampler(
-      Graphics::ETextureWrapping::Mirrored_Repeat,
-      Graphics::ETextureFilter::Nearest);
+    /*     canvas.PushPencil();
+        Graphics::TextureSampler sampler(
+          Graphics::ETextureWrapping::Mirrored_Repeat,
+          Graphics::ETextureFilter::Nearest);
 
-    sampler.SetTexCoords(Vec2(2.f, 2.f));
-    canvas.SetTextureSampler(sampler);
-    canvas.SetBlendMode(Graphics::BlendMode::Alpha);
+        sampler.SetTexCoords(Vec2(2.f, 2.f));
+        canvas.SetTextureSampler(sampler);
+        canvas.SetBlendMode(Graphics::BlendMode::Alpha);
 
-    canvas.DrawTexture(mTexture.get(), Point(5.f, 5.f));
-    canvas.PopPencil();
+        canvas.DrawTexture(mTexture.get(), Point(5.f, 5.f));
+        canvas.PopPencil(); */
   }
 
   private:
   void DrawPrimitives(Canvas& canvas);
   void DrawTextures(Canvas& canvas);
+  void DrawText(Canvas& canvase);
 
   private:
   TUniquePointer<Resource::AssetStorage> mAssetStorage;
@@ -153,4 +155,24 @@ void MyDirector::DrawTextures(Canvas& canvas)
                      Color(Color::Purple, 128));
 
   canvas.PopPencil();
+}
+
+void MyDirector::DrawText(Canvas& canvase)
+{
+  if (!mFont || !mFont->IsReady())
+    return;
+
+  canvase.PushPencil();
+  canvase.SetBlendMode(Graphics::BlendMode::Alpha);
+  static byte alpha = 0u;
+  alpha++;
+  if (alpha > 255)
+    alpha = 0u;
+
+  canvase.DrawText(*mFont,
+                   "0123 456.001, 321.11987",
+                   Point(10.f, 10.f),
+                   Color(Color::Blue, alpha),
+                   1.f);
+  canvase.PopPencil();
 }

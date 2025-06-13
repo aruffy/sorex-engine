@@ -34,10 +34,13 @@
 #include <gtc/matrix_transform.hpp>
 #include <gtc/type_ptr.hpp>
 
-#include "GLPrimitiveRenderer.h"
-#include "GLTextureRenderer.h"
 #include "GLTexture2D.h"
 #include "GLTypes.h"
+
+// Renderers
+#include "GLPrimitiveRenderer.h"
+#include "GLTextureRenderer.h"
+#include "GLFontRenderer.h"
 
 namespace
 {
@@ -724,6 +727,8 @@ namespace Sorex::Graphics
       return new GLPrimitiveRenderer(this, capacity);
     else if (cls.IsA(GetRuntimeType<Graphics::TextureRenderer>()))
       return new GLTextureRenderer(*this, capacity);
+    else if (cls.IsA(GetRuntimeType<Graphics::TextRenderer>()))
+      return new GLFontRenderer(*this, capacity);
 
     return nullptr;
   }

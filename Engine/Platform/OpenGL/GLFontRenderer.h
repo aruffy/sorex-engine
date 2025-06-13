@@ -1,4 +1,3 @@
-
 /**************************************************************************/
 /*                         This file is part of:                          */
 /*                                SOREX                                   */
@@ -28,7 +27,9 @@
 
 #pragma once
 
+#include <Sorex/SxCoreMinimal.h>
 #include <Sorex/Graphics/SxRenderer.h>
+#include <Sorex/Graphics/SxFont.h>
 
 #include "GLQuadBatch.h"
 #include "GLShaderProgram.h"
@@ -37,58 +38,62 @@
 namespace Sorex::Graphics
 {
   class GLRenderDevice;
-  class GLTextureRenderer final: public TextureRenderer
+  class GLFontRenderer final: public TextRenderer
   {
-    SRX_RTTI(Graphics::GLTextureRenderer, Graphics::TextureRenderer);
+    SRX_RTTI(Graphics::GLFontRenderer, Graphics::TextRenderer);
 
 public:
-    GLTextureRenderer(GLRenderDevice& glRenderDevice, size_t maxQuadNumber);
+    GLFontRenderer(GLRenderDevice& glRenderDevice, size_t maxGlyphNumber);
 
     virtual Status Initialize() SRX_NOEXCEPT override;
     virtual Status Activate(const CanvasPencil* pencil) SRX_NOEXCEPT override;
-
-    virtual void Flush() SRX_NOEXCEPT override;
-    virtual void Reset() SRX_NOEXCEPT override;
-
-    virtual bool IsEmpty() const SRX_NOEXCEPT override
+    virtual void   Flush() SRX_NOEXCEPT override;
+    virtual void   Reset() SRX_NOEXCEPT override;
+    virtual bool   IsEmpty() const SRX_NOEXCEPT override
     {
       return mQuadBatch.IsEmpty();
     }
 
-    SRX_INLINE GLRenderDevice* GetRenderDevice()
-    {
-      return mQuadBatch.GetRenderDevice();
-    }
+    /**
+     * @copydoc TextRenderer::DrawText
+     */
+    virtual void DrawText(const Font&  font,
+                          StringView   text,
+                          const Point& pos,
+                          float        scale = 1.f,
+                          Color        color = Color::White) override;
 
-    // API TextureRenderer
-    virtual void DrawTexture(const Texture2D* texture,
-                             const Point&     position,
-                             Color            color) SRX_NOEXCEPT override;
-
-    virtual void DrawTexture(const Texture2D* texture,
-                             const Rect&      texRect,
-                             const Point&     position,
-                             Color            color) SRX_NOEXCEPT override;
-
-    virtual void DrawTexture(const Texture2D* texture,
-                             const Point&     position,
-                             const Vector2&   scale,
-                             EAnchorPoint     anchor,
-                             scalar_t         rotation,
-                             Color            color) SRX_NOEXCEPT override;
+    /**
+     * @copydoc TextRenderer::DrawText
+     */
+    virtual void DrawText(const Font&  font,
+                          WStringView  wtext,
+                          const Point& pos,
+                          float        scale = 1.f,
+                          Color        color = Color::White) override;
 
 private:
-    void DrawQuad(const Texture2D* texture, Color color);
+    bool ApplyFont(const Font& font, const float scale) SRX_NOEXCEPT;
+    bool SetFontTexture(const Texture2D* texture) SRX_NOEXCEPT;
+
+    scalar_t DrawGlyph(const FontGlyph& glyph,
+                       Point            position,
+                       const Color      color,
+                       const scalar_t   scale);
+    void     DrawQuad(const RectInt& texRect,
+                      const Point&   position,
+                      const scalar_t scale,
+                      Color          color);
 
 private:
-    GLTexQuadBatch                  mQuadBatch;
-    TUniquePointer<GLShaderProgram> mShaderProgram;
-    GLRenderTechnique               mRenderTechnique;
+    GLTexQuadBatch mQuadBatch;
 
-    const Texture2D*    mActiveTexture;
+    const Texture2D*    mTexture;
     const CanvasPencil* mPencil;
 
-    TArray<Point, 4> mScreenPoints;
-    TArray<Point, 4> mTexPoints;
+    GLRenderTechnique               mTechnique;
+    TUniquePointer<GLShaderProgram> mBitmapShaderProgram;
+    TUniquePointer<GLShaderProgram> mSdfShaderProgram;
   };
-}
+
+}  // namespace Sorex::Graphics
