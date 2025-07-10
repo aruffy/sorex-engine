@@ -60,7 +60,7 @@ public:
     virtual void DrawText(const Font&  font,
                           StringView   text,
                           const Point& pos,
-                          float        scale = 1.f,
+                          scalar_t     scale = 1.f,
                           Color        color = Color::White) override;
 
     /**
@@ -69,7 +69,7 @@ public:
     virtual void DrawText(const Font&  font,
                           WStringView  wtext,
                           const Point& pos,
-                          float        scale = 1.f,
+                          scalar_t     scale = 1.f,
                           Color        color = Color::White) override;
 
 private:

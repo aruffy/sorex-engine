@@ -74,8 +74,8 @@ public:
     void DrawText(const Graphics::Font& font,
                   StringView            text,
                   const Point&          pos,
-                  Color                 color = Color::White,
-                  float                 scale = 1.f);
+                  scalar_t              scale = 1.f,
+                  Color                 color = Color::White);
 
     /*
             void DrawText(const Graphics::Font& font,

@@ -187,12 +187,12 @@ public:
     virtual void DrawText(const Font&  font,
                           StringView   text,
                           const Point& pos,
-                          float        scale,
+                          scalar_t     scale,
                           Color        color) = 0;
     virtual void DrawText(const Font&  font,
                           WStringView  wtext,
                           const Point& pos,
-                          float        scale,
+                          scalar_t     scale,
                           Color        color) = 0;
 
     /* virtual void DrawText(const FontDecorator& decorator,

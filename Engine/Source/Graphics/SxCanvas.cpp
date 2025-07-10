@@ -205,8 +205,8 @@ namespace Sorex
   void Canvas::DrawText(const Graphics::Font& font,
                         StringView            text,
                         const Point&          pos,
-                        Color                 color,
-                        float                 scale)
+                        scalar_t              scale,
+                        Color                 color)
   {
     if (ActivateRenderer(mTextRenderer.get()))
       mTextRenderer->DrawText(font, text, pos, scale, color);

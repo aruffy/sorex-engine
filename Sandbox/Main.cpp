@@ -170,11 +170,12 @@ void MyDirector::DrawText(Canvas& canvas)
     alpha = 0.f;
 
   scalar_t ypos = 40.f - mFont->GetSize();
-  canvas.DrawRect(Rect(Point(10.f, ypos), Size(590.f, 32.f)), Color::Blue);
+  canvas.DrawRect(Rect(Point(10.f, ypos), Size(590.f, mFont->GetSize() + 2.f)),
+                  Color::Blue);
   canvas.DrawText(*mFont,
                   "0123 456.001, 321.11987",
                   Point(15.f, 40.f),
-                  Color(Color::Yellow, 1.f),
-                  1.f);
+                  1.f,
+                  Color(Color::Yellow, 1.f));
   canvas.PopPencil();
 }
