@@ -10,3 +10,7 @@
 [submodule "Engine/ThirdParty/stb"]
 	path = Engine/ThirdParty/stb
 	url = https://github.com/nothings/stb.git
+[submodule "Engine/ThirdParty/tinyxml2"]
+	path = Engine/ThirdParty/tinyxml2
+	url = https://github.com/leethomason/tinyxml2.git
+	branch = 11.0.0

@@ -31,7 +31,6 @@
 #include <Sorex/Graphics/SxTexture2D.h>
 
 #include <Asset/Font/SxXmlFontDataLoader.h>
-#include <Utils/XmlReader.h>
 
 namespace Sorex::Resource
 {

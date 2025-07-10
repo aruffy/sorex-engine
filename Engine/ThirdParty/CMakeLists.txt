@@ -114,6 +114,25 @@ target_include_directories(${ENGINE_TARGET}
 )
 
 # ##############################################################################
+# tinyxml2
+# ##############################################################################
+set(TINYXML2_SUBDIR "tinyxml2")
+
+message(CHECK_START "[${TINYXML2_SUBDIR}] subdir build")
+
+add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/${TINYXML2_SUBDIR}")
+target_include_directories(${ENGINE_TARGET}
+    PRIVATE
+    "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/${TINYXML2_SUBDIR}>"
+)
+set_target_properties(
+  tinyxml2 PROPERTIES FOLDER "${THIRD_PARTY_FOLDER}/${TINYXML2_SUBDIR}"
+)
+
+list(APPEND THIRD_PARTY_LIBRARIES tinyxml2)
+message(CHECK_PASS "done")
+
+# ##############################################################################
 set(ENGINE_THIRD_PARTY_INCLUDE_DIRECTORIES
     ${THIRD_PARTY_INCLUDE_DIRECTORIES}
     PARENT_SCOPE

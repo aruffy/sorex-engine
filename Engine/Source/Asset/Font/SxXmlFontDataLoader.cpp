@@ -30,79 +30,105 @@
 
 #include <Sorex/Utils/SxString.h>
 
-#include <Utils/XmlReader.h>
+#include "tinyxml2.h"
 
 namespace
 {
-  // FIXME: Remove CompareNoCase
-  // Use third-party library for XML parsing
-
   using namespace Sorex;
-  bool ParseXmlFontMetrics(const TVector<Utils::XmlAttrib>& attribs,
-                           Graphics::FontData::Metrics&     metrics)
+  bool ParseFontMetrics(const tinyxml2::XMLElement&  xmlMetrics,
+                        Graphics::FontData::Metrics& metrics)
   {
-    for (const Utils::XmlAttrib& attrib : attribs)
-    {
-      if (Utils::CompareNoCase(attrib.name, "ascent"))
-        Utils::ToInteger(attrib.value, metrics.ascent);
+    SRX_CHECK(Utils::CompareNoCase(xmlMetrics.Name(), "Metrics"));
 
-      else if (Utils::CompareNoCase(attrib.name, "descent"))
-        Utils::ToInteger(attrib.value, metrics.descent);
-
-      else if (Utils::CompareNoCase(attrib.name, "top"))
-        Utils::ToInteger(attrib.value, metrics.top);
-
-      else if (Utils::CompareNoCase(attrib.name, "bottom"))
-        Utils::ToInteger(attrib.value, metrics.bottom);
-
-      else if (Utils::CompareNoCase(attrib.name, "leading"))
-        Utils::ToInteger(attrib.value, metrics.leading);
-    }
+    int value = 0;
+    xmlMetrics.QueryIntAttribute("top", &value);
+    metrics.top = static_cast<int16>(value);
 
     if (metrics.top <= 0)
       return false;
 
-    // @TODO: warnings
+    xmlMetrics.QueryIntAttribute("bottom", &value);
+    metrics.bottom = static_cast<int16>(value);
+    xmlMetrics.QueryIntAttribute("ascent", &value);
+    metrics.ascent = static_cast<int16>(value);
+    xmlMetrics.QueryIntAttribute("descent", &value);
+    metrics.descent = static_cast<int16>(value);
+    xmlMetrics.QueryIntAttribute("leading", &value);
+    metrics.leading = static_cast<int16>(value);
+
     if (metrics.ascent <= 0)
       metrics.ascent = metrics.top;
-
     if (metrics.leading <= 0)
       metrics.leading = metrics.top;
 
     return true;
   }
-  void ParseXmlFontGlyphs(const TVector<Utils::XmlAttrib>& attribs,
-                          Graphics::FontGlyph&             glyph)
+
+  bool ParseFontGlyph(const tinyxml2::XMLElement& xmlChar,
+                      Graphics::FontGlyph&        glyph)
   {
-    for (const Utils::XmlAttrib& attrib : attribs)
-    {
-      if (Utils::CompareNoCase(attrib.name, "code"))
-        glyph.code = attrib.value.empty() ? 0 : attrib.value[0];
+    SRX_CHECK(Utils::CompareNoCase(xmlChar.Name(), "Char"));
+    // Parse attributes using tinyxml2
+    const char* codeAttr = xmlChar.Attribute("code");
+    if (!codeAttr)
+      return false;
 
-      else if (Utils::CompareNoCase(attrib.name, "width"))
-        Utils::ToInteger(attrib.value, glyph.rect.width);
+    int value  = 0;
+    glyph.code = Utils::ReadUtf8Char(codeAttr, strlen(codeAttr), value);
+    if (value == 0)
+      return false;
 
-      else if (Utils::CompareNoCase(attrib.name, "height"))
-        Utils::ToInteger(attrib.value, glyph.rect.height);
+    if (xmlChar.QueryIntAttribute("width", &value) == tinyxml2::XML_SUCCESS)
+      glyph.rect.width = value;
+    if (xmlChar.QueryIntAttribute("height", &value) == tinyxml2::XML_SUCCESS)
+      glyph.rect.height = value;
+    if (xmlChar.QueryIntAttribute("x", &value) == tinyxml2::XML_SUCCESS)
+      glyph.rect.x = value;
+    if (xmlChar.QueryIntAttribute("y", &value) == tinyxml2::XML_SUCCESS)
+      glyph.rect.y = value;
+    if (xmlChar.QueryIntAttribute("bx", &value) == tinyxml2::XML_SUCCESS)
+      glyph.bearing.x = value;
+    if (xmlChar.QueryIntAttribute("by", &value) == tinyxml2::XML_SUCCESS)
+      glyph.bearing.y = value;
+    if (xmlChar.QueryIntAttribute("advance", &value) == tinyxml2::XML_SUCCESS)
+      glyph.advance = value;
 
-      else if (Utils::CompareNoCase(attrib.name, "x"))
-        Utils::ToInteger(attrib.value, glyph.rect.x);
+    if (!glyph.advance)
+      glyph.advance = glyph.rect.width;
 
-      else if (Utils::CompareNoCase(attrib.name, "y"))
-        Utils::ToInteger(attrib.value, glyph.rect.y);
+    return (glyph.rect.x >= 0 && glyph.rect.y >= 0)
+           && glyph.rect.GetSize().IsValid();
+  }
 
-      else if (Utils::CompareNoCase(attrib.name, "bx"))
-        Utils::ToInteger(attrib.value, glyph.bearing.x);
+  bool ParseFontAttribs(tinyxml2::XMLElement& xmlFont, Graphics::FontData& font)
+  {
+    const bool isFontElement = Utils::CompareNoCase(xmlFont.Name(), "Font");
+    SRX_CHECK(isFontElement);
+    if (!isFontElement)
+      return false;
 
-      else if (Utils::CompareNoCase(attrib.name, "by"))
-        Utils::ToInteger(attrib.value, glyph.bearing.y);
+    if (xmlFont.Attribute("size") == nullptr)
+      return false;
 
-      else if (Utils::CompareNoCase(attrib.name, "advance"))
-        Utils::ToInteger(attrib.value, glyph.advance);
+    const char* attrValue = xmlFont.Attribute("family");
+    if (attrValue)
+      font.family = attrValue;
 
-      if (!glyph.advance)
-        glyph.advance = glyph.rect.width;
-    }
+    attrValue  = xmlFont.Attribute("style");
+    font.style = attrValue ? attrValue : "Regular";
+
+    int fontSize = 0;
+    if (xmlFont.QueryIntAttribute("size", &fontSize) != tinyxml2::XML_SUCCESS
+        || fontSize <= 0)
+      return false;
+
+    font.size = static_cast<uint16>(fontSize);
+    font.type = Graphics::EFontType::Bitmap;  // Default type
+    attrValue = xmlFont.Attribute("type");
+    if (attrValue && Utils::CompareNoCase(attrValue, "sdf"))
+      font.type = Graphics::EFontType::Signed_Distance_Field;
+
+    return true;
   }
 }
 
@@ -112,99 +138,66 @@ namespace Sorex::Resource
         TUniquePointer<Graphics::TextureBitmap>>
   XMLFontDataLoader::LoadFont(Stream& stream, Status* status)
   {
-    Utils::XmlReader xml(stream);
-
-    while (xml.Read())
+    tinyxml2::XMLDocument xml;
+    tinyxml2::XMLElement* xmlRoot;
     {
-      if (xml.nodeType == Utils::XMLNODE_Element)
-        break;
+      TVector<byte> xmlBuffer;
+      ssize_t       bytesRead = stream.ReadAll(xmlBuffer);
+      if (bytesRead == SRX_READ_ERROR)
+      {
+        SRX_STATUS_PTR_MSG(status,
+                           EStatusCode::Invalid_Argument,
+                           "failed to read xml font data stream");
+        return std::make_pair(nullptr, nullptr);
+      }
+
+      if (xml.Parse(reinterpret_cast<const char*>(xmlBuffer.data()),
+                    xmlBuffer.size())
+          != tinyxml2::XML_SUCCESS)
+      {
+        SRX_STATUS_PTR_MSG(status,
+                           EStatusCode::Bad_File,
+                           "failed to parse xml font data");
+        return std::make_pair(nullptr, nullptr);
+      }
     }
 
-    if (xml.HasFailed())
-    {
-      SRX_STATUS_PTR_MSG(status,
-                         EStatusCode::Bad_File,
-                         "reading xml descriptor failed");
-      return std::make_pair(nullptr, nullptr);
-    }
-
-    if (xml.EndOfFile() || !Utils::CompareNoCase(xml.name, "font"))
-    {
-      SRX_STATUS_PTR_MSG(status,
-                         EStatusCode::Invalid_Format,
-                         "invalid root element 'font' expected");
-      return std::make_pair(nullptr, nullptr);
-    }
-
+    xmlRoot                                 = xml.RootElement();
     TUniquePointer<Graphics::FontData> font = MakeUnique<Graphics::FontData>();
-
-    // @todo: filter charsets
-    font->type = Graphics::EFontType::Bitmap;
-    for (size_t i = 0; i < xml.attributes.size(); ++i)
-    {
-      Utils::XmlAttrib& attrib = xml.attributes[i];
-      if (Utils::CompareNoCase(attrib.name, "family"))
-        font->family = std::move(attrib.value);
-
-      else if (Utils::CompareNoCase(attrib.name, "style"))
-        font->style = std::move(attrib.value);
-
-      else if (Utils::CompareNoCase(attrib.name, "size"))
-        Utils::ToInteger(attrib.value, font->size);
-
-      else if (Utils::CompareNoCase(attrib.name, "type"))
-        if (Utils::CompareNoCase(attrib.value, "sdf"))
-          font->type = Graphics::EFontType::Signed_Distance_Field;
-    }
-
-    if (font->family.empty() || !font->size)
+    if (xmlRoot == nullptr || !ParseFontAttribs(*xmlRoot, *font))
     {
       SRX_STATUS_PTR_MSG(status,
                          EStatusCode::Invalid_Format,
-                         "invalid font xml node format");
+                         "xml font root element failed");
       return std::make_pair(nullptr, nullptr);
     }
 
-    if (font->style.empty())
-      font->style = "Regular";
-
-    while (xml.Read())
+    const tinyxml2::XMLElement* xmlElement =
+      xmlRoot->FirstChildElement("Metrics");
+    if (xmlElement == nullptr || !ParseFontMetrics(*xmlElement, font->metrics))
     {
-      if (xml.nodeType != Utils::XMLNODE_Element)
-        continue;
+      SRX_STATUS_PTR_MSG(status,
+                         EStatusCode::Invalid_Format,
+                         "parsing xml font metrics failed");
+      return std::make_pair(nullptr, nullptr);
+    }
 
-      if (xml.name == "Metrics")
-      {
-        if (!ParseXmlFontMetrics(xml.attributes, font->metrics))
-        {
-          SRX_STATUS_PTR_MSG(status,
-                             EStatusCode::Invalid_Format,
-                             "invalid font metrics");
-          return std::make_pair(nullptr, nullptr);
-        }
-      }
-      else if (xml.name == "Glyphs")
-      {
-        while (xml.Read())
-        {
-          if (xml.nodeType == Utils::XMLNODE_EndElement && xml.name == "Glyphs")
-            break;
+    xmlElement = xmlRoot->FirstChildElement("Glyphs");
 
-          if (xml.nodeType == Utils::XMLNODE_Element)
-          {
-            SRX_CHECK(xml.name == "Char");
+    // Iterate through all glyphs
+    Graphics::FontGlyph      glyph;
+    const tinyxml2::XMLNode* xmlNode =
+      xmlElement ? xmlElement->FirstChild() : nullptr;
+    const tinyxml2::XMLElement* xmlChar = nullptr;
+    while (xmlNode)
+    {
+      xmlChar = xmlNode->ToElement();
+      if (xmlChar && ParseFontGlyph(*xmlChar, glyph))
+        font->glyphs.emplace(glyph.code, glyph);
 
-            // @todo: move or placement
-            Graphics::FontGlyph glyph;
-            ParseXmlFontGlyphs(xml.attributes, glyph);
-
-            SRX_CHECK(glyph.code && glyph.rect.GetSize().IsValid());
-            font->glyphs.emplace(glyph.code, glyph);
-          }
-        }
-      }
+      xmlNode = xmlNode->NextSibling();
     }
 
     return std::make_pair(std::move(font), nullptr);
   }
-}
+}  // namespace Sorex::Resource
