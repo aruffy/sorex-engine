@@ -150,7 +150,9 @@ namespace Sorex::Graphics
       return nullptr;
     }
 
-    SRX_TRACE("[GLRenderDevice] Allocate '{}' resource {}", ToString(type), id);
+    SRX_TRACE("[GLRenderDevice] Allocate '{}' resource id={}",
+              ToString(type),
+              id);
 
     mResources.emplace_front();
     GLResource& glResource = mResources.front();
@@ -180,7 +182,7 @@ namespace Sorex::Graphics
   void GLRenderDevice::DeallocateResource(GLResource& resource) SRX_NOEXCEPT
   {
     SRX_CHECK(Thread::IsMainThread());
-    SRX_TRACE("[GLRenderDevice] Deallocate '{}' resource {}",
+    SRX_TRACE("[GLRenderDevice] Deallocate '{}' resource id={}",
               ToString(resource.type),
               resource.id);
 
