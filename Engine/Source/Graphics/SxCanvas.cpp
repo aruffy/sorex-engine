@@ -212,6 +212,14 @@ namespace Sorex
       mTextRenderer->DrawText(font, text, pos, scale, color);
   }
 
+  void Canvas::DrawText(const Graphics::FontDecorator& decorator,
+                        StringView                     text,
+                        const Point&                   pos)
+  {
+    if (ActivateRenderer(mTextRenderer.get()))
+      mTextRenderer->DrawText(decorator, text, pos);
+  }
+
   void Canvas::Clear() SRX_NOEXCEPT
   {
     if (mRenderer)

@@ -87,6 +87,7 @@ namespace Sorex::Graphics::OpenGL
   const GLShaderSource Shader::kFontBitmapFragmentShaderSource =
     GLShaderSource{ EShaderType::Fragment, __kBitmapFontFragmentShaderSource };
 
-  /* const GLShaderSource Shader::kTextureFragmentShaderSource =
-    GLShaderSource{ EShaderType::Fragment, __kTextureFragmentShaderSource }; */
+  const GLShaderSource Shader::kSignedDistanceFieldFragmentShaderSource =
+    GLShaderSource{ EShaderType::Fragment,
+                    __kSignedDistanceFieldFragmentShaderSource };
 }  // namespace

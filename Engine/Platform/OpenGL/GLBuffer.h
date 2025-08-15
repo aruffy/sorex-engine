@@ -136,6 +136,13 @@ public:
     }
   };
 
+  namespace OpenGL::Concept
+  {
+    template<typename T>
+    concept IndexType = std::is_same_v<T, GLbyte> || std::is_same_v<T, GLushort>
+                        || std::is_same_v<T, GLuint>;
+  }
+
   template<typename index_t = GLshort>
   class GLIndexBuffer final: public GLBuffer<index_t>
   {

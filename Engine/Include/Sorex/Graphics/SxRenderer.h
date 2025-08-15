@@ -176,7 +176,7 @@ public:
   };
 
   class Font;
-  // class FontDecorator;
+  class FontDecorator;
   class TextRenderer: public Renderer
   {
     SRX_RTTI(Graphics::TextRenderer, Graphics::Renderer);
@@ -195,12 +195,12 @@ public:
                           scalar_t     scale,
                           Color        color) = 0;
 
-    /* virtual void DrawText(const FontDecorator& decorator,
+    virtual void DrawText(const FontDecorator& decorator,
                           StringView           text,
                           const Point&         pos) = 0;
     virtual void DrawText(const FontDecorator& decorator,
                           WStringView          wtext,
-                          const Point&         pos) = 0; */
+                          const Point&         pos) = 0;
   };
 
 }  // namespace

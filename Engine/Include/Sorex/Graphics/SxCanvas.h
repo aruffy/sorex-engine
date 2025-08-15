@@ -29,7 +29,10 @@
 
 #include <Sorex/SxCoreMinimal.h>
 #include <Sorex/Math/SxMatrix3x3.h>
+
 #include <Sorex/Graphics/SxGraphicsTypes.h>
+#include <Sorex/Graphics/SxFont.h>
+#include <Sorex/Graphics/SxFontDecorator.h>
 
 #include "SxRenderDevice.h"
 #include "SxRenderer.h"
@@ -77,6 +80,11 @@ public:
                   scalar_t              scale = 1.f,
                   Color                 color = Color::White);
 
+
+    void DrawText(const Graphics::FontDecorator& decorator,
+                  StringView                     text,
+                  const Point&                   pos);
+
     /*
             void DrawText(const Graphics::Font& font,
                           WStringView           text,
@@ -84,9 +92,6 @@ public:
                           Color                 color = Color::White,
             float                 scale = 1.f);
 
-            void DrawText(const Graphics::FontDecorator& decorator,
-                          StringView                     text,
-                          const Point&                   pos);
             void DrawText(const Graphics::FontDecorator& decorator,
                           WStringView                    wtext,
                           const Point&                   pos);

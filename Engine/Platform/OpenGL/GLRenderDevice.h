@@ -146,18 +146,15 @@ private:
     TUniquePointer<GLExtensions> mExtensions;
   };
 
-  template<typename IndexType>
+  template<OpenGL::Concept::IndexType IndexType>
   constexpr GLenum ConvertIndexType() SRX_NOEXCEPT
   {
     if constexpr (std::is_same_v<IndexType, GLbyte>)
       return GL_UNSIGNED_BYTE;
     else if constexpr (std::is_same_v<IndexType, GLushort>)
       return GL_UNSIGNED_SHORT;
-    else if constexpr (std::is_same_v<IndexType, GLuint>)
-      return GL_UNSIGNED_INT;
 
-    SRX_NOENTRY("Invalid Index Type");
-    return GL_NONE;
+    return GL_UNSIGNED_INT;
   }
 
   template<typename VertexType, typename IndexType>
@@ -214,6 +211,7 @@ private:
     if (!status.Ok())
       return status;
 
+    // @TODO: VAO store this info, should be in Binding methond
     EnableVertexAttributes(vtxBuffer->GetVertexLayout());
 
     if (const GLIndexBuffer<IndexType>* indxBuffer = vtxArray.GetIndexBuffer())

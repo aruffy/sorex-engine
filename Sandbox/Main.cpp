@@ -9,6 +9,8 @@
 #include <Sorex/SxDirector.h>
 #include <Sorex/FileSystem/SxDirectorFileSystem.h>
 #include <Sorex/Graphics/SxCanvas.h>
+#include <Sorex/Graphics/SxFont.h>
+#include <Sorex/Graphics/SxFontDecorator.h>
 
 #include <Sorex/Asset/SxAsset.h>
 #include <Sorex/Asset/SxAssetManager.h>
@@ -63,6 +65,8 @@ class MyDirector final: public Director
 
     mFont = mAssetManager->LoadAsync<Graphics::Font>(
       SRX_PATH("/Fonts/Arial-Bold.xml"));
+    mSdfFont = mAssetManager->LoadAsync<Graphics::Font>(
+      SRX_PATH("/Fonts/SDF-Font-Test.xml"));
     return status;
   }
 
@@ -98,6 +102,7 @@ class MyDirector final: public Director
   SxAssetManager*                        mAssetManager = nullptr;
   TSharedPointer<Graphics::Texture2D>    mTexture;
   TSharedPointer<Graphics::Font>         mFont;
+  TSharedPointer<Graphics::Font>         mSdfFont;
 };
 
 int main(const int argc, const char* argv[])
@@ -178,4 +183,45 @@ void MyDirector::DrawText(Canvas& canvas)
                   1.f,
                   Color(Color::Yellow, 1.f));
   canvas.PopPencil();
+
+  if (mSdfFont && mSdfFont->IsReady())
+  {
+    canvas.PushPencil();
+    canvas.SetBlendMode(Graphics::BlendMode::Alpha);
+    Color      _color;
+    const auto time = Time::GetMonotonicCounter();
+    _color.r = _color.g = static_cast<uint8>(time / 10 % 255);
+    _color.b            = static_cast<uint8>(time / 50 % 255);
+    const int64 sec     = time / 100u;
+    const int   t       = sec % 300;
+    float       scale   = 0.5f + (float(t) / 100);
+
+    Graphics::FontDecorator decorator;
+    decorator.SetScale(scale)
+      .SetColor(Color(200, 200, 200, 96))
+      .SetLetterSpacingUnit(0.15f)
+      .SetOutline(2, Color::Red)
+      // .SetTextTransform(Graphics::EFontTransform::Lowercase)
+      .Apply(mSdfFont.get());
+
+    Graphics::FontMetrics fontMetrics;
+    const auto            leading = decorator.CalcFontMetrics(fontMetrics)
+                                      ? fontMetrics.leading
+                                      : mSdfFont->GetMetrics()->leading;
+
+    Point      loc(10.f, 120.f);
+    const Size boxSize  = Size(780.f, leading);
+    Color      boxColor = Color::Purple;
+    canvas.DrawRect(Rect(loc, boxSize), boxColor);
+    canvas.DrawText(decorator, "A", loc);
+    /*
+        loc.y += leading;
+        canvas.DrawText(decorator, "abcdifghijklmABC", loc);
+
+        loc.y += leading;
+        decorator.SetSize(48).SetColor(Color::Green).SetOutline(2, Color::Blue);
+        // canvas.DrawRectangle(Rect(loc, boxSize), boxColor);
+        canvas.DrawText(decorator, "abcdifghijklmABC", loc); */
+    canvas.PopPencil();
+  }
 }

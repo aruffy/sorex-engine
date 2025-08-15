@@ -28,8 +28,6 @@
 #include "GLFontRenderer.h"
 #include "GLRenderDevice.h"
 
-#include <Sorex/Graphics/SxFont.h>
-
 namespace Sorex::Graphics
 {
   GLFontRenderer::GLFontRenderer(GLRenderDevice& glRenderDevice,
@@ -56,12 +54,14 @@ namespace Sorex::Graphics
     if (!mBitmapShaderProgram)
       return status;
 
-    /*     _sdfShaderProgram = GLShaderProgram::CreateFromSource(
-          glDevice,
-          GLShaderSource::kTextureVertexShaderSource,
-          GLShaderSource::kSignedDistanceFieldFragmentShaderSource,
-          error);
-     */
+    mSdfShaderProgram = GLShaderProgram::Create(
+      *glDevice,
+      OpenGL::Shader::kTextureVertexShaderSource,
+      OpenGL::Shader::kSignedDistanceFieldFragmentShaderSource,
+      status);
+
+    if (!mSdfShaderProgram)
+      return status;
 
     mTechnique.blendMode = BlendMode::Alpha;
     mTechnique.program   = mBitmapShaderProgram.get();
@@ -88,8 +88,7 @@ namespace Sorex::Graphics
 
   void GLFontRenderer::Reset() SRX_NOEXCEPT
   {
-    // DisableOutline();
-
+    DisableOutline();
     mTexture = nullptr;
     mQuadBatch.Clear();
   }
@@ -103,7 +102,7 @@ namespace Sorex::Graphics
     if (!ApplyFont(font, scale))
       return;
 
-    // DisableOutline();
+    DisableOutline();
 
     Point position = pos;
     for (const char ch : text)
@@ -122,6 +121,39 @@ namespace Sorex::Graphics
   {
     SRX_NOENTRY(
       "[GLFontRenderer] DrawText with WStringView is not implemented yet");
+  }
+
+  void GLFontRenderer::DrawText(const FontDecorator& decorator,
+                                StringView           text,
+                                const Point&         pos)
+  {
+    const Font* font  = decorator.GetFont();
+    const float scale = decorator.GetScale();
+    if (!font || !ApplyFont(*font, scale))
+      return;
+
+    ApplyOutline(decorator.GetOutline(), scale);
+
+    Point position = pos;
+    if (const auto fontMetrics = font->GetMetrics())
+      position.y += fontMetrics->leading * scale;
+
+    char                 ch;
+    const Color          color     = decorator.GetColor();
+    const int32          spacing   = decorator.GetLetterSpacing();
+    const EFontTransform transform = decorator.GetTextTransform();
+    for (size_t i = 0; i < text.size(); ++i)
+    {
+      if (transform == EFontTransform::None)
+        ch = text[i];
+      else
+        ch = transform == EFontTransform::Upppercase ? std::toupper(text[i])
+                                                     : std::tolower(text[i]);
+
+      if (const FontGlyph* glyph = decorator.GetGlyph(static_cast<glyph_t>(ch)))
+        // cppcheck-suppress unreadVariable
+        position.x = DrawGlyph(*glyph, position, color, scale) + spacing;
+    }
   }
 
   static inline bool IsEqual(const FontData::SDFMetrics& lhs,
@@ -152,15 +184,87 @@ namespace Sorex::Graphics
 
     const FontData::Metrics* metrics  = font.GetMetrics();
     constexpr size_t         kByteMax = std::numeric_limits<uint8>::max();
-
     if (bSdfFont)
     {
       const FontData::SDFMetrics* sdf =
         metrics && metrics->sdf.has_value() ? &metrics->sdf.value() : nullptr;
-      SRX_NOENTRY("[GLFontRenderer] SDF font rendering is not implemented yet");
+      if (sdf && !IsEqual(mSdfMetrics, *sdf))
+      {
+        Flush();
+        mSdfMetrics        = *sdf;
+        GLUniform* uniform = mSdfShaderProgram->GetUniform("u_smoothing");
+        if (uniform)
+        {
+          const GLfloat step = mSdfMetrics.pxlDistScale / scale / kByteMax;
+          SRX_VERIFY(uniform->SetValue(step) == EStatusCode::Ok);
+        }
+
+        uniform = shaderProgram->GetUniform("u_onedge");
+        if (uniform)
+        {
+          const GLfloat onedge = GLfloat(sdf->onedge) / kByteMax;
+          SRX_VERIFY(uniform->SetValue(onedge) == EStatusCode::Ok);
+        }
+      }
     }
 
     return SetFontTexture(font.GetTexture());
+  }
+
+  bool GLFontRenderer::ApplyOutline(const FontOutline& outline,
+                                    const float scale /* = 1.f */) SRX_NOEXCEPT
+  {
+    if (mTechnique.program != mSdfShaderProgram.get())
+    {
+      SRX_NOENTRY("[GLFontRenderer] Outline can be applied only for SDF font");
+      return false;
+    }
+
+    GLUniform* uniform = mSdfShaderProgram->GetUniform("u_outline");
+    if (!uniform)
+    {
+      SRX_NOENTRY("[GLFontRenderer] Shader program has no 'u_outline' uniform");
+      return false;
+    }
+
+    const float step   = mSdfMetrics.pxlDistScale / scale;
+    float       pixels = std::floorf(mSdfMetrics.onedge / step);
+    pixels = std::min(pixels, std::roundf(mSdfMetrics.padding * scale));
+    const uint8 thickness =
+      std::min(outline.thickness, static_cast<uint8>(pixels));
+
+    if (!thickness)
+    {
+      if (mIsOutline)
+        Flush();
+
+      DisableOutline();
+      return false;
+    }
+
+    Flush();  // Ensure previous batch is flushed before applying outline
+
+    const GLfloat outlineEdge = (mSdfMetrics.onedge - thickness * step)
+                                / std::numeric_limits<uint8>::max();
+
+    SRX_VERIFY(uniform->SetValue(outlineEdge) == EStatusCode::Ok);
+
+    uniform = mSdfShaderProgram->GetUniform("u_outline_color");
+    if (uniform)
+      uniform->SetVector(outline.color.ToVector().data);
+
+    mIsOutline = true;
+    return true;
+  }
+
+  void GLFontRenderer::DisableOutline() SRX_NOEXCEPT
+  {
+    if (mIsOutline)
+    {
+      mIsOutline = false;
+      if (GLUniform* uniform = mSdfShaderProgram->GetUniform("u_outline"))
+        uniform->SetValue(GLfloat(-1.f));
+    }
   }
 
   bool GLFontRenderer::SetFontTexture(const Texture2D* texture) SRX_NOEXCEPT

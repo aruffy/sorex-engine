@@ -120,7 +120,7 @@ private:
       static const GLShaderSource kTextureFragmentShaderSource;
 
       static const GLShaderSource kFontBitmapFragmentShaderSource;
-      // static const GLShaderSource kSignedDistanceFieldFragmentShaderSource;
+      static const GLShaderSource kSignedDistanceFieldFragmentShaderSource;
     };
 
   }  // namespace OpenGL

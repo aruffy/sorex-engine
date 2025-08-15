@@ -30,6 +30,7 @@
 #include <Sorex/SxCoreMinimal.h>
 #include <Sorex/Graphics/SxRenderer.h>
 #include <Sorex/Graphics/SxFont.h>
+#include <Sorex/Graphics/SxFontDecorator.h>
 
 #include "GLQuadBatch.h"
 #include "GLShaderProgram.h"
@@ -72,8 +73,23 @@ public:
                           scalar_t     scale = 1.f,
                           Color        color = Color::White) override;
 
+    virtual void DrawText(const FontDecorator& decorator,
+                          StringView           text,
+                          const Point&         pos) override;
+    virtual void DrawText(const FontDecorator& decorator,
+                          WStringView          wtext,
+                          const Point&         pos) override
+    {
+      SRX_NOENTRY("Not Implemented");
+    }
+
+
 private:
-    bool ApplyFont(const Font& font, const float scale) SRX_NOEXCEPT;
+    bool ApplyFont(const Font& font, const float scale = 1.f) SRX_NOEXCEPT;
+    bool ApplyOutline(const FontOutline& outline,
+                      const float        scale = 1.f) SRX_NOEXCEPT;
+    void DisableOutline() SRX_NOEXCEPT;
+
     bool SetFontTexture(const Texture2D* texture) SRX_NOEXCEPT;
 
     scalar_t DrawGlyph(const FontGlyph& glyph,
@@ -94,6 +110,9 @@ private:
     GLRenderTechnique               mTechnique;
     TUniquePointer<GLShaderProgram> mBitmapShaderProgram;
     TUniquePointer<GLShaderProgram> mSdfShaderProgram;
+
+    FontData::SDFMetrics mSdfMetrics;
+    bool                 mIsOutline = false;
   };
 
 }  // namespace Sorex::Graphics
