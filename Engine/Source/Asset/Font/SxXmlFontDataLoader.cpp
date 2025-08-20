@@ -79,6 +79,8 @@ namespace
       value = 0;
       xmlSdf->QueryIntAttribute("step", &value);
       sdfMetrics.pxlDistScale = static_cast<uint8>(value % kUInt8Max);
+
+      metrics.sdf = TOptional<Graphics::FontData::SDFMetrics>(sdfMetrics);
     }
 
     return true;
