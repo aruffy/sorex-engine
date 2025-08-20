@@ -66,9 +66,11 @@ namespace Sorex::Graphics
   {
     struct SDFMetrics
     {
-      uint8 onedge       = 0u;
-      uint8 padding      = 0u;
-      float pxlDistScale = 0.f;
+      static constexpr uint8 kDefaultOnEdge =
+        std::numeric_limits<uint8>::max() / 2;
+      uint8 onedge  = kDefaultOnEdge;  ///< Distance to the edge of the glyph
+      uint8 padding = 0u;              ///< Padding around the glyph
+      uint8 pxlDistScale = 0u;         ///< Step size for pixel distance
     };
 
     struct Metrics

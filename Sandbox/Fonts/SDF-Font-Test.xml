@@ -1,7 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Font family="Arial" style="Regular" type="bitmap" size="34">
-	<Metrics ascent="32" descent="7" top="34" leading="39"  />
+<Font family="Arial" style="Regular" type="sdf" size="34">
+	<Metrics ascent="32" descent="7" top="34" leading="39">
+    <Sdf onedge="0.5" step="13" />
+  </Metrics>
 	<Glyphs>
-		<Char code=" " x="0"   y="0" height="8" width="8" advance="13" />
-		<Char code="A" x="880"   y="85" height="60" width="58" advance="62" bx="2" by="60" />
+		<Char code=" " x="0" y="0" height="8" width="8" advance="13" />
+		<Char code="A" x="880" y="85" height="60" width="58" advance="62" bx="2" by="60" />
+	</Glyphs>
 </Font>

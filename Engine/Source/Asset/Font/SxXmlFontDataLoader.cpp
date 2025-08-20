@@ -61,6 +61,26 @@ namespace
     if (metrics.leading <= 0)
       metrics.leading = metrics.top;
 
+    if (auto xmlSdf = xmlMetrics.FirstChildElement("Sdf"))
+    {
+      float                          fval = 0.5f;
+      Graphics::FontData::SDFMetrics sdfMetrics;
+      if (xmlSdf->QueryFloatAttribute("onedge", &fval) == tinyxml2::XML_SUCCESS)
+        fval = Math::Clamp(fval, 0.f, 1.f);
+
+      constexpr uint8 kUInt8Max = std::numeric_limits<uint8>::max();
+      fval                      = (float)kUInt8Max * fval;
+      sdfMetrics.onedge         = static_cast<uint8>(fval);
+
+      value = 0;
+      xmlSdf->QueryIntAttribute("padding", &value);
+      sdfMetrics.padding = static_cast<uint8>(value % kUInt8Max);
+
+      value = 0;
+      xmlSdf->QueryIntAttribute("step", &value);
+      sdfMetrics.pxlDistScale = static_cast<uint8>(value % kUInt8Max);
+    }
+
     return true;
   }
 

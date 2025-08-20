@@ -159,8 +159,7 @@ namespace Sorex::Graphics
   static inline bool IsEqual(const FontData::SDFMetrics& lhs,
                              const FontData::SDFMetrics& rhs)
   {
-    return lhs.onedge == rhs.onedge
-           && Math::IsEqual(lhs.pxlDistScale, rhs.pxlDistScale);
+    return lhs.onedge == rhs.onedge && lhs.pxlDistScale == rhs.pxlDistScale;
   }
 
   bool GLFontRenderer::ApplyFont(const Font& font,
@@ -195,7 +194,8 @@ namespace Sorex::Graphics
         GLUniform* uniform = mSdfShaderProgram->GetUniform("u_smoothing");
         if (uniform)
         {
-          const GLfloat step = mSdfMetrics.pxlDistScale / scale / kByteMax;
+          const GLfloat step =
+            (float)mSdfMetrics.pxlDistScale / scale / kByteMax;
           SRX_VERIFY(uniform->SetValue(step) == EStatusCode::Ok);
         }
 
@@ -227,7 +227,7 @@ namespace Sorex::Graphics
       return false;
     }
 
-    const float step   = mSdfMetrics.pxlDistScale / scale;
+    const float step   = (float)mSdfMetrics.pxlDistScale / scale;
     float       pixels = std::floorf(mSdfMetrics.onedge / step);
     pixels = std::min(pixels, std::roundf(mSdfMetrics.padding * scale));
     const uint8 thickness =
