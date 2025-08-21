@@ -213,7 +213,7 @@ void MyDirector::DrawText(Canvas& canvas)
     const Size boxSize  = Size(780.f, leading);
     Color      boxColor = Color::Purple;
     canvas.DrawRect(Rect(loc, boxSize), boxColor);
-    canvas.DrawText(decorator, "A", loc);
+    canvas.DrawText(decorator, "AA A", loc);
     /*
         loc.y += leading;
         canvas.DrawText(decorator, "abcdifghijklmABC", loc);
