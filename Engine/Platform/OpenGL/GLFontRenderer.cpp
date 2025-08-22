@@ -234,9 +234,6 @@ namespace Sorex::Graphics
 
     if (!thickness)
     {
-      if (mIsOutline)
-        Flush();
-
       DisableOutline();
       return false;
     }
@@ -260,6 +257,7 @@ namespace Sorex::Graphics
   {
     if (mIsOutline)
     {
+      Flush();
       mIsOutline = false;
       if (GLUniform* uniform = mSdfShaderProgram->GetUniform("u_outline"))
         uniform->SetValue(GLfloat(-1.f));

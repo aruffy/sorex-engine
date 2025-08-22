@@ -198,10 +198,9 @@ void MyDirector::DrawText(Canvas& canvas)
 
     Graphics::FontDecorator decorator;
     decorator.SetScale(scale)
-      .SetColor(Color(200, 200, 200, 96))
+      .SetColor(Color(200, 200, 200))
       .SetLetterSpacingUnit(0.15f)
       .SetOutline(2, Color::Red)
-      // .SetTextTransform(Graphics::EFontTransform::Lowercase)
       .Apply(mSdfFont.get());
 
     Graphics::FontMetrics fontMetrics;
@@ -211,17 +210,11 @@ void MyDirector::DrawText(Canvas& canvas)
 
     Point      loc(10.f, 120.f);
     const Size boxSize  = Size(780.f, leading);
-    Color      boxColor = Color::Purple;
+    Color      boxColor = Color::Yellow;
     canvas.DrawRect(Rect(loc, boxSize), boxColor);
     canvas.DrawText(decorator, "AA A", loc);
-    /*
-        loc.y += leading;
-        canvas.DrawText(decorator, "abcdifghijklmABC", loc);
 
-        loc.y += leading;
-        decorator.SetSize(48).SetColor(Color::Green).SetOutline(2, Color::Blue);
-        // canvas.DrawRectangle(Rect(loc, boxSize), boxColor);
-        canvas.DrawText(decorator, "abcdifghijklmABC", loc); */
+    canvas.DrawText(*mSdfFont, "AAA", Point(200.f, 200.f), 1.f, Color::Purple);
     canvas.PopPencil();
   }
 }
