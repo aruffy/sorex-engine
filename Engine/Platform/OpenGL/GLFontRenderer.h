@@ -27,6 +27,8 @@
 
 #pragma once
 
+#include <cwctype>
+
 #include <Sorex/SxCoreMinimal.h>
 #include <Sorex/Graphics/SxRenderer.h>
 #include <Sorex/Graphics/SxFont.h>
@@ -62,7 +64,10 @@ public:
                           StringView   text,
                           const Point& pos,
                           scalar_t     scale = 1.f,
-                          Color        color = Color::White) override;
+                          Color        color = Color::White) override
+    {
+      DrawTextInternal(font, text, pos, scale, color);
+    }
 
     /**
      * @copydoc TextRenderer::DrawText
@@ -71,16 +76,23 @@ public:
                           WStringView  wtext,
                           const Point& pos,
                           scalar_t     scale = 1.f,
-                          Color        color = Color::White) override;
+                          Color        color = Color::White) override
+    {
+      DrawTextInternal(font, wtext, pos, scale, color);
+    }
 
     virtual void DrawText(const FontDecorator& decorator,
                           StringView           text,
-                          const Point&         pos) override;
+                          const Point&         pos) override
+
+    {
+      DrawTextInternal(decorator, text, pos);
+    }
     virtual void DrawText(const FontDecorator& decorator,
                           WStringView          wtext,
                           const Point&         pos) override
     {
-      SRX_NOENTRY("Not Implemented");
+      DrawTextInternal(decorator, wtext, pos);
     }
 
 
@@ -102,6 +114,34 @@ private:
                       Color          color);
 
 private:
+    template<typename Char>
+    void DrawTextInternal(const Font&           font,
+                          BasicStringView<Char> text,
+                          const Point&          pos,
+                          scalar_t              scale,
+                          Color                 color);
+
+    template<typename Char>
+    void DrawTextInternal(const FontDecorator&  decorator,
+                          BasicStringView<Char> text,
+                          const Point&          pos);
+
+    template<typename Char>
+      requires std::is_same_v<Char, char> || std::is_same_v<Char, wchar_t>
+    Char Transform(const Char ch, const EFontTransform transform) const
+    {
+      if (transform == EFontTransform::None)
+        return ch;
+
+      if constexpr (std::is_same_v<Char, char>)
+        return transform == EFontTransform::Upppercase ? std::toupper(ch)
+                                                       : std::tolower(ch);
+      else
+        return transform == EFontTransform::Upppercase ? std::towupper(ch)
+                                                       : std::towlower(ch);
+    }
+
+private:
     GLTexQuadBatch mQuadBatch;
 
     const Texture2D*    mTexture;
@@ -115,4 +155,55 @@ private:
     bool                 mIsOutline = false;
   };
 
+  template<typename Char>
+  void GLFontRenderer::DrawTextInternal(const Font&           font,
+                                        BasicStringView<Char> text,
+                                        const Point&          pos,
+                                        scalar_t              scale,
+                                        Color                 color)
+  {
+    static_assert(sizeof(Char) <= sizeof(glyph_t),
+                  "[GLFontRenderer::DrawTextInternal] Invalid character type");
+
+    if (!ApplyFont(font, scale))
+      return;
+
+    DisableOutline();
+
+    Point position = pos;
+    for (const Char ch : text)
+      if (const FontGlyph* glyph = font.GetGlyph(static_cast<glyph_t>(ch)))
+        position.x = DrawGlyph(*glyph,
+                               position,
+                               color,
+                               scale);  // cppcheck-suppress unreadVariable
+  }
+
+  template<typename Char>
+  void GLFontRenderer::DrawTextInternal(const FontDecorator&  decorator,
+                                        BasicStringView<Char> text,
+                                        const Point&          pos)
+  {
+    const Font* font  = decorator.GetFont();
+    const float scale = decorator.GetScale();
+    if (!font || !ApplyFont(*font, scale))
+      return;
+
+    ApplyOutline(decorator.GetOutline(), scale);
+
+    Point position = pos;
+    if (const auto fontMetrics = font->GetMetrics())
+      position.y += fontMetrics->leading * scale;
+
+    const Color          color     = decorator.GetColor();
+    const int32          spacing   = decorator.GetLetterSpacing();
+    const EFontTransform transform = decorator.GetTextTransform();
+    for (const Char ch : text)
+    {
+      if (const FontGlyph* glyph =
+            decorator.GetGlyph(static_cast<glyph_t>(Transform(ch, transform))))
+        // cppcheck-suppress unreadVariable
+        position.x = DrawGlyph(*glyph, position, color, scale) + spacing;
+    }
+  }
 }  // namespace Sorex::Graphics

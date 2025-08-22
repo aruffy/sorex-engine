@@ -93,69 +93,6 @@ namespace Sorex::Graphics
     mQuadBatch.Clear();
   }
 
-  void GLFontRenderer::DrawText(const Font&  font,
-                                StringView   text,
-                                const Point& pos,
-                                scalar_t     scale,
-                                Color        color)
-  {
-    if (!ApplyFont(font, scale))
-      return;
-
-    DisableOutline();
-
-    Point position = pos;
-    for (const char ch : text)
-      if (const FontGlyph* glyph = font.GetGlyph(static_cast<glyph_t>(ch)))
-        position.x = DrawGlyph(*glyph,
-                               position,
-                               color,
-                               scale);  // cppcheck-suppress unreadVariable
-  }
-
-  void GLFontRenderer::DrawText(const Font&  font,
-                                WStringView  wtext,
-                                const Point& pos,
-                                scalar_t     scale,
-                                Color        color)
-  {
-    SRX_NOENTRY(
-      "[GLFontRenderer] DrawText with WStringView is not implemented yet");
-  }
-
-  void GLFontRenderer::DrawText(const FontDecorator& decorator,
-                                StringView           text,
-                                const Point&         pos)
-  {
-    const Font* font  = decorator.GetFont();
-    const float scale = decorator.GetScale();
-    if (!font || !ApplyFont(*font, scale))
-      return;
-
-    ApplyOutline(decorator.GetOutline(), scale);
-
-    Point position = pos;
-    if (const auto fontMetrics = font->GetMetrics())
-      position.y += fontMetrics->leading * scale;
-
-    char                 ch;
-    const Color          color     = decorator.GetColor();
-    const int32          spacing   = decorator.GetLetterSpacing();
-    const EFontTransform transform = decorator.GetTextTransform();
-    for (size_t i = 0; i < text.size(); ++i)
-    {
-      if (transform == EFontTransform::None)
-        ch = text[i];
-      else
-        ch = transform == EFontTransform::Upppercase ? std::toupper(text[i])
-                                                     : std::tolower(text[i]);
-
-      if (const FontGlyph* glyph = decorator.GetGlyph(static_cast<glyph_t>(ch)))
-        // cppcheck-suppress unreadVariable
-        position.x = DrawGlyph(*glyph, position, color, scale) + spacing;
-    }
-  }
-
   static inline bool IsEqual(const FontData::SDFMetrics& lhs,
                              const FontData::SDFMetrics& rhs)
   {
