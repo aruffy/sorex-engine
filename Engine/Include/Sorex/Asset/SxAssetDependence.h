@@ -150,7 +150,7 @@ public:
       for (auto& [_, vec] : mResources)
       {
         for (AssetDependence& dep : vec)
-          deps.push_back(&dep);
+          deps.push_back(&dep);  // cppcheck-suppress useStlAlgorithm
       }
     }
 

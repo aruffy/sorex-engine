@@ -122,7 +122,8 @@ namespace
            && glyph.rect.GetSize().IsValid();
   }
 
-  bool ParseFontAttribs(tinyxml2::XMLElement& xmlFont, Graphics::FontData& font)
+  bool ParseFontAttribs(const tinyxml2::XMLElement& xmlFont,
+                        Graphics::FontData&         font)
   {
     const bool isFontElement = Utils::CompareNoCase(xmlFont.Name(), "Font");
     SRX_CHECK(isFontElement);

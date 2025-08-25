@@ -34,6 +34,8 @@ namespace Sorex::Graphics
                                  size_t          maxGlyphNumber)
     : mQuadBatch(glRenderDevice, maxGlyphNumber)
     , mTexture(nullptr)
+    , mPencil(nullptr)
+    , mIsOutline(false)
   {}
 
   Status GLFontRenderer::Initialize() SRX_NOEXCEPT

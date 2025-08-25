@@ -128,7 +128,7 @@ private:
 
     template<typename Char>
       requires std::is_same_v<Char, char> || std::is_same_v<Char, wchar_t>
-    Char Transform(const Char ch, const EFontTransform transform) const
+    static Char Transform(const Char ch, const EFontTransform transform)
     {
       if (transform == EFontTransform::None)
         return ch;
@@ -152,7 +152,7 @@ private:
     TUniquePointer<GLShaderProgram> mSdfShaderProgram;
 
     FontData::SDFMetrics mSdfMetrics;
-    bool                 mIsOutline = false;
+    bool                 mIsOutline;
   };
 
   template<typename Char>
