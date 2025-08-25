@@ -108,6 +108,11 @@ namespace Sorex::Graphics
     return (it != mShaders.end() ? (*it) : nullptr);
   }
 
+  GLUniform* GLShaderProgram::GetUniform(const GLStringView& name)
+  {
+    return FindUniform(Sorex::Utils::GetHash(name));
+  }
+
   Status GLShaderProgram::SetTexture(uint32                index,
                                      const Texture2D&      texture,
                                      const TextureSampler* sampler)

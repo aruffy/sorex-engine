@@ -484,6 +484,8 @@ namespace Sorex::Utils
 #endif
   }
 
-  SRX_API String ToUtf8String(WStringView wstr) SRX_NOEXCEPT;
-
+  SRX_API String   ToUtf8String(WStringView wstr) SRX_NOEXCEPT;
+  SRX_API char32_t ReadUtf8Char(const void*  ptr,
+                                const size_t len,
+                                int&         bytes) SRX_NOEXCEPT;
 }  // namespace

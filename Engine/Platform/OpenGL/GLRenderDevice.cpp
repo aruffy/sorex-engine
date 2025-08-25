@@ -34,10 +34,13 @@
 #include <gtc/matrix_transform.hpp>
 #include <gtc/type_ptr.hpp>
 
-#include "GLPrimitiveRenderer.h"
-#include "GLTextureRenderer.h"
 #include "GLTexture2D.h"
 #include "GLTypes.h"
+
+// Renderers
+#include "GLPrimitiveRenderer.h"
+#include "GLTextureRenderer.h"
+#include "GLFontRenderer.h"
 
 namespace
 {
@@ -147,7 +150,9 @@ namespace Sorex::Graphics
       return nullptr;
     }
 
-    SRX_TRACE("[GLRenderDevice] Allocate '{}' resource {}", ToString(type), id);
+    SRX_TRACE("[GLRenderDevice] Allocate '{}' resource id={}",
+              ToString(type),
+              id);
 
     mResources.emplace_front();
     GLResource& glResource = mResources.front();
@@ -177,7 +182,7 @@ namespace Sorex::Graphics
   void GLRenderDevice::DeallocateResource(GLResource& resource) SRX_NOEXCEPT
   {
     SRX_CHECK(Thread::IsMainThread());
-    SRX_TRACE("[GLRenderDevice] Deallocate '{}' resource {}",
+    SRX_TRACE("[GLRenderDevice] Deallocate '{}' resource id={}",
               ToString(resource.type),
               resource.id);
 
@@ -724,6 +729,8 @@ namespace Sorex::Graphics
       return new GLPrimitiveRenderer(this, capacity);
     else if (cls.IsA(GetRuntimeType<Graphics::TextureRenderer>()))
       return new GLTextureRenderer(*this, capacity);
+    else if (cls.IsA(GetRuntimeType<Graphics::TextRenderer>()))
+      return new GLFontRenderer(*this, capacity);
 
     return nullptr;
   }

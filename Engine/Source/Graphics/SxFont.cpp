@@ -1,4 +1,3 @@
-
 /**************************************************************************/
 /*                         This file is part of:                          */
 /*                                SOREX                                   */
@@ -26,69 +25,46 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#pragma once
-
-#include <Sorex/Graphics/SxRenderer.h>
-
-#include "GLQuadBatch.h"
-#include "GLShaderProgram.h"
-#include "GLRenderTechnique.h"
+#include <Sorex/Graphics/SxFont.h>
 
 namespace Sorex::Graphics
 {
-  class GLRenderDevice;
-  class GLTextureRenderer final: public TextureRenderer
+  Font::Charset Font::GetCharset(ECharset charset) SRX_NOEXCEPT
   {
-    SRX_RTTI(Graphics::GLTextureRenderer, Graphics::TextureRenderer);
-
-public:
-    GLTextureRenderer(GLRenderDevice& glRenderDevice, size_t maxQuadNumber);
-
-    virtual Status Initialize() SRX_NOEXCEPT override;
-    virtual Status Activate(const CanvasPencil* pencil) SRX_NOEXCEPT override;
-
-    virtual void Flush() SRX_NOEXCEPT override;
-    virtual void Reset() SRX_NOEXCEPT override;
-
-    virtual bool IsEmpty() const SRX_NOEXCEPT override
+    switch (charset)
     {
-      return mQuadBatch.IsEmpty();
+    case ECharset::ASCII:
+      return Charset(0x20, 0x7F);
+    case ECharset::Latin:
+      return Charset(0x20, 0x100);
+    case ECharset::Cyrillic:
+      return Charset(0x400, 0x500);
+    default:
+      SRX_NOENTRY("unknown charset");
+      return Charset(0x20, 0x7F);  // ASCII
     }
+  }
 
-    SRX_INLINE GLRenderDevice* GetRenderDevice()
-    {
-      return mQuadBatch.GetRenderDevice();
-    }
+  Status Font::Initialize(TUniquePointer<FontData>  data,
+                          TSharedPointer<Texture2D> texture)
+  {
+    if (!data || data->glyphs.empty() || texture == nullptr)
+      return SRX_STATUS_MSG(EStatusCode::Invalid_Argument,
+                            "Font data or texture is invalid");
 
-    // API TextureRenderer
-    virtual void DrawTexture(const Texture2D* texture,
-                             const Point&     position,
-                             Color            color) SRX_NOEXCEPT override;
+    // @todo: add spec symbol
 
-    virtual void DrawTexture(const Texture2D* texture,
-                             const Rect&      texRect,
-                             const Point&     position,
-                             Color            color) SRX_NOEXCEPT override;
+    mData    = std::move(data);
+    mTexture = std::move(texture);
 
-    virtual void DrawTexture(const Texture2D* texture,
-                             const Point&     position,
-                             const Vector2&   scale,
-                             EAnchorPoint     anchor,
-                             scalar_t         rotation,
-                             Color            color) SRX_NOEXCEPT override;
+    return SRX_OK;
+  }
 
-private:
-    void DrawQuad(const Texture2D* texture, Color color);
+  const FontGlyph* Font::GetGlyph(wchar_t c) const
+  {
+    SRX_CHECK(mData);
 
-private:
-    GLTexQuadBatch                  mQuadBatch;
-    TUniquePointer<GLShaderProgram> mShaderProgram;
-    GLRenderTechnique               mRenderTechnique;
-
-    const Texture2D*    mActiveTexture;
-    const CanvasPencil* mPencil;
-
-    TArray<Point, 4> mScreenPoints;
-    TArray<Point, 4> mTexPoints;
-  };
-}
+    auto it = mData->glyphs.find(static_cast<glyph_t>(c));
+    return it != mData->glyphs.end() ? &it->second : nullptr;
+  }
+}  // namespace Sorex::Graphics

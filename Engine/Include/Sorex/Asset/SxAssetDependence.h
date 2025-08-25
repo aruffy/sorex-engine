@@ -85,35 +85,40 @@ public:
 
     template<typename T>
       requires std::is_base_of_v<Asset, T>
-    bool Push(const String& name)
+    int32 Push(const Path& path)
     {
-      const RuntimeClass* const rt = GetRuntimeType<T>();
-      if (mResources[rt].emplace(name, AssetDependence(*rt, name)).second)
-      {
-        mSize++;
-        return true;
-      }
+      const RuntimeClass&       type     = GetRuntimeType<T>();
+      const hash_t              rttiHash = type.GetHash();
+      TVector<AssetDependence>& deps     = mResources[rttiHash];
+      const int32               index    = static_cast<int32>(deps.size());
 
-      return false;
+      deps.emplace_back(type, path);
+      mSize++;
+
+      return index;
     }
 
     template<typename T>
       requires std::is_base_of_v<Asset, T>
-    TSharedPointer<T> GetAsset(const String& name) const
+    TSharedPointer<T> GetAsset(const int32 index) const
     {
-      const RuntimeClass* rt     = GetRuntimeType<T>();
-      auto                dictIt = mResources.find(rt);
+      const hash_t rttiHash = GetRuntimeType<T>().GetHash();
+      auto         dictIt   = mResources.find(rttiHash);
 
       if (dictIt == mResources.end())
         return nullptr;
 
-      if (auto it = dictIt->second.find(name); it != dictIt->second.end())
+      if (index < 0 || index >= static_cast<int32>(dictIt->second.size()))
       {
-        if (TSharedPointer<Asset> asset = it->second.asset)
-        {
-          SRX_CHECK_MSG(asset->IsA<T>(), "invalid type");
-          return std::static_pointer_cast<T>(asset);
-        }
+        SRX_NOENTRY(__FILE__ "invalid asset index");
+        return nullptr;
+      }
+
+      const AssetDependence& dep = dictIt->second[index];
+      if (dep.asset)
+      {
+        SRX_CHECK_MSG(dep.asset->IsA<T>(), "invalid type");
+        return std::static_pointer_cast<T>(dep.asset);
       }
 
       return nullptr;
@@ -121,7 +126,7 @@ public:
 
     template<typename T>
       requires std::is_base_of_v<Asset, T>
-    void GetAssets(TVector<T>& assets) const
+    void GetAssets(TVector<const T*>& assets) const
     {
       assets.clear();
       const RuntimeClass* rt = GetRuntimeType<T>();
@@ -134,7 +139,7 @@ public:
       for (const auto& [_, dep] : it->second)
       {
         if (dep.asset)
-          assets.push_back(std::move(std::static_pointer_cast<T>(dep.asset)));
+          assets.push_back(std::move(static_cast<const T*>(dep.asset.get())));
       }
     }
 
@@ -142,17 +147,18 @@ public:
     {
       deps.clear();
       deps.reserve(mSize);
-      for (auto& [_rt, rmap] : mResources)
+      for (auto& [_, vec] : mResources)
       {
-        for (auto& [_name, rd] : rmap)
-          deps.push_back(&rd);
+        for (AssetDependence& dep : vec)
+          deps.push_back(&dep);  // cppcheck-suppress useStlAlgorithm
       }
     }
 
     SRX_INLINE void Clear() { mResources.clear(); }
 
 private:
-    size_t                                                           mSize = 0;
-    THashMap<const RuntimeClass*, THashMap<String, AssetDependence>> mResources;
+    size_t mSize = 0;
+    // NOTE: key - hash_t RTTI class hash
+    THashMap<hash_t, TVector<AssetDependence>> mResources;
   };
-}  // namespace
+}  // namespace Sorex::Resource

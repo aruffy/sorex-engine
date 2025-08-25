@@ -118,9 +118,9 @@ private:
 
       static const GLShaderSource kTextureVertexShaderSource;
       static const GLShaderSource kTextureFragmentShaderSource;
-      //
-      // static const GLShaderSource kBitmapTextFragmentShaderSource;
-      // static const GLShaderSource kSignedDistanceFieldFragmentShaderSource;
+
+      static const GLShaderSource kFontBitmapFragmentShaderSource;
+      static const GLShaderSource kSignedDistanceFieldFragmentShaderSource;
     };
 
   }  // namespace OpenGL

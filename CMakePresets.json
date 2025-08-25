@@ -4,8 +4,8 @@
     {
       "name": "win_x64_debug",
       "displayName": "Windows x64 (Debug)",
-      "description": "Windows x64 build with Ninja generator",
-      "generator": "Ninja",
+      "description": "Windows x64 build with MSVC generator",
+      "generator": "Visual Studio 17 2022",
       "binaryDir": "${sourceDir}/build",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",

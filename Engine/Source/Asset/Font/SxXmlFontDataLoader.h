@@ -1,4 +1,3 @@
-
 /**************************************************************************/
 /*                         This file is part of:                          */
 /*                                SOREX                                   */
@@ -28,67 +27,16 @@
 
 #pragma once
 
-#include <Sorex/Graphics/SxRenderer.h>
+#include <Sorex/Asset/SxFontLoader.h>
+#include <Sorex/Utils/SxObjectFactory.h>
 
-#include "GLQuadBatch.h"
-#include "GLShaderProgram.h"
-#include "GLRenderTechnique.h"
-
-namespace Sorex::Graphics
+namespace Sorex::Resource
 {
-  class GLRenderDevice;
-  class GLTextureRenderer final: public TextureRenderer
+  class XMLFontDataLoader final: public IFontDataLoader
   {
-    SRX_RTTI(Graphics::GLTextureRenderer, Graphics::TextureRenderer);
-
 public:
-    GLTextureRenderer(GLRenderDevice& glRenderDevice, size_t maxQuadNumber);
-
-    virtual Status Initialize() SRX_NOEXCEPT override;
-    virtual Status Activate(const CanvasPencil* pencil) SRX_NOEXCEPT override;
-
-    virtual void Flush() SRX_NOEXCEPT override;
-    virtual void Reset() SRX_NOEXCEPT override;
-
-    virtual bool IsEmpty() const SRX_NOEXCEPT override
-    {
-      return mQuadBatch.IsEmpty();
-    }
-
-    SRX_INLINE GLRenderDevice* GetRenderDevice()
-    {
-      return mQuadBatch.GetRenderDevice();
-    }
-
-    // API TextureRenderer
-    virtual void DrawTexture(const Texture2D* texture,
-                             const Point&     position,
-                             Color            color) SRX_NOEXCEPT override;
-
-    virtual void DrawTexture(const Texture2D* texture,
-                             const Rect&      texRect,
-                             const Point&     position,
-                             Color            color) SRX_NOEXCEPT override;
-
-    virtual void DrawTexture(const Texture2D* texture,
-                             const Point&     position,
-                             const Vector2&   scale,
-                             EAnchorPoint     anchor,
-                             scalar_t         rotation,
-                             Color            color) SRX_NOEXCEPT override;
-
-private:
-    void DrawQuad(const Texture2D* texture, Color color);
-
-private:
-    GLTexQuadBatch                  mQuadBatch;
-    TUniquePointer<GLShaderProgram> mShaderProgram;
-    GLRenderTechnique               mRenderTechnique;
-
-    const Texture2D*    mActiveTexture;
-    const CanvasPencil* mPencil;
-
-    TArray<Point, 4> mScreenPoints;
-    TArray<Point, 4> mTexPoints;
+    virtual TPair<TUniquePointer<Graphics::FontData>,
+                  TUniquePointer<Graphics::TextureBitmap>>
+    LoadFont(Stream& stream, Status* status) override;
   };
-}
+}  // namespace Sorex::Resource::Details

@@ -57,11 +57,11 @@ namespace Sorex
   const Color Color::Cyan(0u, 255u, 255u);
   const Color Color::Purple(255u, 0u, 255u);
 
-  Color::Color(const Color& base, int alpha) SRX_NOEXCEPT
+  Color::Color(const Color& base, scalar_t alpha) SRX_NOEXCEPT
     : r(base.r)
     , g(base.g)
     , b(base.b)
-    , a(IntToByte(alpha))
+    , a(FloatToByte(alpha))
   {}
 
   Color::Color(const int red, const int green, const int blue, const int alpha)

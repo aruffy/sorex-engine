@@ -29,7 +29,10 @@
 
 #include <Sorex/SxCoreMinimal.h>
 #include <Sorex/Math/SxMatrix3x3.h>
+
 #include <Sorex/Graphics/SxGraphicsTypes.h>
+#include <Sorex/Graphics/SxFont.h>
+#include <Sorex/Graphics/SxFontDecorator.h>
 
 #include "SxRenderDevice.h"
 #include "SxRenderer.h"
@@ -71,21 +74,24 @@ public:
                      Vec2                       scale = Vec2::One(),
                      Color                      color = Color::White);
 
+    void DrawText(const Graphics::Font& font,
+                  StringView            text,
+                  const Point&          pos,
+                  scalar_t              scale = 1.f,
+                  Color                 color = Color::White);
+
+
+    void DrawText(const Graphics::FontDecorator& decorator,
+                  StringView                     text,
+                  const Point&                   pos);
+
     /*
-            void DrawText(const Graphics::Font& font,
-                          StringView            text,
-                          const Point&          pos,
-                          Color                 color = Color::White,
-                          float                 scale = 1.f);
             void DrawText(const Graphics::Font& font,
                           WStringView           text,
                           const Point&          pos,
                           Color                 color = Color::White,
             float                 scale = 1.f);
 
-            void DrawText(const Graphics::FontDecorator& decorator,
-                          StringView                     text,
-                          const Point&                   pos);
             void DrawText(const Graphics::FontDecorator& decorator,
                           WStringView                    wtext,
                           const Point&                   pos);
@@ -136,7 +142,7 @@ private:
 
     TUniquePointer<Graphics::PrimitiveRenderer> mPrimitiveRenderer;
     TUniquePointer<Graphics::TextureRenderer>   mTextureRenderer;
-    // TUniquePointer<Graphics::TextRenderer>      _textRenderer;
+    TUniquePointer<Graphics::TextRenderer>      mTextRenderer;
 
     Graphics::CanvasPencil         mPencil;
     TStack<Graphics::CanvasPencil> mPencilStack;

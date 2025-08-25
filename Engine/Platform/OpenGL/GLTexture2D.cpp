@@ -89,8 +89,7 @@ namespace Sorex::Graphics
     const SizeInt origSize = bitmap->GetSize();
     if (mWidth != origSize.width || mHeight != origSize.height)
     {
-      SRX_CHECK(mWidth > origSize.width && mHeight > origSize.height);
-
+      SRX_CHECK(mWidth >= origSize.width && mHeight >= origSize.height);
       TextureBitmap tmpBitmap{ mWidth, mHeight, bitmap->GetPixelFormat() };
 
 #ifdef SOREX_DEBUG_MEDIUM

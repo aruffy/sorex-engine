@@ -355,8 +355,9 @@ namespace Sorex::Math
 
 namespace Sorex
 {
-  typedef Math::TVector2<scalar_t> Vector2;
-  typedef Vector2                  Vec2;
+  typedef Math::TVector2<scalar_t>   Vector2;
+  typedef Vector2                    Vec2;
+  typedef Math::TIntegerPoint<int32> VecInt2;
 }
 
 using SxVec2 = Sorex::Vec2;

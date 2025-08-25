@@ -40,6 +40,90 @@ namespace Sorex::Utils
     return (str.rfind(prefix, 0) == 0);
   }
 
+  SRX_API char32_t ReadUtf8Char(const void*  ptr,
+                                const size_t len,
+                                int&         bytes) SRX_NOEXCEPT
+  {
+    const unsigned char* buf = static_cast<const unsigned char*>(ptr);
+    bytes                    = 0;
+
+    if (!buf || len < 1)
+      return -1;
+
+    int ch1 = buf[0];
+    if ((ch1 & 0x80) == 0)
+    {
+      bytes = 1;
+      return ch1;
+    }
+    else if ((ch1 & 0xE0) == 0xC0)
+    {
+      if (len < 2)
+        return -1;
+
+      int ch2 = buf[1];
+
+      if ((ch2 & 0xC0) == 0x80)
+      {
+        bytes = 2;
+        return ((ch1 & 0x1F) << 6) | (ch2 & 0x3F);
+      }
+    }
+    else if ((ch1 & 0xF0) == 0xE0)
+    {
+      if (len < 2)
+        return -1;
+
+      int ch2 = buf[1];
+
+      if ((ch2 & 0xC0) == 0x80)
+      {
+        if (len < 3)
+          return -1;
+
+        int ch3 = buf[2];
+
+        if ((ch3 & 0xC0) == 0x80)
+        {
+          bytes = 3;
+          return ((ch1 & 0x0F) << 12) | ((ch2 & 0x3F) << 6) | (ch3 & 0x3F);
+        }
+      }
+    }
+    else if ((ch1 & 0xF8) == 0xF0)
+    {
+      if (len < 2)
+        return -1;
+
+      int ch2 = buf[1];
+
+      if ((ch2 & 0xC0) == 0x80)
+      {
+        if (len < 3)
+          return -1;
+
+        int ch3 = buf[2];
+
+        if ((ch3 & 0xC0) == 0x80)
+        {
+          if (len < 4)
+            return -1;
+
+          int ch4 = buf[3];
+
+          if ((ch4 & 0xC0) == 0x80)
+          {
+            bytes = 4;
+            return ((ch1 & 0x07) << 18) | ((ch2 & 0x3F) << 12)
+                   | ((ch3 & 0x3F) << 6) | (ch4 & 0x3F);
+          }
+        }
+      }
+    }
+
+    return -1;  // Bad UTF8 character.
+  }
+
   SRX_API String ToUtf8String(WStringView wstr) SRX_NOEXCEPT
   {
     if (wstr.empty())
