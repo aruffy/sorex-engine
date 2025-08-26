@@ -32,11 +32,11 @@ namespace Sorex
   class StopWatch
   {
 public:
-    uint64      Start(bool bRestart = false);
-    inline void Stop() { mStartTime = 0u; }
+    uint64          Start(bool bRestart = false);
+    SRX_INLINE void Stop() { mStartTime = 0u; }
 
-    inline bool IsRunning() { return mStartTime != 0u; }
-    uint64      GetElapsed() const;
+    SRX_INLINE bool IsRunning() const { return mStartTime != 0u; }
+    uint64          GetElapsed() const;
 
 private:
     uint64 mStartTime = 0;
