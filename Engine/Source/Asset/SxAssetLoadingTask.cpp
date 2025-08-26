@@ -80,9 +80,13 @@ namespace Sorex::Resource
               __FUNCTION__,
               mAssetPath.generic_string());
 
+#ifdef SOREX_DEBUG_MEDIUM
+    mStopWatch.Start();
+#endif
+
     const ETaskAction res = Load(mContext);
 
-#ifdef SRX_DEBUG_MEDIUM
+#ifdef SOREX_DEBUG_MEDIUM
     if (res == ETaskAction::Cancel)
       SRX_ASSERT(!mCommonCtx.status.Ok());
 #endif
@@ -191,6 +195,14 @@ namespace Sorex::Resource
               mAssetPath.generic_string());
 
     Context::Finalize(mContext);
+
+#ifdef SOREX_DEBUG_MEDIUM
+    SRX_DEBUG("[{}] {}: asset '{}' loading took {} ms",
+              GetRuntimeClass().GetName(),
+              __FUNCTION__,
+              mAssetPath.generic_string(),
+              mStopWatch.GetElapsed());
+#endif
 
     return mCommonCtx.status;
   }

@@ -1,5 +1,4 @@
 Engine:
-  - Add StopWatch, Apply for Loading Task
   - Refactoring AssetThread Cond-Variable Pool
 
 Renderer:
