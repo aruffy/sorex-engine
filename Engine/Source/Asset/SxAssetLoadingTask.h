@@ -33,6 +33,10 @@
 #include <Sorex/Asset/SxAssetHandler.h>
 #include <Sorex/Asset/SxAssetOptions.h>
 
+#ifdef SOREX_DEBUG_MEDIUM
+#  include <Utils/SxStopWatch.h>
+#endif
+
 namespace Sorex::Resource
 {
   class AssetLoadingTask final: public Task
@@ -145,5 +149,10 @@ private:
 
     Path                mAssetPath;
     CreateAssetCallback mCreateAssetCallback;
+
+
+#ifdef SOREX_DEBUG_MEDIUM
+    StopWatch mStopWatch;
+#endif
   };
 }  // namespace
