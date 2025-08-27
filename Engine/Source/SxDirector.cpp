@@ -42,10 +42,6 @@ namespace Sorex
   Director::~Director()
   {}
 
-  int32 mFrameRate;
-  float mDeltaTime;
-  bool  mIsExitRequested;
-
   Status Director::Initialize()
   {
     SRX_CLSFUN_TRACE();

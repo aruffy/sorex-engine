@@ -168,9 +168,6 @@ public:
 
     virtual void Exit() { mIsExitRequested = true; }
 
-    // virtual int32 GetFrameRate() const          = 0;
-    // virtual void  SetFrameRate(int32 frameRate) = 0;
-
 protected:
     virtual Status OnLaunch() { return SRX_OK; }
     virtual void   OnUpdate(const float deltaTime) {}
