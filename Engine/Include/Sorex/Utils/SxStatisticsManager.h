@@ -29,6 +29,7 @@
 
 #include <Sorex/SxCoreMinimal.h>
 #include <Sorex/Containers/SxObjectContainer.h>
+#include <Sorex/SxDirector.h>
 
 namespace Sorex
 {
@@ -59,12 +60,12 @@ private:
     String mName;
   };
 
-  class IStatisticsProvider
+  class StatisticsProvider
   {
-    SRX_RTTI_BASE(IStatisticsProvider);
+    SRX_RTTI_BASE(StatisticsProvider);
 
 public:
-    virtual ~IStatisticsProvider() = default;
+    virtual ~StatisticsProvider() = default;
 
     /**
      * @brief Retrieve all statistics values provided by this provider.
@@ -91,9 +92,12 @@ public:
      * reinitialized.
      */
     virtual void ResetStatistics() = 0;
+
+    virtual void OnBeginFrame(float deltaTime) {};
+    virtual void OnFinishFrame() {};
   };
 
-  class StatisticsManager final
+  class StatisticsManager final: public Director::IListener
   {
 public:
     StatisticsManager(const StatisticsManager& other)            = delete;
@@ -114,7 +118,7 @@ public:
     void Reset()
     {
       mProviders.ForEach(
-        [](IStatisticsProvider& provider) { provider.ResetStatistics(); });
+        [](StatisticsProvider& provider) { provider.ResetStatistics(); });
     }
 
     void GetStatisticsByGroup(EStatisticsGroup                 group,
@@ -130,12 +134,11 @@ public:
 private:
     StatisticsManager() = default;
 
-    // API ApplicationLoop::Listener
-    /* virtual void OnBeginFrame(float deltaTime) override;
+    // API Director::IListener
+    virtual void OnBeginFrame(float deltaTime) override;
     virtual void OnFinishFrame() override;
-    virtual void OnExit() override; */
 
 private:
-    TObjectContainer<IStatisticsProvider> mProviders;
+    TObjectContainer<StatisticsProvider> mProviders;
   };
 }  // namespace Sorex

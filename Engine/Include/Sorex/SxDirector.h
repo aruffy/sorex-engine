@@ -79,8 +79,6 @@ public:
 
       /**
        * @brief Will be invoked when frame is being rendered.
-       *
-       * @param stage - stage of rendering.
        */
       virtual void OnRenderScene() {}
 

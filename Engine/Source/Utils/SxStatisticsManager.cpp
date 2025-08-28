@@ -40,8 +40,21 @@ namespace Sorex
     TVector<const StatisticsValue*>& values) const
   {
     values.clear();
-    mProviders.ForEach([group, &values](const IStatisticsProvider& provider) {
+    mProviders.ForEach([group, &values](const StatisticsProvider& provider) {
       provider.GetStatisticsByGroup(group, values);
     });
+  }
+
+  void StatisticsManager::OnBeginFrame(float deltaTime)
+  {
+    mProviders.ForEach([deltaTime](StatisticsProvider& provider) {
+      provider.OnBeginFrame(deltaTime);
+    });
+  }
+
+  void StatisticsManager::OnFinishFrame()
+  {
+    mProviders.ForEach(
+      [](StatisticsProvider& provider) { provider.OnFinishFrame(); });
   }
 }  // namespace

@@ -30,6 +30,7 @@
 #include <Sorex/SxTime.h>
 #include <Sorex/SxThread.h>
 #include <Sorex/Graphics/SxCanvas.h>
+#include <Sorex/Utils/SxStatisticsManager.h>
 
 namespace Sorex
 {
@@ -152,6 +153,10 @@ namespace Sorex
   void Director::RenderScene()
   {
     SRX_CHECK(mCanvas);
+
+    for (IListener* listener : mListeners)
+      listener->OnRenderScene();
+
     mCanvas->Clear();
     OnDraw(*mCanvas);
     mCanvas->Flush();
