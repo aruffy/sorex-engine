@@ -74,12 +74,12 @@ public:
 
       SRX_INLINE Listener* operator*() const
       {
-        return _list->_listeners[_index];
+        return mList->mListeners[mIndex];
       }
 
       SRX_INLINE Listener** operator->() const
       {
-        return &_list->_listeners[_index];
+        return &mList->mListeners[mIndex];
       }
 
   private:
@@ -91,11 +91,11 @@ public:
 
       SRX_INLINE bool IsEnd() const SRX_NOEXCEPT
       {
-        return !_list || _index >= _list->_listeners.size();
+        return !mList || mIndex >= mList->mListeners.size();
       }
 
-      TListenerContainer* _list  = nullptr;
-      size_t              _index = 0;
+      TListenerContainer* mList  = nullptr;
+      size_t              mIndex = 0;
     };
 
 public:
@@ -123,12 +123,12 @@ public:
      *
      * @return True if container has no listeners.
      */
-    bool IsEmpty() const SRX_NOEXCEPT { return _listenersNumber == 0u; }
+    bool IsEmpty() const SRX_NOEXCEPT { return mListenersNumber == 0u; }
 
     /**
      * @return number of listeners which are stored into container.
      */
-    size_t GetSize() const SRX_NOEXCEPT { return _listenersNumber; }
+    size_t GetSize() const SRX_NOEXCEPT { return mListenersNumber; }
 
     /**
      * @brief Add new listener to the container.
@@ -162,27 +162,27 @@ public:
 private:
     void Cleanup() SRX_NOEXCEPT;
 
-    TVector<Listener*> _listeners;
+    TVector<Listener*> mListeners;
 
-    size_t _iteratorsNumber = 0u;
-    size_t _listenersNumber = 0u;
+    size_t mIteratorsNumber = 0u;
+    size_t mListenersNumber = 0u;
 
-    bool _isCleanupNeeded = false;
+    bool mIsCleabupNeeded = false;
   };
 
   template<typename T>
   void TListenerContainer<T>::Clear() SRX_NOEXCEPT
   {
-    _listenersNumber = 0;
-    if (_iteratorsNumber) [[unlikely]]
+    mListenersNumber = 0;
+    if (mIteratorsNumber) [[unlikely]]
     {
-      _isCleanupNeeded = true;
-      for (size_t i = 0; i < _listeners.size(); ++i)
-        _listeners[i] = nullptr;
+      mIsCleabupNeeded = true;
+      for (size_t i = 0; i < mListeners.size(); ++i)
+        mListeners[i] = nullptr;
     }
     else
     {
-      _listeners.clear();
+      mListeners.clear();
     }
   }
 
@@ -193,8 +193,8 @@ private:
     if (!listener)
       return false;
 
-    auto it = std::find(_listeners.begin(), _listeners.end(), listener);
-    return it != _listeners.end();
+    auto it = std::find(mListeners.begin(), mListeners.end(), listener);
+    return it != mListeners.end();
   }
 
   template<typename T>
@@ -203,8 +203,8 @@ private:
     SRX_CHECK(!Contains(listener));
     if (listener && !Contains(listener))
     {
-      _listeners.push_back(listener);
-      ++_listenersNumber;
+      mListeners.push_back(listener);
+      ++mListenersNumber;
 
       return true;
     }
@@ -218,35 +218,35 @@ private:
     if (!listener)
       return;
 
-    if (auto it = std::find(_listeners.begin(), _listeners.end(), listener);
-        it != _listeners.end())
+    if (auto it = std::find(mListeners.begin(), mListeners.end(), listener);
+        it != mListeners.end())
     {
-      if (_iteratorsNumber) [[unlikely]]
+      if (mIteratorsNumber) [[unlikely]]
       {
         *it              = nullptr;
-        _isCleanupNeeded = true;
+        mIsCleabupNeeded = true;
       }
       else
       {
-        _listeners.erase(it);
+        mListeners.erase(it);
       }
 
-      --_listenersNumber;
+      --mListenersNumber;
     }
   }
 
   template<typename T>
   void TListenerContainer<T>::Cleanup() SRX_NOEXCEPT
   {
-    SRX_ASSERT(_iteratorsNumber == 0u);
+    SRX_ASSERT(mIteratorsNumber == 0u);
 
-    if (_isCleanupNeeded)
+    if (mIsCleabupNeeded)
     {
-      _listeners.erase(
-        std::remove(_listeners.begin(), _listeners.end(), nullptr),
-        _listeners.end());
-      _listenersNumber = _listeners.size();
-      _isCleanupNeeded = false;
+      mListeners.erase(
+        std::remove(mListeners.begin(), mListeners.end(), nullptr),
+        mListeners.end());
+      mListenersNumber = mListeners.size();
+      mIsCleabupNeeded = false;
     }
   }
 
@@ -254,16 +254,16 @@ private:
   template<typename T>
   TListenerContainer<T>::Iterator::Iterator(TListenerContainer* list)
     SRX_NOEXCEPT
-    : _list(list)
-    , _index(0u)
+    : mList(list)
+    , mIndex(0u)
   {
     Init();
   }
 
   template<typename T>
   TListenerContainer<T>::Iterator::Iterator(const Iterator& other) SRX_NOEXCEPT
-    : _list(other._list)
-    , _index(other._index)
+    : mList(other.mList)
+    , mIndex(other.mIndex)
   {
     Init();
   }
@@ -276,8 +276,8 @@ private:
     {
       Reset();
 
-      _index = other._index;
-      _list  = other._list;
+      mIndex = other.mIndex;
+      mList  = other.mList;
 
       Init();
     }
@@ -292,7 +292,7 @@ private:
     if (IsEnd() && other.IsEnd())
       return true;
 
-    return (_index == other._index && _list == other._list);
+    return (mIndex == other.mIndex && mList == other.mList);
   }
 
   template<typename T>
@@ -315,10 +315,10 @@ private:
   template<typename T>
   void TListenerContainer<T>::Iterator::Init() SRX_NOEXCEPT
   {
-    if (_list)
+    if (mList)
     {
-      _list->_iteratorsNumber++;
-      if (_index < _list->_listeners.size() && !_list->_listeners[_index])
+      mList->mIteratorsNumber++;
+      if (mIndex < mList->mListeners.size() && !mList->mListeners[mIndex])
         Next();
     }
   }
@@ -326,30 +326,30 @@ private:
   template<typename T>
   void TListenerContainer<T>::Iterator::Reset() SRX_NOEXCEPT
   {
-    if (_list)
+    if (mList)
     {
-      SRX_ASSERT(_list->_iteratorsNumber > 0);
-      _list->_iteratorsNumber--;
+      SRX_ASSERT(mList->mIteratorsNumber > 0);
+      mList->mIteratorsNumber--;
 
-      if (_list->_iteratorsNumber == 0u)
-        _list->Cleanup();
+      if (mList->mIteratorsNumber == 0u)
+        mList->Cleanup();
     }
 
-    _list  = nullptr;
-    _index = 0;
+    mList  = nullptr;
+    mIndex = 0;
   }
 
 
   template<typename T>
   void TListenerContainer<T>::Iterator::Next() SRX_NOEXCEPT
   {
-    if (_list == nullptr)
+    if (mList == nullptr)
       return;
 
-    const size_t size = _list->_listeners.size();
+    const size_t size = mList->mListeners.size();
     do
     {
-      ++_index;
-    } while (_index < size && _list->_listeners[_index] == nullptr);
+      ++mIndex;
+    } while (mIndex < size && mList->mListeners[mIndex] == nullptr);
   }
 }
