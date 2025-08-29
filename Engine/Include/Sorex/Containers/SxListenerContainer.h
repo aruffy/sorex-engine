@@ -80,15 +80,8 @@ public:
       TIterator& operator++() SRX_NOEXCEPT;
       TIterator  operator++(int) SRX_NOEXCEPT;
 
-      SRX_INLINE Listener* operator*() const
-      {
-        return mList->mListeners[mIndex];
-      }
-
-      SRX_INLINE Listener** operator->() const
-      {
-        return &mList->mListeners[mIndex];
-      }
+      Listener*  operator*() const SRX_NOEXCEPT;
+      Listener** operator->() const SRX_NOEXCEPT;
 
   private:
       void Init() SRX_NOEXCEPT;
@@ -97,15 +90,14 @@ public:
 
       SRX_INLINE bool IsEnd() const SRX_NOEXCEPT
       {
-        return !mList || mIndex >= mList->mListeners.size();
+        return !mContainer || mIndex >= mContainer->mListeners.size();
       }
 
-      TListenerContainer* mList  = nullptr;
-      size_t              mIndex = 0;
+      TListenerContainer* mContainer = nullptr;
+      size_t              mIndex     = 0;
     };
 
 private:
-    // @FIXME: index by type
     template<EIterator IteratorType>
     friend class TIterator;
 
@@ -269,7 +261,7 @@ private:
   template<EIterator IteratorType>
   TListenerContainer<T>::TIterator<IteratorType>::TIterator(
     TListenerContainer* list) SRX_NOEXCEPT
-    : mList(list)
+    : mContainer(list)
     , mIndex(0u)
   {
     Init();
@@ -279,7 +271,7 @@ private:
   template<EIterator IteratorType>
   TListenerContainer<T>::TIterator<IteratorType>::TIterator(
     const TIterator& other) SRX_NOEXCEPT
-    : mList(other.mList)
+    : mContainer(other.mContainer)
     , mIndex(other.mIndex)
   {
     Init();
@@ -295,8 +287,8 @@ private:
     {
       Reset();
 
-      mIndex = other.mIndex;
-      mList  = other.mList;
+      mIndex     = other.mIndex;
+      mContainer = other.mContainer;
 
       Init();
     }
@@ -312,7 +304,7 @@ private:
     if (IsEnd() && other.IsEnd())
       return true;
 
-    return (mIndex == other.mIndex && mList == other.mList);
+    return (mIndex == other.mIndex && mContainer == other.mContainer);
   }
 
   template<typename T>
@@ -338,10 +330,11 @@ private:
   template<EIterator IteratorType>
   void TListenerContainer<T>::TIterator<IteratorType>::Init() SRX_NOEXCEPT
   {
-    if (mList)
+    if (mContainer)
     {
-      mList->mIteratorsNumber++;
-      if (mIndex < mList->mListeners.size() && !mList->mListeners[mIndex])
+      mContainer->mIteratorsNumber++;
+      if (mIndex < mContainer->mListeners.size()
+          && !mContainer->mListeners[mIndex])
         Next();
     }
   }
@@ -350,17 +343,17 @@ private:
   template<EIterator IteratorType>
   void TListenerContainer<T>::TIterator<IteratorType>::Reset() SRX_NOEXCEPT
   {
-    if (mList)
+    if (mContainer)
     {
-      SRX_ASSERT(mList->mIteratorsNumber > 0);
-      mList->mIteratorsNumber--;
+      SRX_ASSERT(mContainer->mIteratorsNumber > 0);
+      mContainer->mIteratorsNumber--;
 
-      if (mList->mIteratorsNumber == 0u)
-        mList->Cleanup();
+      if (mContainer->mIteratorsNumber == 0u)
+        mContainer->Cleanup();
     }
 
-    mList  = nullptr;
-    mIndex = 0;
+    mContainer = nullptr;
+    mIndex     = 0;
   }
 
 
@@ -368,13 +361,30 @@ private:
   template<EIterator IteratorType>
   void TListenerContainer<T>::TIterator<IteratorType>::Next() SRX_NOEXCEPT
   {
-    if (mList == nullptr)
+    if (mContainer == nullptr)
       return;
 
-    const size_t size = mList->mListeners.size();
+    const size_t size = mContainer->mListeners.size();
     do
     {
       ++mIndex;
-    } while (mIndex < size && mList->mListeners[mIndex] == nullptr);
+    } while (mIndex < size && mContainer->mListeners[mIndex] == nullptr);
+  }
+
+  template<typename T>
+  template<EIterator IteratorType>
+  typename TListenerContainer<T>::Listener*
+  TListenerContainer<T>::TIterator<IteratorType>::operator*() const SRX_NOEXCEPT
+  {
+    return mContainer->mListeners[mIndex];
+  }
+
+  template<typename T>
+  template<EIterator IteratorType>
+  typename TListenerContainer<T>::Listener**
+  TListenerContainer<T>::TIterator<IteratorType>::operator->() const
+    SRX_NOEXCEPT
+  {
+    return &mContainer->mListeners[mIndex];
   }
 }  // namespace Sorex
