@@ -120,9 +120,8 @@ namespace Sorex
 
       RenderScene();
 
-      // @TODO: call in reverse order
-      for (IListener& listener : mListeners)
-        listener.OnFinishFrame();
+      for (auto it = mListeners.rbegin(); it != mListeners.rend(); ++it)
+        it->OnFinishFrame();
 
       tmNow      = Time::GetSteadyCounter();
       tmInterval = tmNow - tmLast;
