@@ -33,6 +33,12 @@
 
 namespace Sorex
 {
+  enum class EIterator
+  {
+    Forward,
+    Reverse
+  };
+
   /**
    * @brief Container stores listener in Observer programming pattern.
    *
@@ -49,9 +55,13 @@ public:
     /**
      * @brief Forward iterator of TListenerContainer container
      */
-    template<bool ReverseIterator = false>
+    template<EIterator IteratorType = EIterator::Forward>
     class TIterator
     {
+      static_assert(IteratorType == EIterator::Forward
+                      || IteratorType == EIterator::Reverse,
+                    "Invalid iterator type");
+
   public:
       SRX_INLINE explicit TIterator(TListenerContainer* list) SRX_NOEXCEPT;
       TIterator() = default;
@@ -96,11 +106,11 @@ public:
 
 private:
     // @FIXME: index by type
-    template<bool IteratorType>
+    template<EIterator IteratorType>
     friend class TIterator;
 
-    using Iterator        = TIterator<false>;
-    using ReverseIterator = TIterator<true>;
+    using Iterator        = TIterator<EIterator::Forward>;
+    using ReverseIterator = TIterator<EIterator::Reverse>;
 
 public:
     TListenerContainer() = default;
@@ -256,8 +266,8 @@ private:
 
   // Iterator
   template<typename T>
-  template<bool ReverseIterator>
-  TListenerContainer<T>::TIterator<ReverseIterator>::TIterator(
+  template<EIterator IteratorType>
+  TListenerContainer<T>::TIterator<IteratorType>::TIterator(
     TListenerContainer* list) SRX_NOEXCEPT
     : mList(list)
     , mIndex(0u)
@@ -266,8 +276,8 @@ private:
   }
 
   template<typename T>
-  template<bool ReverseIterator>
-  TListenerContainer<T>::TIterator<ReverseIterator>::TIterator(
+  template<EIterator IteratorType>
+  TListenerContainer<T>::TIterator<IteratorType>::TIterator(
     const TIterator& other) SRX_NOEXCEPT
     : mList(other.mList)
     , mIndex(other.mIndex)
@@ -276,9 +286,9 @@ private:
   }
 
   template<typename T>
-  template<bool ReverseIterator>
-  typename TListenerContainer<T>::TIterator<ReverseIterator>&
-  TListenerContainer<T>::TIterator<ReverseIterator>::operator=(
+  template<EIterator IteratorType>
+  typename TListenerContainer<T>::TIterator<IteratorType>&
+  TListenerContainer<T>::TIterator<IteratorType>::operator=(
     const TIterator& other) SRX_NOEXCEPT
   {
     if (this != &other)
@@ -295,8 +305,8 @@ private:
   }
 
   template<typename T>
-  template<bool ReverseIterator>
-  bool TListenerContainer<T>::TIterator<ReverseIterator>::operator==(
+  template<EIterator IteratorType>
+  bool TListenerContainer<T>::TIterator<IteratorType>::operator==(
     const TIterator& other) const SRX_NOEXCEPT
   {
     if (IsEnd() && other.IsEnd())
@@ -306,19 +316,18 @@ private:
   }
 
   template<typename T>
-  template<bool ReverseIterator>
-  typename TListenerContainer<T>::TIterator<ReverseIterator>&
-  TListenerContainer<T>::TIterator<ReverseIterator>::operator++() SRX_NOEXCEPT
+  template<EIterator IteratorType>
+  typename TListenerContainer<T>::TIterator<IteratorType>&
+  TListenerContainer<T>::TIterator<IteratorType>::operator++() SRX_NOEXCEPT
   {
     Next();
     return *this;
   }
 
   template<typename T>
-  template<bool ReverseIterator>
-  typename TListenerContainer<T>::TIterator<ReverseIterator>
-  TListenerContainer<T>::TIterator<ReverseIterator>::operator++(int)
-    SRX_NOEXCEPT
+  template<EIterator IteratorType>
+  typename TListenerContainer<T>::TIterator<IteratorType>
+  TListenerContainer<T>::TIterator<IteratorType>::operator++(int) SRX_NOEXCEPT
   {
     TIterator it = *this;
     Next();
@@ -326,8 +335,8 @@ private:
   }
 
   template<typename T>
-  template<bool ReverseIterator>
-  void TListenerContainer<T>::TIterator<ReverseIterator>::Init() SRX_NOEXCEPT
+  template<EIterator IteratorType>
+  void TListenerContainer<T>::TIterator<IteratorType>::Init() SRX_NOEXCEPT
   {
     if (mList)
     {
@@ -338,8 +347,8 @@ private:
   }
 
   template<typename T>
-  template<bool ReverseIterator>
-  void TListenerContainer<T>::TIterator<ReverseIterator>::Reset() SRX_NOEXCEPT
+  template<EIterator IteratorType>
+  void TListenerContainer<T>::TIterator<IteratorType>::Reset() SRX_NOEXCEPT
   {
     if (mList)
     {
@@ -356,8 +365,8 @@ private:
 
 
   template<typename T>
-  template<bool ReverseIterator>
-  void TListenerContainer<T>::TIterator<ReverseIterator>::Next() SRX_NOEXCEPT
+  template<EIterator IteratorType>
+  void TListenerContainer<T>::TIterator<IteratorType>::Next() SRX_NOEXCEPT
   {
     if (mList == nullptr)
       return;
