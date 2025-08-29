@@ -104,8 +104,8 @@ namespace Sorex
 
     while (!mIsExitRequested)
     {
-      for (IListener* listener : mListeners)
-        listener->OnBeginFrame(mDeltaTime);
+      for (IListener& listener : mListeners)
+        listener.OnBeginFrame(mDeltaTime);
 
       for (auto& cmp : mComponents)
       {
@@ -121,8 +121,8 @@ namespace Sorex
       RenderScene();
 
       // @TODO: call in reverse order
-      for (IListener* listener : mListeners)
-        listener->OnFinishFrame();
+      for (IListener& listener : mListeners)
+        listener.OnFinishFrame();
 
       tmNow      = Time::GetSteadyCounter();
       tmInterval = tmNow - tmLast;
@@ -146,16 +146,16 @@ namespace Sorex
                                       / static_cast<double>(tmFrequency));
     }
 
-    for (IListener* listener : mListeners)
-      listener->OnExit();
+    for (IListener& listener : mListeners)
+      listener.OnExit();
   }
 
   void Director::RenderScene()
   {
     SRX_CHECK(mCanvas);
 
-    for (IListener* listener : mListeners)
-      listener->OnRenderScene();
+    for (IListener& listener : mListeners)
+      listener.OnRenderScene();
 
     mCanvas->Clear();
     OnDraw(*mCanvas);

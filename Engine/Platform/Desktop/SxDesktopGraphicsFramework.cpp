@@ -128,8 +128,8 @@ namespace Sorex::Platform
 
     if (mMainWindow)
     {
-      for (IListener* listener : mListeners)
-        listener->OnWindowDestroy(nullptr);
+      for (IListener& listener : mListeners)
+        listener.OnWindowDestroy(nullptr);
 
       mMainWindow = nullptr;
     }
@@ -252,8 +252,8 @@ namespace Sorex::Platform
       mMainWindow = window;
     }
 
-    for (IListener* listener : mListeners)
-      listener->OnWindowCreate(*window);
+    for (IListener& listener : mListeners)
+      listener.OnWindowCreate(*window);
 
     return std::make_pair(SRX_OK, window);
   }
@@ -265,8 +265,8 @@ namespace Sorex::Platform
     if (window == nullptr)
       return;
 
-    for (IListener* listener : mListeners)
-      listener->OnWindowCreate(*window);
+    for (IListener& listener : mListeners)
+      listener.OnWindowDestroy(window);
 
     if (window == mMainWindow)
     {

@@ -154,12 +154,12 @@ public:
     }
 
     // Listeners
-    SRX_INLINE bool AddListener(IListener* listener) SRX_NOEXCEPT
+    SRX_INLINE bool AddListener(IListener& listener) SRX_NOEXCEPT
     {
       return mListeners.Add(listener);
     }
 
-    SRX_INLINE void RemoveListener(IListener* listener) SRX_NOEXCEPT
+    SRX_INLINE void RemoveListener(IListener& listener) SRX_NOEXCEPT
     {
       mListeners.Remove(listener);
     }

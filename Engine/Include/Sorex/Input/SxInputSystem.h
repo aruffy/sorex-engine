@@ -60,8 +60,8 @@ public:
     InputSystem& operator=(const InputSystem& other) = delete;
 
     // Listeners
-    SRX_INLINE bool AddListener(IListener* listener) SRX_NOEXCEPT;
-    SRX_INLINE void RemoveListener(IListener* listener) SRX_NOEXCEPT;
+    SRX_INLINE bool AddListener(IListener& listener) SRX_NOEXCEPT;
+    SRX_INLINE void RemoveListener(IListener& listener) SRX_NOEXCEPT;
 
     virtual Mouse* GetMouse() { return nullptr; }
     // virtual Keyboard* GetKeyboard() = 0;
@@ -72,12 +72,12 @@ protected:
 private:
   };
 
-  SRX_INLINE bool InputSystem::AddListener(IListener* listener) SRX_NOEXCEPT
+  SRX_INLINE bool InputSystem::AddListener(IListener& listener) SRX_NOEXCEPT
   {
     return mListeners.Add(listener);
   }
 
-  SRX_INLINE void InputSystem::RemoveListener(IListener* listener) SRX_NOEXCEPT
+  SRX_INLINE void InputSystem::RemoveListener(IListener& listener) SRX_NOEXCEPT
   {
     mListeners.Remove(listener);
   }

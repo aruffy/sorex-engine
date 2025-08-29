@@ -49,12 +49,12 @@ namespace Sorex::Platform
     SRX_ASSERT(!inputSystem);
 
     inputSystem = this;
-    mGlfw.AddListener(this);
+    mGlfw.AddListener(*this);
   }
 
   DesktopInputSystem::~DesktopInputSystem()
   {
-    mGlfw.RemoveListener(this);
+    mGlfw.RemoveListener(*this);
     inputSystem = nullptr;
   }
 
@@ -105,8 +105,8 @@ namespace Sorex::Platform
       Window* const wptr =
         static_cast<Window*>(glfwGetWindowUserPointer(window));
 
-      for (auto listener : inputSystem->mListeners)
-        listener->OnMouseEvent(wptr, event);
+      for (auto& listener : inputSystem->mListeners)
+        listener.OnMouseEvent(wptr, event);
     }
   }
 
@@ -126,8 +126,8 @@ namespace Sorex::Platform
     const MouseEvent event(&inputSystem->mMouse, pos);
     SRX_CHECK(event.GetMouseEventType() == EMouseEvent::Move);
 
-    for (auto listener : inputSystem->mListeners)
-      listener->OnMouseEvent(wptr, event);
+    for (auto& listener : inputSystem->mListeners)
+      listener.OnMouseEvent(wptr, event);
   }
 
   void DesktopInputSystem::OnMouseScrollCallback(GLFWwindow* window,
@@ -144,8 +144,7 @@ namespace Sorex::Platform
     const MouseEvent event(&inputSystem->mMouse, scroll);
     SRX_CHECK(event.GetMouseEventType() == EMouseEvent::Scroll);
 
-    for (auto listener : inputSystem->mListeners)
-      listener->OnMouseEvent(wptr, event);
+    for (auto& listener : inputSystem->mListeners)
+      listener.OnMouseEvent(wptr, event);
   }
-
 }  // namespace

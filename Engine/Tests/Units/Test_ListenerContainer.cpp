@@ -24,22 +24,22 @@ TEST(ListenerContainer, Add)
   ASSERT_TRUE(li.IsEmpty());
 
   TestListener lst0(0);
-  EXPECT_FALSE(li.Contains(&lst0));
+  EXPECT_FALSE(li.Contains(lst0));
 
-  EXPECT_TRUE(li.Add(&lst0));
+  EXPECT_TRUE(li.Add(lst0));
   ASSERT_EQ(li.GetSize(), 1u);
   ASSERT_FALSE(li.IsEmpty());
-  EXPECT_TRUE(li.Contains(&lst0));
+  EXPECT_TRUE(li.Contains(lst0));
 
-  EXPECT_FALSE(li.Add(&lst0));
+  EXPECT_FALSE(li.Add(lst0));
 
   TestListener lst1(1);
-  EXPECT_TRUE(li.Add(&lst1));
+  EXPECT_TRUE(li.Add(lst1));
   ASSERT_EQ(li.GetSize(), 2u);
   ASSERT_FALSE(li.IsEmpty());
-  EXPECT_TRUE(li.Contains(&lst1));
+  EXPECT_TRUE(li.Contains(lst1));
 
-  EXPECT_FALSE(li.Add(&lst1));
+  EXPECT_FALSE(li.Add(lst1));
 }
 
 TEST(ListenerContainer, Main)
@@ -55,12 +55,12 @@ TEST(ListenerContainer, Main)
     TestListener* lst = new TestListener(i);
     listeners[i]      = lst;
 
-    EXPECT_FALSE(li.Contains(lst));
+    EXPECT_FALSE(li.Contains(*lst));
 
-    li.Add(lst);
+    li.Add(*lst);
     EXPECT_EQ(li.GetSize(), i + 1);
     EXPECT_FALSE(li.IsEmpty());
-    EXPECT_TRUE(li.Contains(lst));
+    EXPECT_TRUE(li.Contains(*lst));
   }
 
   // Remove during iteraton
@@ -70,10 +70,10 @@ TEST(ListenerContainer, Main)
     if (i % 2 != 0)
     {
       --size;
-      li.Remove(listeners[i]);
+      li.Remove(*listeners[i]);
       EXPECT_EQ(li.GetSize(), size);
       EXPECT_FALSE(li.IsEmpty());
-      EXPECT_FALSE(li.Contains(listeners[i]));
+      EXPECT_FALSE(li.Contains(*listeners[i]));
     }
   }
 
@@ -86,19 +86,19 @@ TEST(ListenerContainer, Main)
   {
     if (i % 2 == 0)
     {
-      EXPECT_TRUE(li.Contains(listeners[i]));
+      EXPECT_TRUE(li.Contains(*listeners[i]));
     }
 
     // Remove by limit
     constexpr int kLimit = kNumber / 2;
     if (i > kLimit)
     {
-      size = li.Contains(listeners[i]) ? size - 1 : size;
+      size = li.Contains(*listeners[i]) ? size - 1 : size;
 
-      li.Remove(listeners[i]);
+      li.Remove(*listeners[i]);
       EXPECT_EQ(li.GetSize(), size);
       EXPECT_FALSE(li.IsEmpty());
-      EXPECT_FALSE(li.Contains(listeners[i]));
+      EXPECT_FALSE(li.Contains(*listeners[i]));
     }
   }
 

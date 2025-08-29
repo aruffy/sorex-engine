@@ -60,7 +60,7 @@ namespace Sorex::Platform
 
     if (mDirector)
     {
-      mDirector->RemoveListener(this);
+      mDirector->RemoveListener(*this);
       mDirector = nullptr;
     }
 
@@ -77,7 +77,7 @@ namespace Sorex::Platform
 
     Director::Component::Attach(director);
 
-    director.AddListener(this);
+    director.AddListener(*this);
     mDirector = &director;
   }
 

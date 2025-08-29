@@ -80,8 +80,8 @@ public:
       TIterator& operator++() SRX_NOEXCEPT;
       TIterator  operator++(int) SRX_NOEXCEPT;
 
-      Listener*  operator*() const SRX_NOEXCEPT;
-      Listener** operator->() const SRX_NOEXCEPT;
+      Listener& operator*() const SRX_NOEXCEPT;
+      Listener* operator->() const SRX_NOEXCEPT;
 
   private:
       void Init() SRX_NOEXCEPT;
@@ -122,7 +122,7 @@ public:
      * @param listener - checked listener
      * @return True if container has a listener
      */
-    bool Contains(const Listener* listener) const SRX_NOEXCEPT;
+    bool Contains(const Listener& listener) const SRX_NOEXCEPT;
 
     /**
      * @brief Check if container is empty.
@@ -142,14 +142,14 @@ public:
      * @param listener - added listener
      * @return True is listener was successfully added to container.
      */
-    bool Add(Listener* listener) SRX_NOEXCEPT;
+    bool Add(Listener& listener) SRX_NOEXCEPT;
 
     /**
      * @brief Remove the listener from the container.
      *
      * @param listener - removed listener
      */
-    void Remove(Listener* listener) SRX_NOEXCEPT;
+    void Remove(Listener& listener) SRX_NOEXCEPT;
 
     SRX_INLINE Iterator begin() SRX_NOEXCEPT { return Iterator(this); }
     // cppcheck-suppress functionStatic
@@ -158,10 +158,9 @@ public:
     template<typename Fn>
     SRX_INLINE void Notify(Fn&& callback) const
     {
-      for (Listener* listener : (*this))
+      for (Listener listener : (*this))
       {
-        SRX_CHECK(listener);  // NOTE: iterator takes valid listener
-        callback(*listener);
+        callback(listener);
       }
     }
 
@@ -193,23 +192,20 @@ private:
   }
 
   template<typename T>
-  bool TListenerContainer<T>::Contains(const Listener* listener) const
+  bool TListenerContainer<T>::Contains(const Listener& listener) const
     SRX_NOEXCEPT
   {
-    if (!listener)
-      return false;
-
-    auto it = std::find(mListeners.begin(), mListeners.end(), listener);
+    auto it = std::find(mListeners.begin(), mListeners.end(), &listener);
     return it != mListeners.end();
   }
 
   template<typename T>
-  bool TListenerContainer<T>::Add(Listener* listener) SRX_NOEXCEPT
+  bool TListenerContainer<T>::Add(Listener& listener) SRX_NOEXCEPT
   {
     SRX_CHECK(!Contains(listener));
-    if (listener && !Contains(listener))
+    if (!Contains(listener))
     {
-      mListeners.push_back(listener);
+      mListeners.push_back(&listener);
       ++mListenersNumber;
 
       return true;
@@ -219,12 +215,9 @@ private:
   }
 
   template<typename T>
-  void TListenerContainer<T>::Remove(Listener* listener) SRX_NOEXCEPT
+  void TListenerContainer<T>::Remove(Listener& listener) SRX_NOEXCEPT
   {
-    if (!listener)
-      return;
-
-    if (auto it = std::find(mListeners.begin(), mListeners.end(), listener);
+    if (auto it = std::find(mListeners.begin(), mListeners.end(), &listener);
         it != mListeners.end())
     {
       if (mIteratorsNumber) [[unlikely]]
@@ -251,6 +244,7 @@ private:
       mListeners.erase(
         std::remove(mListeners.begin(), mListeners.end(), nullptr),
         mListeners.end());
+
       mListenersNumber = mListeners.size();
       mIsCleabupNeeded = false;
     }
@@ -373,18 +367,22 @@ private:
 
   template<typename T>
   template<EIterator IteratorType>
-  typename TListenerContainer<T>::Listener*
+  typename TListenerContainer<T>::Listener&
   TListenerContainer<T>::TIterator<IteratorType>::operator*() const SRX_NOEXCEPT
   {
-    return mContainer->mListeners[mIndex];
+    SRX_CHECK(mContainer && mIndex < mContainer->mListeners.size()
+              && mContainer->mListeners[mIndex]);
+    return *(mContainer->mListeners[mIndex]);
   }
 
   template<typename T>
   template<EIterator IteratorType>
-  typename TListenerContainer<T>::Listener**
+  typename TListenerContainer<T>::Listener*
   TListenerContainer<T>::TIterator<IteratorType>::operator->() const
     SRX_NOEXCEPT
   {
-    return &mContainer->mListeners[mIndex];
+    SRX_CHECK(mContainer && mIndex < mContainer->mListeners.size()
+              && mContainer->mListeners[mIndex]);
+    return mContainer->mListeners[mIndex];
   }
 }  // namespace Sorex
