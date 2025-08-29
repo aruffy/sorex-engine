@@ -63,7 +63,7 @@ public:
                     "Invalid iterator type");
 
   public:
-      SRX_INLINE explicit TIterator(TListenerContainer* list) SRX_NOEXCEPT;
+      SRX_INLINE explicit TIterator(TListenerContainer& list) SRX_NOEXCEPT;
       TIterator() = default;
 
       TIterator(const TIterator& other) SRX_NOEXCEPT;
@@ -88,13 +88,19 @@ public:
       void Reset() SRX_NOEXCEPT;
       void Next() SRX_NOEXCEPT;
 
+      SRX_INLINE bool HasValidIndex() const SRX_NOEXCEPT
+      {
+        return mIndex >= 0
+               && mIndex < static_cast<int32>(mContainer->mListeners.size());
+      }
+
       SRX_INLINE bool IsEnd() const SRX_NOEXCEPT
       {
-        return !mContainer || mIndex >= mContainer->mListeners.size();
+        return !mContainer || !HasValidIndex();
       }
 
       TListenerContainer* mContainer = nullptr;
-      size_t              mIndex     = 0;
+      int32               mIndex     = -1;
     };
 
 private:
@@ -151,14 +157,21 @@ public:
      */
     void Remove(Listener& listener) SRX_NOEXCEPT;
 
-    SRX_INLINE Iterator begin() SRX_NOEXCEPT { return Iterator(this); }
+    SRX_INLINE Iterator begin() SRX_NOEXCEPT { return Iterator(*this); }
     // cppcheck-suppress functionStatic
     SRX_INLINE Iterator end() SRX_NOEXCEPT { return Iterator(); }
+
+    SRX_INLINE ReverseIterator rbegin() SRX_NOEXCEPT
+    {
+      return ReverseIterator(*this);
+    }
+    // cppcheck-suppress functionStatic
+    SRX_INLINE ReverseIterator rend() SRX_NOEXCEPT { return ReverseIterator(); }
 
     template<typename Fn>
     SRX_INLINE void Notify(Fn&& callback) const
     {
-      for (Listener listener : (*this))
+      for (Listener& listener : (*this))
       {
         callback(listener);
       }
@@ -254,10 +267,15 @@ private:
   template<typename T>
   template<EIterator IteratorType>
   TListenerContainer<T>::TIterator<IteratorType>::TIterator(
-    TListenerContainer* list) SRX_NOEXCEPT
-    : mContainer(list)
-    , mIndex(0u)
+    TListenerContainer& list) SRX_NOEXCEPT
+    : mContainer(&list)
+    , mIndex(-1)
   {
+    if (IteratorType == EIterator::Forward)
+      mIndex = 0;
+    else
+      mIndex = static_cast<int32>(list.mListeners.size()) - 1;
+
     Init();
   }
 
@@ -324,13 +342,13 @@ private:
   template<EIterator IteratorType>
   void TListenerContainer<T>::TIterator<IteratorType>::Init() SRX_NOEXCEPT
   {
-    if (mContainer)
-    {
-      mContainer->mIteratorsNumber++;
-      if (mIndex < mContainer->mListeners.size()
-          && !mContainer->mListeners[mIndex])
-        Next();
-    }
+    if (!mContainer)
+      return;
+
+    mContainer->mIteratorsNumber++;
+
+    if (HasValidIndex() && !mContainer->mListeners[mIndex])
+      Next();
   }
 
   template<typename T>
@@ -342,27 +360,28 @@ private:
       SRX_ASSERT(mContainer->mIteratorsNumber > 0);
       mContainer->mIteratorsNumber--;
 
-      if (mContainer->mIteratorsNumber == 0u)
+      if (mContainer->mIteratorsNumber == 0)
         mContainer->Cleanup();
     }
 
     mContainer = nullptr;
-    mIndex     = 0;
+    mIndex     = -1;
   }
-
 
   template<typename T>
   template<EIterator IteratorType>
   void TListenerContainer<T>::TIterator<IteratorType>::Next() SRX_NOEXCEPT
   {
-    if (mContainer == nullptr)
-      return;
+    SRX_CHECK(mContainer);
 
-    const size_t size = mContainer->mListeners.size();
     do
     {
-      ++mIndex;
-    } while (mIndex < size && mContainer->mListeners[mIndex] == nullptr);
+      if constexpr (IteratorType == EIterator::Forward)
+        ++mIndex;
+      else
+        --mIndex;
+
+    } while (HasValidIndex() && mContainer->mListeners[mIndex] == nullptr);
   }
 
   template<typename T>
@@ -370,8 +389,7 @@ private:
   typename TListenerContainer<T>::Listener&
   TListenerContainer<T>::TIterator<IteratorType>::operator*() const SRX_NOEXCEPT
   {
-    SRX_CHECK(mContainer && mIndex < mContainer->mListeners.size()
-              && mContainer->mListeners[mIndex]);
+    SRX_CHECK(mContainer && HasValidIndex() && mContainer->mListeners[mIndex]);
     return *(mContainer->mListeners[mIndex]);
   }
 
@@ -381,8 +399,7 @@ private:
   TListenerContainer<T>::TIterator<IteratorType>::operator->() const
     SRX_NOEXCEPT
   {
-    SRX_CHECK(mContainer && mIndex < mContainer->mListeners.size()
-              && mContainer->mListeners[mIndex]);
+    SRX_CHECK(mContainer && HasValidIndex() && mContainer->mListeners[mIndex]);
     return mContainer->mListeners[mIndex];
   }
 }  // namespace Sorex
