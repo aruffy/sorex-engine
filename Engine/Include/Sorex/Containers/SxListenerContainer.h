@@ -169,7 +169,7 @@ public:
     SRX_INLINE ReverseIterator rend() SRX_NOEXCEPT { return ReverseIterator(); }
 
     template<typename Fn>
-    SRX_INLINE void Notify(Fn&& callback) const
+    SRX_INLINE void Notify(Fn&& callback)
     {
       for (Listener& listener : (*this))
       {

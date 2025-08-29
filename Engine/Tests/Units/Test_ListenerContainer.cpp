@@ -182,3 +182,158 @@ TEST(ListenerContainer, ReverseIterator)
     listeners[i] = nullptr;
   }
 }
+
+// Copilot Test
+TEST(TListenerContainer, Clear)
+{
+  TListenerContainer<TestListener> container;
+  TestListener                     l1(1), l2(2);
+  container.Add(l1);
+  container.Add(l2);
+  ASSERT_EQ(container.GetSize(), 2u);
+  container.Clear();
+  EXPECT_EQ(container.GetSize(), 0u);
+  EXPECT_TRUE(container.IsEmpty());
+  EXPECT_FALSE(container.Contains(l1));
+  EXPECT_FALSE(container.Contains(l2));
+}
+
+TEST(TListenerContainer, Contains)
+{
+  TListenerContainer<TestListener> container;
+  TestListener                     l1(1), l2(2);
+  EXPECT_FALSE(container.Contains(l1));
+  container.Add(l1);
+  EXPECT_TRUE(container.Contains(l1));
+  EXPECT_FALSE(container.Contains(l2));
+  container.Add(l2);
+  EXPECT_TRUE(container.Contains(l2));
+}
+
+TEST(TListenerContainer, AddAndRemove)
+{
+  TListenerContainer<TestListener> container;
+  TestListener                     l1(1), l2(2);
+  EXPECT_TRUE(container.Add(l1));
+  EXPECT_FALSE(container.Add(l1));  // duplicate
+  EXPECT_TRUE(container.Add(l2));
+  EXPECT_EQ(container.GetSize(), 2u);
+  container.Remove(l1);
+  EXPECT_FALSE(container.Contains(l1));
+  EXPECT_EQ(container.GetSize(), 1u);
+  container.Remove(l2);
+  EXPECT_FALSE(container.Contains(l2));
+  EXPECT_EQ(container.GetSize(), 0u);
+}
+
+TEST(TListenerContainer, IteratorForward)
+{
+  TListenerContainer<TestListener> container;
+  TestListener                     l1(1), l2(2), l3(3);
+  container.Add(l1);
+  container.Add(l2);
+  container.Add(l3);
+
+  int sum = 0;
+  for (auto it = container.begin(); it != container.end(); ++it)
+    sum += it->GetNumber();
+  EXPECT_EQ(sum, 6);
+
+  // Remove during iteration
+  int count = 0;
+  for (auto it = container.begin(); it != container.end();)
+  {
+    if (it->GetNumber() == 2)
+    {
+      container.Remove(*it);
+      ++it;
+    }
+    else
+    {
+      ++count;
+      ++it;
+    }
+  }
+  EXPECT_EQ(container.GetSize(), 2u);
+  EXPECT_FALSE(container.Contains(l2));
+}
+
+TEST(TListenerContainer, IteratorReverse)
+{
+  TListenerContainer<TestListener> container;
+  TestListener                     l1(1), l2(2), l3(3);
+  container.Add(l1);
+  container.Add(l2);
+  container.Add(l3);
+
+  int expected[] = { 3, 2, 1 };
+  int idx        = 0;
+  for (auto it = container.rbegin(); it != container.rend(); ++it)
+  {
+    EXPECT_EQ(it->GetNumber(), expected[idx]);
+    ++idx;
+  }
+}
+
+TEST(TListenerContainer, Notify)
+{
+  TListenerContainer<TestListener> container;
+  TestListener                     l1(1), l2(2);
+  container.Add(l1);
+  container.Add(l2);
+
+  int sum = 0;
+  container.Notify([&sum](TestListener& l) { sum += l.GetNumber(); });
+  EXPECT_EQ(sum, 3);
+}
+
+TEST(TListenerContainer, RemoveDuringNotify)
+{
+  TListenerContainer<TestListener> container;
+  TestListener                     l1(1), l2(2), l3(3);
+  container.Add(l1);
+  container.Add(l2);
+  container.Add(l3);
+
+  int called = 0;
+  container.Notify([&](TestListener& l) {
+    ++called;
+    if (l.GetNumber() == 2)
+      container.Remove(l);
+  });
+  EXPECT_EQ(container.GetSize(), 2u);
+  EXPECT_FALSE(container.Contains(l2));
+  EXPECT_EQ(called, 3);
+}
+
+TEST(TListenerContainer, CleanupAfterIterator)
+{
+  TListenerContainer<TestListener> container;
+  TestListener                     l1(1), l2(2);
+  container.Add(l1);
+  container.Add(l2);
+
+  {
+    auto it = container.begin();
+    container.Remove(l1);
+    ++it;
+    // Iterator goes out of scope, triggers cleanup
+  }
+  EXPECT_EQ(container.GetSize(), 1u);
+  EXPECT_FALSE(container.Contains(l1));
+  EXPECT_TRUE(container.Contains(l2));
+}
+
+TEST(TListenerContainer, IsEmptyAndGetSize)
+{
+  TListenerContainer<TestListener> container;
+  EXPECT_TRUE(container.IsEmpty());
+  EXPECT_EQ(container.GetSize(), 0u);
+  TestListener l1(1);
+  container.Add(l1);
+  EXPECT_FALSE(container.IsEmpty());
+  EXPECT_EQ(container.GetSize(), 1u);
+  container.Remove(l1);
+  EXPECT_TRUE(container.IsEmpty());
+  EXPECT_EQ(container.GetSize(), 0u);
+}
