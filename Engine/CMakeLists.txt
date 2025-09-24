@@ -14,7 +14,7 @@ option(SOREX_STATIC_LIBRARY "Compile Sorex engine as static library" OFF)
 option(SRXENG_ADDRESS_SANITIZER "Enable address sanitizer for engine code" OFF)
 option(SRXENG_BUILD_PIC "Build position independent code (-fPIC)" OFF)
 
-set(SRXENG_ENVIRONMENT "PROD" CACHE STRING "Set engine environment" FORCE)
+set(SRXENG_ENVIRONMENT "PROD" CACHE STRING "Set engine environment")
 set_property(CACHE SRXENG_ENVIRONMENT PROPERTY STRINGS "PROD" "DEV")
 
 option(SRXENG_DISABLE_CHECK "Disable engine check macros: useful for tests" OFF)

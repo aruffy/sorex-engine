@@ -27,54 +27,39 @@
 
 #pragma once
 
-#include <Sorex/SxCoreMinimal.h>
-#include <Sorex/Utils/SxStatisticsValue.h>
+#include <Sorex/Utils/SxStatisticsProvider.h>
+
+#include "GLTypes.h"
+#include "GLResourceToken.h"
 
 namespace Sorex
 {
-  enum class EStatisticsGroup
+  class GLStatisticsProvider: public StatisticsProvider
   {
-    System,
-    Engine,
-    Graphics,
-    // Audio
-    // Application,
-    // Network
-  };
-  class StatisticsProvider
-  {
-    SRX_RTTI_BASE(StatisticsProvider);
+    SRX_RTTI(GLStatisticsProvider, StatisticsProvider);
 
 public:
-    virtual ~StatisticsProvider() = default;
+    GLStatisticsProvider();
 
-    /**
-     * @brief Retrieve all statistics values provided by this provider.
-     *
-     * @param outValues Vector to be filled with pointers to statistics values.
-     */
+    // StatisticsProvider Interface
     virtual void GetAllStatistics(
-      TVector<const Statistics::Value*>& outValues) const = 0;
-
-    /**
-     * @brief Retrieve statistics values belonging to a specific group.
-     *
-     * @param group The statistics group to filter by.
-     * @param outValues Vector to be filled with pointers to statistics values.
-     */
+      TVector<const Statistics::Value*>& outValues) const override;
     virtual void GetStatisticsByGroup(
       EStatisticsGroup                   group,
-      TVector<const Statistics::Value*>& outValues) const = 0;
+      TVector<const Statistics::Value*>& outValues) const override;
 
-    /**
-     * @brief Reset all statistics values to their initial state.
-     *
-     * This function is called when statistics need to be cleared or
-     * reinitialized.
-     */
-    virtual void ResetStatistics() = 0;
+    virtual void ResetStatistics() override;
+    virtual void OnBeginFrame(const float deltaTime) override;
+    virtual void OnFinishFrame() override;
 
-    virtual void OnBeginFrame(float deltaTime) {};
-    virtual void OnFinishFrame() {};
+    // Methods
+    void OnDrawCall() { mDrawCallsAccumulator++; }
+
+private:
+    Statistics::TCounter<uint32> mDrawCalls;
+    Statistics::TCounter<uint32> mFramesPerSecond;
+
+    TPair<float, uint32> mFpsAccumulator;
+    uint32 mDrawCallsAccumulator
   };
 }  // namespace Sorex

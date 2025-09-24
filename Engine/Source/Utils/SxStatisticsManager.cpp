@@ -50,6 +50,23 @@ namespace Sorex
     mProviders.ForEach([deltaTime](StatisticsProvider& provider) {
       provider.OnBeginFrame(deltaTime);
     });
+
+    // FIXME: Temprorary solution
+    static float accumulator = 0.0f;
+    accumulator += deltaTime;
+    constexpr float kSecond = 1000.f;
+    if (accumulator >= kSecond)
+    {
+      accumulator = 0.0f;
+      mProviders.ForEach([](StatisticsProvider& provider) {
+        TVector<const StatisticsValue*> values;
+        provider.GetAllStatistics(values);
+        for (const StatisticsValue* value : values)
+        {
+          SRX_INFO("Statistic {}: {}", value->GetName(), value->ToString());
+        }
+      });
+    }
   }
 
   void StatisticsManager::OnFinishFrame()

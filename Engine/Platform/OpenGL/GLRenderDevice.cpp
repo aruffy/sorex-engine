@@ -30,6 +30,10 @@
 #include <Sorex/SxThread.h>
 #include <Sorex/Utils/SxString.h>
 
+#ifdef SOREX_MONITORING
+#  include <Sorex/Utils/SxStatisticsManager.h>
+#endif
+
 #include <glm.hpp>
 #include <gtc/matrix_transform.hpp>
 #include <gtc/type_ptr.hpp>
@@ -62,7 +66,12 @@ namespace
 namespace Sorex::Graphics
 {
   GLRenderDevice::GLRenderDevice() SRX_NOEXCEPT: mActiveShaderProgram(nullptr)
-  {}
+  {
+#ifdef SOREX_MONITORING
+    mStats = StatisticsManager::GetInstance()
+               .GetOrCreateStatisticsProvider<GLStatisticsProvider>();
+#endif
+  }
 
   GLRenderDevice::~GLRenderDevice()
   {

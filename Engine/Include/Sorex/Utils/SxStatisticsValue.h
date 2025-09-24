@@ -25,6 +25,8 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
+#pragma once
+
 #include <Sorex/SxCoreMinimal.h>
 #include <Sorex/Utils/SxString.h>
 
@@ -60,9 +62,9 @@ public:
     {}
 
     virtual ~TCounter() override = default;
+    virtual String ToString() const override { return Utils::ToString(_value); }
 
-    virtual void Reset() override { _value = TInt{ 0 }; }
-
+    inline void Reset(const TInt val = TInt{ 0 }) { _value = val; }
     inline void Increase() { ++_value; }
     inline void Decrease()
     {
@@ -71,8 +73,6 @@ public:
       else
         _value -= 1;
     }
-
-    virtual String ToString() const override { return Utils::ToString(_value); }
 
     TCounter& operator=(const TInt value) noexcept
     {
@@ -110,4 +110,4 @@ private:
   };
 
   using Counter = TCounter<int32>;
-}
+}  // namespace Sorex::Statistics

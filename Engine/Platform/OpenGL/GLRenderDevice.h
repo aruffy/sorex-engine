@@ -40,6 +40,10 @@
 #include "GLExtensions.h"
 #include "GLTexture2D.h"
 
+#ifdef SOREX_MONITORING
+#  include "GLStatisticsProvider.h"
+#endif
+
 namespace Sorex::Graphics
 {
   class GLRenderDevice final: public RenderDevice
@@ -144,6 +148,10 @@ private:
     GLShaderProgram*                mActiveShaderProgram;
 
     TUniquePointer<GLExtensions> mExtensions;
+
+#ifdef SOREX_MONITORING
+    GLStatisticsProvider* mStats = nullptr;
+#endif
   };
 
   template<OpenGL::Concept::IndexType IndexType>
@@ -185,9 +193,8 @@ private:
         glDrawArrays(mode, 0, static_cast<GLsizei>(vtxBuffer->GetSize())));
     }
 
-    // @FIXME:
-#ifdef RUFFY_GAME_DEVELOPMENT
-    _stats.drawCalls.Increase();
+#ifdef SOREX_MONITORING
+    mStats->OnDrawCall();
 #endif
 
     SRX_OPENGL_CALL(glBindVertexArray(0));

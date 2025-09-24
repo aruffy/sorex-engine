@@ -25,56 +25,57 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#pragma once
-
-#include <Sorex/SxCoreMinimal.h>
-#include <Sorex/Utils/SxStatisticsValue.h>
+#include "GLStatisticsProvider.h"
 
 namespace Sorex
 {
-  enum class EStatisticsGroup
+  GLStatisticsProvider::GLStatisticsProvider()
+    : mDrawCalls("Draw Calls")
+    , mFramesPerSecond("FPS")
+    , mFpsAccumulator(0.0f, 0)
+    , mDrawCallsAccumulator(0u)
+  {}
+
+  void GLStatisticsProvider::GetAllStatistics(
+    TVector<const Statistics::Value*>& outValues) const
   {
-    System,
-    Engine,
-    Graphics,
-    // Audio
-    // Application,
-    // Network
-  };
-  class StatisticsProvider
+    outValues.push_back(&mDrawCalls);
+    outValues.push_back(&mFramesPerSecond);
+  }
+
+  void GLStatisticsProvider::GetStatisticsByGroup(
+    EStatisticsGroup                   group,
+    TVector<const Statistics::Value*>& outValues) const
   {
-    SRX_RTTI_BASE(StatisticsProvider);
+    if (group == EStatisticsGroup::Graphics)
+      GetAllStatistics(outValues);
+  }
 
-public:
-    virtual ~StatisticsProvider() = default;
+  void GLStatisticsProvider::ResetStatistics()
+  {
+    mDrawCalls.Reset();
+    mFramesPerSecond.Reset();
+    mFpsAccumulator       = { 0.0f, 0 };
+    mDrawCallsAccumulator = 0u;
+  }
 
-    /**
-     * @brief Retrieve all statistics values provided by this provider.
-     *
-     * @param outValues Vector to be filled with pointers to statistics values.
-     */
-    virtual void GetAllStatistics(
-      TVector<const Statistics::Value*>& outValues) const = 0;
+  void GLStatisticsProvider::OnBeginFrame(const float deltaTime)
+  {
+    mDrawCallsAccumulator = 0u;
+    mFpsAccumulator.first += deltaTime;
+    mFpsAccumulator.second += 1;
+  }
 
-    /**
-     * @brief Retrieve statistics values belonging to a specific group.
-     *
-     * @param group The statistics group to filter by.
-     * @param outValues Vector to be filled with pointers to statistics values.
-     */
-    virtual void GetStatisticsByGroup(
-      EStatisticsGroup                   group,
-      TVector<const Statistics::Value*>& outValues) const = 0;
+  void GLStatisticsProvider::OnFinishFrame()
+  {
+    mDrawCalls = mDrawCallsAccumulator;
 
-    /**
-     * @brief Reset all statistics values to their initial state.
-     *
-     * This function is called when statistics need to be cleared or
-     * reinitialized.
-     */
-    virtual void ResetStatistics() = 0;
+    constexpr float kSecond = 1000.f;
+    const scalar_t  fps =
+      scalar_t(mFpsAccumulator.second) * kSecond / mFpsAccumulator.first;
+    mFramesPerSecond = static_cast<uint32>(fps);
 
-    virtual void OnBeginFrame(float deltaTime) {};
-    virtual void OnFinishFrame() {};
-  };
+    if (mFpsAccumulator.first >= kSecond)
+      mFpsAccumulator = { 0.0f, 0 };
+  }
 }  // namespace Sorex
