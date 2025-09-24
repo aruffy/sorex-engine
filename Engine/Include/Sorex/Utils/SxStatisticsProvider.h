@@ -25,58 +25,87 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#pragma once
-
 #include <Sorex/SxCoreMinimal.h>
-#include <Sorex/Containers/SxObjectContainer.h>
-#include <Sorex/SxDirector.h>
-
-#include "SxStatisticsProvider.h"
 
 namespace Sorex
 {
-  class StatisticsManager final: public Director::IListener
+  enum class EStatisticsGroup
+  {
+    System,
+    Engine,
+    Graphics,
+    // Audio
+    // Application,
+    // Network
+  };
+
+  class StatisticsValue
   {
 public:
-    StatisticsManager(const StatisticsManager& other)            = delete;
-    StatisticsManager& operator=(const StatisticsManager& other) = delete;
+    SRX_INLINE StatisticsValue(const String& name) SRX_NOEXCEPT: mName(name) {}
+    virtual ~StatisticsValue() = default;
 
-    static StatisticsManager& GetInstance();
+    StatisticsValue(const StatisticsValue& other)            = delete;
+    StatisticsValue& operator=(const StatisticsValue& other) = delete;
 
-    template<typename T, typename... Args>
-    T* GetOrCreateStatisticsProvider(Args&&... args)
-    {
-      if (T* const provider = mProviders.Get<T>())
-        return provider;
+    SRX_INLINE const String& GetName() const { return mName; }
 
-      return mProviders.Add<T>(std::forward<Args>(args)...);
-    }
-
-    // cppcheck-suppress functionConst
-    void Reset()
-    {
-      mProviders.ForEach(
-        [](StatisticsProvider& provider) { provider.ResetStatistics(); });
-    }
-
-    void GetStatisticsByGroup(EStatisticsGroup                 group,
-                              TVector<const StatisticsValue*>& values) const;
-
-    template<typename T>
-    void GetStatisticsByProvider(TVector<const StatisticsValue*>& values) const
-    {
-      if (auto provider = mProviders.Get<T>())
-        provider->GetAllStatistics(values);
-    }
+    virtual String ToString() = 0;
 
 private:
-    StatisticsManager() = default;
+    String mName;
+  };
 
-    // API Director::IListener
-    virtual void OnBeginFrame(float deltaTime) override;
-    virtual void OnFinishFrame() override;
+  class StatisticsProvider
+  {
+    SRX_RTTI_BASE(StatisticsProvider);
 
-private:
-    TObjectContainer<StatisticsProvider> mProviders;
+public:
+    virtual ~StatisticsProvider() = default;
+
+    /**
+     * @brief Retrieve all statistics values provided by this provider.
+     *
+     * @param outValues Vector to be filled with pointers to statistics values.
+     */
+    virtual void GetAllStatistics(
+      TVector<const StatisticsValue*>& outValues) const = 0;
+
+    /**
+     * @brief Retrieve statistics values belonging to a specific group.
+     *
+     * @param group The statistics group to filter by.
+     * @param outValues Vector to be filled with pointers to statistics values.
+     */
+    virtual void GetStatisticsByGroup(
+      EStatisticsGroup                 group,
+      TVector<const StatisticsValue*>& outValues) const = 0;
+
+    /**
+     * @brief Reset all statistics values to their initial state.
+     *
+     * This function is called when statistics need to be cleared or
+     * reinitialized.
+     */
+    virtual void ResetStatistics() = 0;
+
+    virtual void OnBeginFrame(float deltaTime) {};
+    virtual void OnFinishFrame() {};
+  };
+
+  enum class EGraphicsResource
+  {
+    Texture,
+    Buffer,
+    Shader,
+    Other
+  };
+
+  class GraphicsStatisticsProvider: public StatisticsProvider
+  {
+    SRX_RTTI(GraphicsStatisticsProvider, StatisticsProvider);
+
+public:
+    virtual ~GraphicsStatisticsProvider() override = default;
   };
 }  // namespace Sorex

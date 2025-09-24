@@ -30,7 +30,10 @@
 #include <Sorex/SxTime.h>
 #include <Sorex/SxThread.h>
 #include <Sorex/Graphics/SxCanvas.h>
-#include <Sorex/Utils/SxStatisticsManager.h>
+
+#ifdef SOREX_MONITORING
+#  include <Sorex/Utils/SxStatisticsManager.h>
+#endif
 
 namespace Sorex
 {
@@ -46,6 +49,10 @@ namespace Sorex
   Status Director::Initialize()
   {
     SRX_CLSFUN_TRACE();
+
+#ifdef SOREX_MONITORING
+    AddListener(StatisticsManager::GetInstance());
+#endif
 
     Graphics::RenderDevice* renderDevice =
       GetComponent<Graphics::RenderDevice>();
@@ -83,6 +90,10 @@ namespace Sorex
     }
 
     mComponents.Clear();
+
+#ifdef SOREX_MONITORING
+    RemoveListener(StatisticsManager::GetInstance());
+#endif
   }
 
   void Director::MainLoop()
