@@ -25,65 +25,89 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#pragma once
-
 #include <Sorex/SxCoreMinimal.h>
-#include <Sorex/Containers/SxObjectContainer.h>
-#include <Sorex/SxDirector.h>
+#include <Sorex/Utils/SxString.h>
 
-#include "SxStatisticsProvider.h"
-
-namespace Sorex
+namespace Sorex::Statistics
 {
-  using StatisticsValue = Statistics::Value;
-  class StatisticsManager final: public Director::IListener
+  class Value
   {
 public:
-    StatisticsManager(const StatisticsManager& other)            = delete;
-    StatisticsManager& operator=(const StatisticsManager& other) = delete;
+    SRX_INLINE Value(const String& name) SRX_NOEXCEPT: mName(name) {}
+    virtual ~Value() = default;
 
-    static StatisticsManager& GetInstance();
+    Value(const Value& other)            = delete;
+    Value& operator=(const Value& other) = delete;
 
-    template<typename T, typename... Args>
-    T* GetOrCreateStatisticsProvider(Args&&... args)
-    {
-      if (T* const provider = mProviders.Get<T>())
-        return provider;
+    SRX_INLINE const String& GetName() const { return mName; }
 
-      return mProviders.Add<T>(std::forward<Args>(args)...);
-    }
-
-    template<typename T>
-    SRX_INLINE T* GetStatisticsProvider()
-    {
-      return mProviders.Get<T>();
-    }
-
-    // cppcheck-suppress functionConst
-    void Reset()
-    {
-      mProviders.ForEach(
-        [](StatisticsProvider& provider) { provider.ResetStatistics(); });
-    }
-
-    void GetStatisticsByGroup(EStatisticsGroup                 group,
-                              TVector<const StatisticsValue*>& values) const;
-
-    template<typename T>
-    void GetStatisticsByProvider(TVector<const StatisticsValue*>& values) const
-    {
-      if (auto provider = mProviders.Get<T>())
-        provider->GetAllStatistics(values);
-    }
+    virtual String ToString() const = 0;
 
 private:
-    StatisticsManager() = default;
-
-    // API Director::IListener
-    virtual void OnBeginFrame(float deltaTime) override;
-    virtual void OnFinishFrame() override;
-
-private:
-    TObjectContainer<StatisticsProvider> mProviders;
+    String mName;
   };
-}  // namespace Sorex
+
+  template<typename TInt>
+  class TCounter: public Value
+  {
+    static_assert(std::is_integral_v<TInt>,
+                  "[Statistics::Counter] Must be a integral type");
+
+public:
+    TCounter(const String& name)
+      : Value(name)
+      , _value(TInt{ 0 })
+    {}
+
+    virtual ~TCounter() override = default;
+
+    virtual void Reset() override { _value = TInt{ 0 }; }
+
+    inline void Increase() { ++_value; }
+    inline void Decrease()
+    {
+      if constexpr (std::is_unsigned<TInt>::value)
+        _value = _value ? _value - 1 : 0u;
+      else
+        _value -= 1;
+    }
+
+    virtual String ToString() const override { return Utils::ToString(_value); }
+
+    TCounter& operator=(const TInt value) noexcept
+    {
+      _value = value;
+      return *this;
+    }
+
+    TCounter& operator++() noexcept
+    {
+      ++_value;
+      return *this;
+    }
+
+    TCounter& operator--() noexcept
+    {
+      --_value;
+      return *this;
+    }
+
+    TCounter& operator+=(const TInt arg) noexcept
+    {
+      _value += arg;
+      return *this;
+    }
+
+    TCounter& operator-=(const TInt arg) noexcept
+    {
+      _value -= arg;
+      return *this;
+    }
+
+private:
+    TInt _value;
+    bool _isRefreshable;
+  };
+
+  using Counter = TCounter<int32>;
+}

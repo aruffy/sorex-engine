@@ -26,6 +26,7 @@
 /**************************************************************************/
 
 #include <Sorex/SxCoreMinimal.h>
+#include <Sorex/Utils/SxStatisticsValue.h>
 
 namespace Sorex
 {
@@ -38,24 +39,6 @@ namespace Sorex
     // Application,
     // Network
   };
-
-  class StatisticsValue
-  {
-public:
-    SRX_INLINE StatisticsValue(const String& name) SRX_NOEXCEPT: mName(name) {}
-    virtual ~StatisticsValue() = default;
-
-    StatisticsValue(const StatisticsValue& other)            = delete;
-    StatisticsValue& operator=(const StatisticsValue& other) = delete;
-
-    SRX_INLINE const String& GetName() const { return mName; }
-
-    virtual String ToString() = 0;
-
-private:
-    String mName;
-  };
-
   class StatisticsProvider
   {
     SRX_RTTI_BASE(StatisticsProvider);
@@ -69,7 +52,7 @@ public:
      * @param outValues Vector to be filled with pointers to statistics values.
      */
     virtual void GetAllStatistics(
-      TVector<const StatisticsValue*>& outValues) const = 0;
+      TVector<const Statistics::Value*>& outValues) const = 0;
 
     /**
      * @brief Retrieve statistics values belonging to a specific group.
@@ -78,8 +61,8 @@ public:
      * @param outValues Vector to be filled with pointers to statistics values.
      */
     virtual void GetStatisticsByGroup(
-      EStatisticsGroup                 group,
-      TVector<const StatisticsValue*>& outValues) const = 0;
+      EStatisticsGroup                   group,
+      TVector<const Statistics::Value*>& outValues) const = 0;
 
     /**
      * @brief Reset all statistics values to their initial state.
@@ -91,14 +74,6 @@ public:
 
     virtual void OnBeginFrame(float deltaTime) {};
     virtual void OnFinishFrame() {};
-  };
-
-  enum class EGraphicsResource
-  {
-    Texture,
-    Buffer,
-    Shader,
-    Other
   };
 
   class GraphicsStatisticsProvider: public StatisticsProvider
