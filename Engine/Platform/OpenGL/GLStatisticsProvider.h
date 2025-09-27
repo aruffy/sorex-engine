@@ -60,6 +60,6 @@ private:
     Statistics::TCounter<uint32> mFramesPerSecond;
 
     TPair<float, uint32> mFpsAccumulator;
-    uint32 mDrawCallsAccumulator
+    uint32 mDrawCallsAccumulator;
   };
 }  // namespace Sorex
