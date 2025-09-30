@@ -32,8 +32,7 @@ namespace Sorex
   GLStatisticsProvider::GLStatisticsProvider()
     : mDrawCalls("Draw Calls")
     , mFramesPerSecond("FPS")
-    , mFpsAccumulator(0.0f, 0)
-    , mDrawCallsAccumulator(0u)
+    , mTimer(0.f)
   {}
 
   void GLStatisticsProvider::GetAllStatistics(
@@ -55,27 +54,24 @@ namespace Sorex
   {
     mDrawCalls.Reset();
     mFramesPerSecond.Reset();
-    mFpsAccumulator       = { 0.0f, 0 };
-    mDrawCallsAccumulator = 0u;
+    mTimer = 0.f;
   }
 
   void GLStatisticsProvider::OnBeginFrame(const float deltaTime)
   {
-    mDrawCallsAccumulator = 0u;
-    mFpsAccumulator.first += deltaTime;
-    mFpsAccumulator.second += 1;
+    mTimer += deltaTime;
+    mFramesPerSecond.Increase();
   }
 
   void GLStatisticsProvider::OnFinishFrame()
   {
-    mDrawCalls = mDrawCallsAccumulator;
+    mDrawCalls.Reset();
 
     constexpr float kSecond = 1000.f;
-    const scalar_t  fps =
-      scalar_t(mFpsAccumulator.second) * kSecond / mFpsAccumulator.first;
-    mFramesPerSecond = static_cast<uint32>(fps);
-
-    if (mFpsAccumulator.first >= kSecond)
-      mFpsAccumulator = { 0.0f, 0 };
+    if (mTimer >= kSecond)
+    {
+      mTimer = 0.f;
+      mFramesPerSecond.Reset();
+    }
   }
 }  // namespace Sorex

@@ -49,6 +49,32 @@ private:
     String mName;
   };
 
+  /**
+   * @brief Statistics counter for integral types.
+   *
+   * TCounter is a generic statistics counter designed for use cases where
+   * values are updated frequently, such as per-frame or periodic statistics
+   * (e.g., FPS counters). The class maintains two members:
+   * - @c  mAccumulator: a mutable value that is incremented or decremented as
+   * events occur.
+   * - @c mValue: the stable value representing the actual statistic, updated
+   * from @c mAccumulator via the Apply() or Reset() methods.
+   *
+   * This separation allows for continuous updates to the accumulator without
+   * affecting the reported value, which is only refreshed at specific intervals
+   * (such as at the end of a frame).
+   *
+   * @tparam TInt Integral type used for counting.
+   *
+   * Example usage:
+   * @code
+   * TCounter<int32> fpsCounter("FPS");
+   * fpsCounter.Increase(); // Called every frame
+   * fpsCounter.Reset();    // Called once per second to reset accumulator and
+   *                        // update the visible FPS value
+   *  std::cout << fpsCounter.ToString(); // Prints
+   * @endcode
+   */
   template<typename TInt>
   class TCounter: public Value
   {
@@ -56,57 +82,71 @@ private:
                   "[Statistics::Counter] Must be a integral type");
 
 public:
-    TCounter(const String& name)
+    SRX_INLINE TCounter(const String& name) SRX_NOEXCEPT
       : Value(name)
-      , _value(TInt{ 0 })
+      , mAccumulator(TInt{ 0 })
+      , mValue(TInt{ 0 })
     {}
 
     virtual ~TCounter() override = default;
-    virtual String ToString() const override { return Utils::ToString(_value); }
+    virtual String ToString() const override { return Utils::ToString(mValue); }
 
-    inline void Reset(const TInt val = TInt{ 0 }) { _value = val; }
-    inline void Increase() { ++_value; }
-    inline void Decrease()
+    void Apply() { mValue = mAccumulator; }
+    void Reset(const TInt val = TInt{ 0 })
+    {
+      mValue       = mAccumulator;
+      mAccumulator = val;
+    }
+
+    void Increase() { ++mAccumulator; }
+    void Decrease()
     {
       if constexpr (std::is_unsigned<TInt>::value)
-        _value = _value ? _value - 1 : 0u;
+        mAccumulator = mAccumulator ? mAccumulator - 1 : 0u;
       else
-        _value -= 1;
+        mAccumulator -= 1;
     }
+
+    SRX_INLINE TInt GetAccumulator() const { return mAccumulator; }
+    SRX_INLINE TInt GetValue() const { return mValue; }
 
     TCounter& operator=(const TInt value) noexcept
     {
-      _value = value;
+      mAccumulator = value;
       return *this;
     }
 
     TCounter& operator++() noexcept
     {
-      ++_value;
+      ++mAccumulator;
       return *this;
     }
 
     TCounter& operator--() noexcept
     {
-      --_value;
+      --mAccumulator;
       return *this;
     }
 
     TCounter& operator+=(const TInt arg) noexcept
     {
-      _value += arg;
+      mAccumulator += arg;
       return *this;
     }
 
     TCounter& operator-=(const TInt arg) noexcept
     {
-      _value -= arg;
+      if constexpr (std::is_unsigned<TInt>::value)
+        mAccumulator = (mAccumulator > arg) ? mAccumulator - arg : 0u;
+      else
+        mAccumulator -= arg;
+
       return *this;
     }
 
 private:
-    TInt _value;
-    bool _isRefreshable;
+    TInt mAccumulator;
+    TInt mValue;
   };
 
   using Counter = TCounter<int32>;

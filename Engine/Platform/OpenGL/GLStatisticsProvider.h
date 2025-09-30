@@ -53,13 +53,11 @@ public:
     virtual void OnFinishFrame() override;
 
     // Methods
-    void OnDrawCall() { mDrawCallsAccumulator++; }
+    SRX_INLINE void OnDrawCall() { mDrawCalls.Increase(); }
 
 private:
     Statistics::TCounter<uint32> mDrawCalls;
     Statistics::TCounter<uint32> mFramesPerSecond;
-
-    TPair<float, uint32> mFpsAccumulator;
-    uint32 mDrawCallsAccumulator;
+    float                        mTimer;
   };
 }  // namespace Sorex
