@@ -82,7 +82,7 @@ private:
                   "[Statistics::Counter] Must be a integral type");
 
 public:
-    SRX_INLINE TCounter(const String& name) SRX_NOEXCEPT
+    SRX_INLINE explicit TCounter(const String& name) SRX_NOEXCEPT
       : Value(name)
       , mAccumulator(TInt{ 0 })
       , mValue(TInt{ 0 })

@@ -58,7 +58,7 @@ namespace Sorex
     if (accumulator >= kSecond)
     {
       accumulator = 0.0f;
-      mProviders.ForEach([](StatisticsProvider& provider) {
+      mProviders.ForEach([](const StatisticsProvider& provider) {
         TVector<const StatisticsValue*> values;
         provider.GetAllStatistics(values);
         for (const StatisticsValue* value : values)

@@ -66,6 +66,7 @@ public:
       SRX_INLINE explicit TIterator(TListenerContainer& list) SRX_NOEXCEPT;
       TIterator() = default;
 
+      // cppcheck-suppress noExplicitConstructor
       TIterator(const TIterator& other) SRX_NOEXCEPT;
       TIterator& operator=(const TIterator& other) SRX_NOEXCEPT;
 
@@ -169,7 +170,7 @@ public:
     SRX_INLINE ReverseIterator rend() SRX_NOEXCEPT { return ReverseIterator(); }
 
     template<typename Fn>
-    SRX_INLINE void Notify(Fn&& callback)
+    SRX_INLINE void Notify(Fn&& callback) const
     {
       for (Listener& listener : (*this))
       {
