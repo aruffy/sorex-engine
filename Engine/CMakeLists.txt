@@ -14,6 +14,9 @@ option(SOREX_STATIC_LIBRARY "Compile Sorex engine as static library" OFF)
 option(SRXENG_ADDRESS_SANITIZER "Enable address sanitizer for engine code" OFF)
 option(SRXENG_BUILD_PIC "Build position independent code (-fPIC)" OFF)
 
+set(SRXENG_ENVIRONMENT "PROD" CACHE STRING "Set engine environment")
+set_property(CACHE SRXENG_ENVIRONMENT PROPERTY STRINGS "PROD" "DEV")
+
 option(SRXENG_DISABLE_CHECK "Disable engine check macros: useful for tests" OFF)
 
 if(SRXENG_BUILD_PIC)
@@ -52,7 +55,7 @@ generate_export_header(
 sorex_target_compile_options(${ENGINE_TARGET})
 get_target_property(compile_flags ${ENGINE_TARGET} COMPILE_OPTIONS)
 
-message(STATUS "[${ENGINE_TARGET}]  Compile options: ${compile_flags}")
+message(STATUS "[${ENGINE_TARGET}] Compile options: ${compile_flags}")
 
 # ##############################################################################
 # Preprocessor Definitions
@@ -80,6 +83,11 @@ endif()
 if(SRXENG_DISABLE_CHECK)
   message(STATUS "[${ENGINE_TARGET}] Disable check macros")
   target_compile_definitions(${ENGINE_TARGET} PUBLIC SOREX_DISABLE_CHECK)
+endif()
+
+if(${SRXENG_ENVIRONMENT} MATCHES "DEV")
+  message(STATUS "[${ENGINE_TARGET}] Enable development tools")
+  target_compile_definitions(${ENGINE_TARGET} PRIVATE SOREX_ENVIRONMENT_DEVELOPMENT)
 endif()
 
 target_precompile_headers(

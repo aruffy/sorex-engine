@@ -27,58 +27,37 @@
 
 #pragma once
 
-#include <Sorex/SxCoreMinimal.h>
-#include <Sorex/SxDirector.h>
-#include <Sorex/SxWindow.h>
+#include <Sorex/Utils/SxStatisticsProvider.h>
 
-#include <Sorex/Containers/SxListenerContainer.h>
-
-#include "SxMouse.h"
+#include "GLTypes.h"
+#include "GLResourceToken.h"
 
 namespace Sorex
 {
-  class InputSystem: public Director::Component
+  class GLStatisticsProvider: public StatisticsProvider
   {
-    SRX_RTTI(InputSystem, Director::Component)
+    SRX_RTTI(GLStatisticsProvider, StatisticsProvider);
 
 public:
-    class IListener
-    {
-  public:
-      virtual ~IListener() = default;
+    GLStatisticsProvider();
 
-      virtual void OnMouseEvent(Window* window, const MouseEvent& event) {}
-      virtual void OnKeyboardEvent(Window* window) {};
-      // virtual void OnTouchEvent() {}
-    };
+    // StatisticsProvider Interface
+    virtual void GetAllStatistics(
+      TVector<const Statistics::Value*>& outValues) const override;
+    virtual void GetStatisticsByGroup(
+      EStatisticsGroup                   group,
+      TVector<const Statistics::Value*>& outValues) const override;
 
-public:
-    InputSystem()                   = default;
-    virtual ~InputSystem() override = default;
+    virtual void ResetStatistics() override;
+    virtual void OnBeginFrame(const float deltaTime) override;
+    virtual void OnFinishFrame() override;
 
-    InputSystem(const InputSystem& other)            = delete;
-    InputSystem& operator=(const InputSystem& other) = delete;
-
-    // Listeners
-    SRX_INLINE bool AddListener(IListener& listener) SRX_NOEXCEPT;
-    SRX_INLINE void RemoveListener(IListener& listener) SRX_NOEXCEPT;
-
-    virtual Mouse* GetMouse() { return nullptr; }
-    // virtual Keyboard* GetKeyboard() = 0;
-    // virtual TouchScreen* GetTouchScreen() = 0;
-protected:
-    TListenerContainer<IListener> mListeners;
+    // Methods
+    SRX_INLINE void OnDrawCall() { mDrawCalls.Increase(); }
 
 private:
+    Statistics::TCounter<uint32> mDrawCalls;
+    Statistics::TCounter<uint32> mFramesPerSecond;
+    float                        mTimer;
   };
-
-  SRX_INLINE bool InputSystem::AddListener(IListener& listener) SRX_NOEXCEPT
-  {
-    return mListeners.Add(listener);
-  }
-
-  SRX_INLINE void InputSystem::RemoveListener(IListener& listener) SRX_NOEXCEPT
-  {
-    mListeners.Remove(listener);
-  }
-}
+}  // namespace Sorex

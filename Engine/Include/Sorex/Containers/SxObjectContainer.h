@@ -170,6 +170,9 @@ public:
     template<class T, class Enable = SRX_TYPENAME TEnableIf_IsSubclassType<T>>
     SRX_INLINE void GetAll(TVector<const T*>& objects) const SRX_NOEXCEPT;
 
+    void ForEach(std::function<void(const Type&)> func) const;
+    void ForEach(std::function<void(Type&)> func);
+
 private:
     template<class T>
     void GetAll(TVector<T*>& objects, const RuntimeClass& type) SRX_NOEXCEPT;
@@ -411,4 +414,20 @@ private:
   {
     return Find(GetRuntimeType<T>());
   }
+
+  template<class Type>
+  void TObjectContainer<Type>::ForEach(
+    std::function<void(const Type&)> func) const
+  {
+    for (const TUniquePointer<Type>& item : mContainer)
+      func(*item);  // @NOTE: item is guaranteed to be valid
+  }
+
+  template<class Type>
+  void TObjectContainer<Type>::ForEach(std::function<void(Type&)> func)
+  {
+    for (TUniquePointer<Type>& item : mContainer)
+      func(*item);  // @NOTE: item is guaranteed to be valid
+  }
+
 }  // namespace Sorex

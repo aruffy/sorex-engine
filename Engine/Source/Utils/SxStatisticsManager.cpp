@@ -25,60 +25,53 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#pragma once
-
-#include <Sorex/SxCoreMinimal.h>
-#include <Sorex/SxDirector.h>
-#include <Sorex/SxWindow.h>
-
-#include <Sorex/Containers/SxListenerContainer.h>
-
-#include "SxMouse.h"
+#include <Sorex/Utils/SxStatisticsManager.h>
 
 namespace Sorex
 {
-  class InputSystem: public Director::Component
+  StatisticsManager& StatisticsManager::GetInstance()
   {
-    SRX_RTTI(InputSystem, Director::Component)
+    static StatisticsManager instance;
+    return instance;
+  }
 
-public:
-    class IListener
+  void StatisticsManager::GetStatisticsByGroup(
+    EStatisticsGroup                 group,
+    TVector<const StatisticsValue*>& values) const
+  {
+    values.clear();
+    mProviders.ForEach([group, &values](const StatisticsProvider& provider) {
+      provider.GetStatisticsByGroup(group, values);
+    });
+  }
+
+  void StatisticsManager::OnBeginFrame(float deltaTime)
+  {
+    mProviders.ForEach([deltaTime](StatisticsProvider& provider) {
+      provider.OnBeginFrame(deltaTime);
+    });
+
+    // FIXME: Temprorary solution
+    static float accumulator = 0.0f;
+    accumulator += deltaTime;
+    constexpr float kSecond = 1000.f;
+    if (accumulator >= kSecond)
     {
-  public:
-      virtual ~IListener() = default;
-
-      virtual void OnMouseEvent(Window* window, const MouseEvent& event) {}
-      virtual void OnKeyboardEvent(Window* window) {};
-      // virtual void OnTouchEvent() {}
-    };
-
-public:
-    InputSystem()                   = default;
-    virtual ~InputSystem() override = default;
-
-    InputSystem(const InputSystem& other)            = delete;
-    InputSystem& operator=(const InputSystem& other) = delete;
-
-    // Listeners
-    SRX_INLINE bool AddListener(IListener& listener) SRX_NOEXCEPT;
-    SRX_INLINE void RemoveListener(IListener& listener) SRX_NOEXCEPT;
-
-    virtual Mouse* GetMouse() { return nullptr; }
-    // virtual Keyboard* GetKeyboard() = 0;
-    // virtual TouchScreen* GetTouchScreen() = 0;
-protected:
-    TListenerContainer<IListener> mListeners;
-
-private:
-  };
-
-  SRX_INLINE bool InputSystem::AddListener(IListener& listener) SRX_NOEXCEPT
-  {
-    return mListeners.Add(listener);
+      accumulator = 0.0f;
+      mProviders.ForEach([](const StatisticsProvider& provider) {
+        TVector<const StatisticsValue*> values;
+        provider.GetAllStatistics(values);
+        for (const StatisticsValue* value : values)
+        {
+          SRX_INFO("Statistic {}: {}", value->GetName(), value->ToString());
+        }
+      });
+    }
   }
 
-  SRX_INLINE void InputSystem::RemoveListener(IListener& listener) SRX_NOEXCEPT
+  void StatisticsManager::OnFinishFrame()
   {
-    mListeners.Remove(listener);
+    mProviders.ForEach(
+      [](StatisticsProvider& provider) { provider.OnFinishFrame(); });
   }
-}
+}  // namespace

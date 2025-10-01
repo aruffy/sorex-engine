@@ -28,57 +28,62 @@
 #pragma once
 
 #include <Sorex/SxCoreMinimal.h>
+#include <Sorex/Containers/SxObjectContainer.h>
 #include <Sorex/SxDirector.h>
-#include <Sorex/SxWindow.h>
 
-#include <Sorex/Containers/SxListenerContainer.h>
-
-#include "SxMouse.h"
+#include "SxStatisticsProvider.h"
 
 namespace Sorex
 {
-  class InputSystem: public Director::Component
+  using StatisticsValue = Statistics::Value;
+  class StatisticsManager final: public Director::IListener
   {
-    SRX_RTTI(InputSystem, Director::Component)
-
 public:
-    class IListener
+    StatisticsManager(const StatisticsManager& other)            = delete;
+    StatisticsManager& operator=(const StatisticsManager& other) = delete;
+
+    static StatisticsManager& GetInstance();
+
+    template<typename T, typename... Args>
+    T* GetOrCreateStatisticsProvider(Args&&... args)
     {
-  public:
-      virtual ~IListener() = default;
+      if (T* const provider = mProviders.Get<T>())
+        return provider;
 
-      virtual void OnMouseEvent(Window* window, const MouseEvent& event) {}
-      virtual void OnKeyboardEvent(Window* window) {};
-      // virtual void OnTouchEvent() {}
-    };
+      return mProviders.Add<T>(std::forward<Args>(args)...);
+    }
 
-public:
-    InputSystem()                   = default;
-    virtual ~InputSystem() override = default;
+    template<typename T>
+    SRX_INLINE T* GetStatisticsProvider()
+    {
+      return mProviders.Get<T>();
+    }
 
-    InputSystem(const InputSystem& other)            = delete;
-    InputSystem& operator=(const InputSystem& other) = delete;
+    // cppcheck-suppress functionConst
+    void Reset()
+    {
+      mProviders.ForEach(
+        [](StatisticsProvider& provider) { provider.ResetStatistics(); });
+    }
 
-    // Listeners
-    SRX_INLINE bool AddListener(IListener& listener) SRX_NOEXCEPT;
-    SRX_INLINE void RemoveListener(IListener& listener) SRX_NOEXCEPT;
+    void GetStatisticsByGroup(EStatisticsGroup                 group,
+                              TVector<const StatisticsValue*>& values) const;
 
-    virtual Mouse* GetMouse() { return nullptr; }
-    // virtual Keyboard* GetKeyboard() = 0;
-    // virtual TouchScreen* GetTouchScreen() = 0;
-protected:
-    TListenerContainer<IListener> mListeners;
+    template<typename T>
+    void GetStatisticsByProvider(TVector<const StatisticsValue*>& values) const
+    {
+      if (auto provider = mProviders.Get<T>())
+        provider->GetAllStatistics(values);
+    }
 
 private:
+    StatisticsManager() = default;
+
+    // API Director::IListener
+    virtual void OnBeginFrame(float deltaTime) override;
+    virtual void OnFinishFrame() override;
+
+private:
+    TObjectContainer<StatisticsProvider> mProviders;
   };
-
-  SRX_INLINE bool InputSystem::AddListener(IListener& listener) SRX_NOEXCEPT
-  {
-    return mListeners.Add(listener);
-  }
-
-  SRX_INLINE void InputSystem::RemoveListener(IListener& listener) SRX_NOEXCEPT
-  {
-    mListeners.Remove(listener);
-  }
-}
+}  // namespace Sorex

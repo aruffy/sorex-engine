@@ -79,8 +79,6 @@ public:
 
       /**
        * @brief Will be invoked when frame is being rendered.
-       *
-       * @param stage - stage of rendering.
        */
       virtual void OnRenderScene() {}
 
@@ -156,20 +154,17 @@ public:
     }
 
     // Listeners
-    SRX_INLINE bool AddListener(IListener* listener) SRX_NOEXCEPT
+    SRX_INLINE bool AddListener(IListener& listener) SRX_NOEXCEPT
     {
       return mListeners.Add(listener);
     }
 
-    SRX_INLINE void RemoveListener(IListener* listener) SRX_NOEXCEPT
+    SRX_INLINE void RemoveListener(IListener& listener) SRX_NOEXCEPT
     {
       mListeners.Remove(listener);
     }
 
     virtual void Exit() { mIsExitRequested = true; }
-
-    // virtual int32 GetFrameRate() const          = 0;
-    // virtual void  SetFrameRate(int32 frameRate) = 0;
 
 protected:
     virtual Status OnLaunch() { return SRX_OK; }

@@ -33,6 +33,12 @@
 
 namespace Sorex
 {
+  enum class EIterator
+  {
+    Forward,
+    Reverse
+  };
+
   /**
    * @brief Container stores listener in Observer programming pattern.
    *
@@ -43,60 +49,67 @@ namespace Sorex
   template<typename T>
   class TListenerContainer
   {
-    friend class Iterator;
-
 public:
     using Listener = T;
 
     /**
      * @brief Forward iterator of TListenerContainer container
      */
-    class Iterator
+    template<EIterator IteratorType = EIterator::Forward>
+    class TIterator
     {
-      friend class TListenerContainer;
+      static_assert(IteratorType == EIterator::Forward
+                      || IteratorType == EIterator::Reverse,
+                    "Invalid iterator type");
 
   public:
-      Iterator() = default;
+      SRX_INLINE explicit TIterator(TListenerContainer& list) SRX_NOEXCEPT;
+      TIterator() = default;
 
-      Iterator(const Iterator& other) SRX_NOEXCEPT;
-      Iterator& operator=(const Iterator& other) SRX_NOEXCEPT;
+      // cppcheck-suppress noExplicitConstructor
+      TIterator(const TIterator& other) SRX_NOEXCEPT;
+      TIterator& operator=(const TIterator& other) SRX_NOEXCEPT;
 
-      ~Iterator() { Reset(); }
+      ~TIterator() { Reset(); }
 
-      bool            operator==(const Iterator& rhs) const SRX_NOEXCEPT;
-      SRX_INLINE bool operator!=(const Iterator& rhs) const SRX_NOEXCEPT
+      bool operator==(const TIterator& rhs) const SRX_NOEXCEPT;
+      bool operator!=(const TIterator& rhs) const SRX_NOEXCEPT
       {
         return !(*this == rhs);
       }
 
-      Iterator& operator++() SRX_NOEXCEPT;
-      Iterator  operator++(int) SRX_NOEXCEPT;
+      TIterator& operator++() SRX_NOEXCEPT;
+      TIterator  operator++(int) SRX_NOEXCEPT;
 
-      SRX_INLINE Listener* operator*() const
-      {
-        return _list->_listeners[_index];
-      }
-
-      SRX_INLINE Listener** operator->() const
-      {
-        return &_list->_listeners[_index];
-      }
+      Listener& operator*() const SRX_NOEXCEPT;
+      Listener* operator->() const SRX_NOEXCEPT;
 
   private:
-      SRX_INLINE explicit Iterator(TListenerContainer* list) SRX_NOEXCEPT;
-
       void Init() SRX_NOEXCEPT;
       void Reset() SRX_NOEXCEPT;
       void Next() SRX_NOEXCEPT;
 
-      SRX_INLINE bool IsEnd() const SRX_NOEXCEPT
+      SRX_INLINE bool HasValidIndex() const SRX_NOEXCEPT
       {
-        return !_list || _index >= _list->_listeners.size();
+        return mIndex >= 0
+               && mIndex < static_cast<int32>(mContainer->mListeners.size());
       }
 
-      TListenerContainer* _list  = nullptr;
-      size_t              _index = 0;
+      SRX_INLINE bool IsEnd() const SRX_NOEXCEPT
+      {
+        return !mContainer || !HasValidIndex();
+      }
+
+      TListenerContainer* mContainer = nullptr;
+      int32               mIndex     = -1;
     };
+
+private:
+    template<EIterator IteratorType>
+    friend class TIterator;
+
+    using Iterator        = TIterator<EIterator::Forward>;
+    using ReverseIterator = TIterator<EIterator::Reverse>;
 
 public:
     TListenerContainer() = default;
@@ -116,19 +129,19 @@ public:
      * @param listener - checked listener
      * @return True if container has a listener
      */
-    bool Contains(const Listener* listener) const SRX_NOEXCEPT;
+    bool Contains(const Listener& listener) const SRX_NOEXCEPT;
 
     /**
      * @brief Check if container is empty.
      *
      * @return True if container has no listeners.
      */
-    bool IsEmpty() const SRX_NOEXCEPT { return _listenersNumber == 0u; }
+    bool IsEmpty() const SRX_NOEXCEPT { return mListenersNumber == 0u; }
 
     /**
      * @return number of listeners which are stored into container.
      */
-    size_t GetSize() const SRX_NOEXCEPT { return _listenersNumber; }
+    size_t GetSize() const SRX_NOEXCEPT { return mListenersNumber; }
 
     /**
      * @brief Add new listener to the container.
@@ -136,75 +149,78 @@ public:
      * @param listener - added listener
      * @return True is listener was successfully added to container.
      */
-    bool Add(Listener* listener) SRX_NOEXCEPT;
+    bool Add(Listener& listener) SRX_NOEXCEPT;
 
     /**
      * @brief Remove the listener from the container.
      *
      * @param listener - removed listener
      */
-    void Remove(Listener* listener) SRX_NOEXCEPT;
+    void Remove(Listener& listener) SRX_NOEXCEPT;
 
-    SRX_INLINE Iterator begin() SRX_NOEXCEPT { return Iterator(this); }
+    SRX_INLINE Iterator begin() SRX_NOEXCEPT { return Iterator(*this); }
     // cppcheck-suppress functionStatic
     SRX_INLINE Iterator end() SRX_NOEXCEPT { return Iterator(); }
+
+    SRX_INLINE ReverseIterator rbegin() SRX_NOEXCEPT
+    {
+      return ReverseIterator(*this);
+    }
+    // cppcheck-suppress functionStatic
+    SRX_INLINE ReverseIterator rend() SRX_NOEXCEPT { return ReverseIterator(); }
 
     template<typename Fn>
     SRX_INLINE void Notify(Fn&& callback) const
     {
-      for (Listener* listener : (*this))
+      for (Listener& listener : (*this))
       {
-        SRX_CHECK(listener);  // NOTE: iterator takes valid listener
-        callback(*listener);
+        callback(listener);
       }
     }
 
 private:
     void Cleanup() SRX_NOEXCEPT;
 
-    TVector<Listener*> _listeners;
+    TVector<Listener*> mListeners;
 
-    size_t _iteratorsNumber = 0u;
-    size_t _listenersNumber = 0u;
+    size_t mIteratorsNumber = 0u;
+    size_t mListenersNumber = 0u;
 
-    bool _isCleanupNeeded = false;
+    bool mIsCleabupNeeded = false;
   };
 
   template<typename T>
   void TListenerContainer<T>::Clear() SRX_NOEXCEPT
   {
-    _listenersNumber = 0;
-    if (_iteratorsNumber) [[unlikely]]
+    mListenersNumber = 0;
+    if (mIteratorsNumber) [[unlikely]]
     {
-      _isCleanupNeeded = true;
-      for (size_t i = 0; i < _listeners.size(); ++i)
-        _listeners[i] = nullptr;
+      mIsCleabupNeeded = true;
+      for (size_t i = 0; i < mListeners.size(); ++i)
+        mListeners[i] = nullptr;
     }
     else
     {
-      _listeners.clear();
+      mListeners.clear();
     }
   }
 
   template<typename T>
-  bool TListenerContainer<T>::Contains(const Listener* listener) const
+  bool TListenerContainer<T>::Contains(const Listener& listener) const
     SRX_NOEXCEPT
   {
-    if (!listener)
-      return false;
-
-    auto it = std::find(_listeners.begin(), _listeners.end(), listener);
-    return it != _listeners.end();
+    auto it = std::find(mListeners.begin(), mListeners.end(), &listener);
+    return it != mListeners.end();
   }
 
   template<typename T>
-  bool TListenerContainer<T>::Add(Listener* listener) SRX_NOEXCEPT
+  bool TListenerContainer<T>::Add(Listener& listener) SRX_NOEXCEPT
   {
     SRX_CHECK(!Contains(listener));
-    if (listener && !Contains(listener))
+    if (!Contains(listener))
     {
-      _listeners.push_back(listener);
-      ++_listenersNumber;
+      mListeners.push_back(&listener);
+      ++mListenersNumber;
 
       return true;
     }
@@ -213,71 +229,79 @@ private:
   }
 
   template<typename T>
-  void TListenerContainer<T>::Remove(Listener* listener) SRX_NOEXCEPT
+  void TListenerContainer<T>::Remove(Listener& listener) SRX_NOEXCEPT
   {
-    if (!listener)
-      return;
-
-    if (auto it = std::find(_listeners.begin(), _listeners.end(), listener);
-        it != _listeners.end())
+    if (auto it = std::find(mListeners.begin(), mListeners.end(), &listener);
+        it != mListeners.end())
     {
-      if (_iteratorsNumber) [[unlikely]]
+      if (mIteratorsNumber) [[unlikely]]
       {
         *it              = nullptr;
-        _isCleanupNeeded = true;
+        mIsCleabupNeeded = true;
       }
       else
       {
-        _listeners.erase(it);
+        mListeners.erase(it);
       }
 
-      --_listenersNumber;
+      --mListenersNumber;
     }
   }
 
   template<typename T>
   void TListenerContainer<T>::Cleanup() SRX_NOEXCEPT
   {
-    SRX_ASSERT(_iteratorsNumber == 0u);
+    SRX_ASSERT(mIteratorsNumber == 0u);
 
-    if (_isCleanupNeeded)
+    if (mIsCleabupNeeded)
     {
-      _listeners.erase(
-        std::remove(_listeners.begin(), _listeners.end(), nullptr),
-        _listeners.end());
-      _listenersNumber = _listeners.size();
-      _isCleanupNeeded = false;
+      mListeners.erase(
+        std::remove(mListeners.begin(), mListeners.end(), nullptr),
+        mListeners.end());
+
+      mListenersNumber = mListeners.size();
+      mIsCleabupNeeded = false;
     }
   }
 
   // Iterator
   template<typename T>
-  TListenerContainer<T>::Iterator::Iterator(TListenerContainer* list)
-    SRX_NOEXCEPT
-    : _list(list)
-    , _index(0u)
+  template<EIterator IteratorType>
+  TListenerContainer<T>::TIterator<IteratorType>::TIterator(
+    TListenerContainer& list) SRX_NOEXCEPT
+    : mContainer(&list)
+    , mIndex(-1)
+  {
+    if (IteratorType == EIterator::Forward)
+      mIndex = 0;
+    else
+      mIndex = static_cast<int32>(list.mListeners.size()) - 1;
+
+    Init();
+  }
+
+  template<typename T>
+  template<EIterator IteratorType>
+  TListenerContainer<T>::TIterator<IteratorType>::TIterator(
+    const TIterator& other) SRX_NOEXCEPT
+    : mContainer(other.mContainer)
+    , mIndex(other.mIndex)
   {
     Init();
   }
 
   template<typename T>
-  TListenerContainer<T>::Iterator::Iterator(const Iterator& other) SRX_NOEXCEPT
-    : _list(other._list)
-    , _index(other._index)
-  {
-    Init();
-  }
-
-  template<typename T>
-  typename TListenerContainer<T>::Iterator&
-  TListenerContainer<T>::Iterator::operator=(const Iterator& other) SRX_NOEXCEPT
+  template<EIterator IteratorType>
+  typename TListenerContainer<T>::TIterator<IteratorType>&
+  TListenerContainer<T>::TIterator<IteratorType>::operator=(
+    const TIterator& other) SRX_NOEXCEPT
   {
     if (this != &other)
     {
       Reset();
 
-      _index = other._index;
-      _list  = other._list;
+      mIndex     = other.mIndex;
+      mContainer = other.mContainer;
 
       Init();
     }
@@ -286,70 +310,97 @@ private:
   }
 
   template<typename T>
-  bool TListenerContainer<T>::Iterator::operator==(const Iterator& other) const
-    SRX_NOEXCEPT
+  template<EIterator IteratorType>
+  bool TListenerContainer<T>::TIterator<IteratorType>::operator==(
+    const TIterator& other) const SRX_NOEXCEPT
   {
     if (IsEnd() && other.IsEnd())
       return true;
 
-    return (_index == other._index && _list == other._list);
+    return (mIndex == other.mIndex && mContainer == other.mContainer);
   }
 
   template<typename T>
-  typename TListenerContainer<T>::Iterator&
-  TListenerContainer<T>::Iterator::operator++() SRX_NOEXCEPT
+  template<EIterator IteratorType>
+  typename TListenerContainer<T>::TIterator<IteratorType>&
+  TListenerContainer<T>::TIterator<IteratorType>::operator++() SRX_NOEXCEPT
   {
     Next();
     return *this;
   }
 
   template<typename T>
-  typename TListenerContainer<T>::Iterator
-  TListenerContainer<T>::Iterator::operator++(int) SRX_NOEXCEPT
+  template<EIterator IteratorType>
+  typename TListenerContainer<T>::TIterator<IteratorType>
+  TListenerContainer<T>::TIterator<IteratorType>::operator++(int) SRX_NOEXCEPT
   {
-    Iterator it = *this;
+    TIterator it = *this;
     Next();
     return it;
   }
 
   template<typename T>
-  void TListenerContainer<T>::Iterator::Init() SRX_NOEXCEPT
+  template<EIterator IteratorType>
+  void TListenerContainer<T>::TIterator<IteratorType>::Init() SRX_NOEXCEPT
   {
-    if (_list)
-    {
-      _list->_iteratorsNumber++;
-      if (_index < _list->_listeners.size() && !_list->_listeners[_index])
-        Next();
-    }
-  }
-
-  template<typename T>
-  void TListenerContainer<T>::Iterator::Reset() SRX_NOEXCEPT
-  {
-    if (_list)
-    {
-      SRX_ASSERT(_list->_iteratorsNumber > 0);
-      _list->_iteratorsNumber--;
-
-      if (_list->_iteratorsNumber == 0u)
-        _list->Cleanup();
-    }
-
-    _list  = nullptr;
-    _index = 0;
-  }
-
-
-  template<typename T>
-  void TListenerContainer<T>::Iterator::Next() SRX_NOEXCEPT
-  {
-    if (_list == nullptr)
+    if (!mContainer)
       return;
 
-    const size_t size = _list->_listeners.size();
+    mContainer->mIteratorsNumber++;
+
+    if (HasValidIndex() && !mContainer->mListeners[mIndex])
+      Next();
+  }
+
+  template<typename T>
+  template<EIterator IteratorType>
+  void TListenerContainer<T>::TIterator<IteratorType>::Reset() SRX_NOEXCEPT
+  {
+    if (mContainer)
+    {
+      SRX_ASSERT(mContainer->mIteratorsNumber > 0);
+      mContainer->mIteratorsNumber--;
+
+      if (mContainer->mIteratorsNumber == 0)
+        mContainer->Cleanup();
+    }
+
+    mContainer = nullptr;
+    mIndex     = -1;
+  }
+
+  template<typename T>
+  template<EIterator IteratorType>
+  void TListenerContainer<T>::TIterator<IteratorType>::Next() SRX_NOEXCEPT
+  {
+    SRX_CHECK(mContainer);
+
     do
     {
-      ++_index;
-    } while (_index < size && _list->_listeners[_index] == nullptr);
+      if constexpr (IteratorType == EIterator::Forward)
+        ++mIndex;
+      else
+        --mIndex;
+
+    } while (HasValidIndex() && mContainer->mListeners[mIndex] == nullptr);
   }
-}
+
+  template<typename T>
+  template<EIterator IteratorType>
+  typename TListenerContainer<T>::Listener&
+  TListenerContainer<T>::TIterator<IteratorType>::operator*() const SRX_NOEXCEPT
+  {
+    SRX_CHECK(mContainer && HasValidIndex() && mContainer->mListeners[mIndex]);
+    return *(mContainer->mListeners[mIndex]);
+  }
+
+  template<typename T>
+  template<EIterator IteratorType>
+  typename TListenerContainer<T>::Listener*
+  TListenerContainer<T>::TIterator<IteratorType>::operator->() const
+    SRX_NOEXCEPT
+  {
+    SRX_CHECK(mContainer && HasValidIndex() && mContainer->mListeners[mIndex]);
+    return mContainer->mListeners[mIndex];
+  }
+}  // namespace Sorex

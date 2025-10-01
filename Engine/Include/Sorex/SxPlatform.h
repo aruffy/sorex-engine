@@ -88,6 +88,10 @@ namespace Sorex
 #  endif
 #endif
 
+#if !defined(SOREX_DEBUG_NONE) && defined(SOREX_ENVIRONMENT_DEVELOPMENT)
+#  define SOREX_MONITORING (1)
+#endif
+
 // Finds current platform
 #if defined(__WIN32__) || defined(_WIN32) || defined(TARGET_PLATFORM_WINDOWS)
 #  define SOREX_TARGET_PLATFORM (::Sorex::ETargetPlatform::Win32)

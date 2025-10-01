@@ -31,6 +31,10 @@
 #include <Sorex/SxThread.h>
 #include <Sorex/Graphics/SxCanvas.h>
 
+#ifdef SOREX_MONITORING
+#  include <Sorex/Utils/SxStatisticsManager.h>
+#endif
+
 namespace Sorex
 {
   Director::Director() SRX_NOEXCEPT
@@ -42,13 +46,13 @@ namespace Sorex
   Director::~Director()
   {}
 
-  int32 mFrameRate;
-  float mDeltaTime;
-  bool  mIsExitRequested;
-
   Status Director::Initialize()
   {
     SRX_CLSFUN_TRACE();
+
+#ifdef SOREX_MONITORING
+    AddListener(StatisticsManager::GetInstance());
+#endif
 
     Graphics::RenderDevice* renderDevice =
       GetComponent<Graphics::RenderDevice>();
@@ -86,6 +90,10 @@ namespace Sorex
     }
 
     mComponents.Clear();
+
+#ifdef SOREX_MONITORING
+    RemoveListener(StatisticsManager::GetInstance());
+#endif
   }
 
   void Director::MainLoop()
@@ -107,8 +115,8 @@ namespace Sorex
 
     while (!mIsExitRequested)
     {
-      for (IListener* listener : mListeners)
-        listener->OnBeginFrame(mDeltaTime);
+      for (IListener& listener : mListeners)
+        listener.OnBeginFrame(mDeltaTime);
 
       for (auto& cmp : mComponents)
       {
@@ -123,9 +131,8 @@ namespace Sorex
 
       RenderScene();
 
-      // @TODO: call in reverse order
-      for (IListener* listener : mListeners)
-        listener->OnFinishFrame();
+      for (auto it = mListeners.rbegin(); it != mListeners.rend(); ++it)
+        it->OnFinishFrame();
 
       tmNow      = Time::GetSteadyCounter();
       tmInterval = tmNow - tmLast;
@@ -149,13 +156,17 @@ namespace Sorex
                                       / static_cast<double>(tmFrequency));
     }
 
-    for (IListener* listener : mListeners)
-      listener->OnExit();
+    for (IListener& listener : mListeners)
+      listener.OnExit();
   }
 
   void Director::RenderScene()
   {
     SRX_CHECK(mCanvas);
+
+    for (IListener& listener : mListeners)
+      listener.OnRenderScene();
+
     mCanvas->Clear();
     OnDraw(*mCanvas);
     mCanvas->Flush();

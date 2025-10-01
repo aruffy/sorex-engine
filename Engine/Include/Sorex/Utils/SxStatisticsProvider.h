@@ -28,57 +28,53 @@
 #pragma once
 
 #include <Sorex/SxCoreMinimal.h>
-#include <Sorex/SxDirector.h>
-#include <Sorex/SxWindow.h>
-
-#include <Sorex/Containers/SxListenerContainer.h>
-
-#include "SxMouse.h"
+#include <Sorex/Utils/SxStatisticsValue.h>
 
 namespace Sorex
 {
-  class InputSystem: public Director::Component
+  enum class EStatisticsGroup
   {
-    SRX_RTTI(InputSystem, Director::Component)
-
-public:
-    class IListener
-    {
-  public:
-      virtual ~IListener() = default;
-
-      virtual void OnMouseEvent(Window* window, const MouseEvent& event) {}
-      virtual void OnKeyboardEvent(Window* window) {};
-      // virtual void OnTouchEvent() {}
-    };
-
-public:
-    InputSystem()                   = default;
-    virtual ~InputSystem() override = default;
-
-    InputSystem(const InputSystem& other)            = delete;
-    InputSystem& operator=(const InputSystem& other) = delete;
-
-    // Listeners
-    SRX_INLINE bool AddListener(IListener& listener) SRX_NOEXCEPT;
-    SRX_INLINE void RemoveListener(IListener& listener) SRX_NOEXCEPT;
-
-    virtual Mouse* GetMouse() { return nullptr; }
-    // virtual Keyboard* GetKeyboard() = 0;
-    // virtual TouchScreen* GetTouchScreen() = 0;
-protected:
-    TListenerContainer<IListener> mListeners;
-
-private:
+    System,
+    Engine,
+    Graphics,
+    // Audio
+    // Application,
+    // Network
   };
-
-  SRX_INLINE bool InputSystem::AddListener(IListener& listener) SRX_NOEXCEPT
+  class StatisticsProvider
   {
-    return mListeners.Add(listener);
-  }
+    SRX_RTTI_BASE(StatisticsProvider);
 
-  SRX_INLINE void InputSystem::RemoveListener(IListener& listener) SRX_NOEXCEPT
-  {
-    mListeners.Remove(listener);
-  }
-}
+public:
+    virtual ~StatisticsProvider() = default;
+
+    /**
+     * @brief Retrieve all statistics values provided by this provider.
+     *
+     * @param outValues Vector to be filled with pointers to statistics values.
+     */
+    virtual void GetAllStatistics(
+      TVector<const Statistics::Value*>& outValues) const = 0;
+
+    /**
+     * @brief Retrieve statistics values belonging to a specific group.
+     *
+     * @param group The statistics group to filter by.
+     * @param outValues Vector to be filled with pointers to statistics values.
+     */
+    virtual void GetStatisticsByGroup(
+      EStatisticsGroup                   group,
+      TVector<const Statistics::Value*>& outValues) const = 0;
+
+    /**
+     * @brief Reset all statistics values to their initial state.
+     *
+     * This function is called when statistics need to be cleared or
+     * reinitialized.
+     */
+    virtual void ResetStatistics() = 0;
+
+    virtual void OnBeginFrame(float deltaTime) {};
+    virtual void OnFinishFrame() {};
+  };
+}  // namespace Sorex

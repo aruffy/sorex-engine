@@ -13,6 +13,7 @@
         "CMAKE_CXX_COMPILER": "cl.exe",
         "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
         "SOREX_STATIC_LIBRARY": "ON",
+        "SRXENG_ENVIRONMENT": "DEV",
         "TRACE": "ON"
       }
     },
@@ -48,6 +49,7 @@
         "CMAKE_CXX_COMPILER": "/usr/bin/clang++",
         "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
         "SRXENG_ADDRESS_SANITIZER": "ON",
+        "SRXENG_ENVIRONMENT": "DEV",
         "TRACE": "ON"
       }
     },

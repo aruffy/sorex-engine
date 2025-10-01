@@ -25,60 +25,53 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#pragma once
-
-#include <Sorex/SxCoreMinimal.h>
-#include <Sorex/SxDirector.h>
-#include <Sorex/SxWindow.h>
-
-#include <Sorex/Containers/SxListenerContainer.h>
-
-#include "SxMouse.h"
+#include "GLStatisticsProvider.h"
 
 namespace Sorex
 {
-  class InputSystem: public Director::Component
-  {
-    SRX_RTTI(InputSystem, Director::Component)
+  GLStatisticsProvider::GLStatisticsProvider()
+    : mDrawCalls("Draw Calls")
+    , mFramesPerSecond("FPS")
+    , mTimer(0.f)
+  {}
 
-public:
-    class IListener
+  void GLStatisticsProvider::GetAllStatistics(
+    TVector<const Statistics::Value*>& outValues) const
+  {
+    outValues.push_back(&mDrawCalls);
+    outValues.push_back(&mFramesPerSecond);
+  }
+
+  void GLStatisticsProvider::GetStatisticsByGroup(
+    EStatisticsGroup                   group,
+    TVector<const Statistics::Value*>& outValues) const
+  {
+    if (group == EStatisticsGroup::Graphics)
+      GetAllStatistics(outValues);
+  }
+
+  void GLStatisticsProvider::ResetStatistics()
+  {
+    mDrawCalls.Reset();
+    mFramesPerSecond.Reset();
+    mTimer = 0.f;
+  }
+
+  void GLStatisticsProvider::OnBeginFrame(const float deltaTime)
+  {
+    mTimer += deltaTime;
+    mFramesPerSecond.Increase();
+  }
+
+  void GLStatisticsProvider::OnFinishFrame()
+  {
+    mDrawCalls.Reset();
+
+    constexpr float kSecond = 1000.f;
+    if (mTimer >= kSecond)
     {
-  public:
-      virtual ~IListener() = default;
-
-      virtual void OnMouseEvent(Window* window, const MouseEvent& event) {}
-      virtual void OnKeyboardEvent(Window* window) {};
-      // virtual void OnTouchEvent() {}
-    };
-
-public:
-    InputSystem()                   = default;
-    virtual ~InputSystem() override = default;
-
-    InputSystem(const InputSystem& other)            = delete;
-    InputSystem& operator=(const InputSystem& other) = delete;
-
-    // Listeners
-    SRX_INLINE bool AddListener(IListener& listener) SRX_NOEXCEPT;
-    SRX_INLINE void RemoveListener(IListener& listener) SRX_NOEXCEPT;
-
-    virtual Mouse* GetMouse() { return nullptr; }
-    // virtual Keyboard* GetKeyboard() = 0;
-    // virtual TouchScreen* GetTouchScreen() = 0;
-protected:
-    TListenerContainer<IListener> mListeners;
-
-private:
-  };
-
-  SRX_INLINE bool InputSystem::AddListener(IListener& listener) SRX_NOEXCEPT
-  {
-    return mListeners.Add(listener);
+      mTimer = 0.f;
+      mFramesPerSecond.Reset();
+    }
   }
-
-  SRX_INLINE void InputSystem::RemoveListener(IListener& listener) SRX_NOEXCEPT
-  {
-    mListeners.Remove(listener);
-  }
-}
+}  // namespace Sorex
