@@ -167,7 +167,7 @@ namespace Sorex::Graphics
     }
 
     const float step   = (float)mSdfMetrics.pxlDistScale / scale;
-    const float pixels = std::floorf((float)mSdfMetrics.onedge / step);
+    const float pixels = std::floor((float)mSdfMetrics.onedge / step);
     const uint8 thickness =
       std::min(outline.thickness, static_cast<uint8>(pixels));
 
@@ -216,7 +216,7 @@ namespace Sorex::Graphics
               mTechnique.program->SetTexture(0, *mTexture, nullptr);
             s != SRX_OK)
         {
-          SRX_NOEXCEPT(s.ToString());
+          SRX_NOENTRY(s.ToString().c_str());
           return false;
         }
       }

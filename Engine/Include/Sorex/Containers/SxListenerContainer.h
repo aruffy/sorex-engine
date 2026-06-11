@@ -292,7 +292,7 @@ private:
 
   template<typename T>
   template<EIterator IteratorType>
-  typename TListenerContainer<T>::TIterator<IteratorType>&
+  typename TListenerContainer<T>::template TIterator<IteratorType>&
   TListenerContainer<T>::TIterator<IteratorType>::operator=(
     const TIterator& other) SRX_NOEXCEPT
   {
@@ -322,7 +322,7 @@ private:
 
   template<typename T>
   template<EIterator IteratorType>
-  typename TListenerContainer<T>::TIterator<IteratorType>&
+  typename TListenerContainer<T>::template TIterator<IteratorType>&
   TListenerContainer<T>::TIterator<IteratorType>::operator++() SRX_NOEXCEPT
   {
     Next();
@@ -331,7 +331,7 @@ private:
 
   template<typename T>
   template<EIterator IteratorType>
-  typename TListenerContainer<T>::TIterator<IteratorType>
+  typename TListenerContainer<T>::template TIterator<IteratorType>
   TListenerContainer<T>::TIterator<IteratorType>::operator++(int) SRX_NOEXCEPT
   {
     TIterator it = *this;

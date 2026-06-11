@@ -6,7 +6,6 @@ cmake_policy(SET CMP0077 NEW)
 
 # Skip libraries installation
 set(SKIP_INSTALL_ALL ON)
-
 set(THIRD_PARTY_LIBRARIES "")
 
 # ##############################################################################
@@ -18,6 +17,7 @@ message(STATUS "[${SPDLOG_SUBDIR}] subdir build")
 if(NOT SOREX_STATIC_LIBRARY)
   message(VERBOSE "[ThirdParty] spdlog enable fPIC compile flag")
   set(SPDLOG_BUILD_PIC CACHE BOOL "[SPDLOG] Build position independent code" ON)
+  set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 endif()
 
 add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/${SPDLOG_SUBDIR}")
@@ -83,6 +83,10 @@ set(GLFW_INSTALL
 set(GLFW_BUILD_WAYLAND
     OFF
     CACHE BOOL "Build support for Wayland"
+)
+set(GLFW_BUILD_X11
+    ON
+    CACHE BOOL "Build support for X11"
 )
 
 message(CHECK_START "[${GLFW_SUBDIR}] subdir build")

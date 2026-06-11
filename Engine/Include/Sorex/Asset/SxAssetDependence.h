@@ -110,7 +110,7 @@ public:
 
       if (index < 0 || index >= static_cast<int32>(dictIt->second.size()))
       {
-        SRX_NOENTRY(__FILE__ "invalid asset index");
+        SRX_NOENTRY("invalid asset index");
         return nullptr;
       }
 
@@ -130,16 +130,16 @@ public:
     {
       assets.clear();
       const RuntimeClass* rt = GetRuntimeType<T>();
-      auto                it = mResources.find(rt);
+      auto                it = mResources.find(rt->GetHash());
 
       if (it == mResources.end())
         return;
 
       assets.reserve(it->second.size());
-      for (const auto& [_, dep] : it->second)
+      for (const auto& dep : it->second)
       {
         if (dep.asset)
-          assets.push_back(std::move(static_cast<const T*>(dep.asset.get())));
+          assets.push_back(static_cast<const T*>(dep.asset.get()));
       }
     }
 
