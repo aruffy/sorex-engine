@@ -216,7 +216,7 @@ namespace Sorex::Graphics
               mTechnique.program->SetTexture(0, *mTexture, nullptr);
             s != SRX_OK)
         {
-          SRX_NOEXCEPT(s.ToString());
+          SRX_NOENTRY(s.ToString().c_str());
           return false;
         }
       }

@@ -296,7 +296,7 @@ private:
   {
     if (this == &other)
     {
-      SRX_NOEXCEPT("operatorEqToSelf");
+      SRX_NOENTRY("operatorEqToSelf");
       return *this;
     }
 
@@ -348,7 +348,7 @@ private:
   {
     if (this == &other)
     {
-      SRX_NOEXCEPT("operatorEqToSelf");
+      SRX_NOENTRY("operatorEqToSelf");
       return *this;
     }
 

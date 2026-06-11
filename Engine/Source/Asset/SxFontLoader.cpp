@@ -25,7 +25,6 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#pragma once
 
 #include <Sorex/Asset/SxFontLoader.h>
 #include <Sorex/Graphics/SxTexture2D.h>
