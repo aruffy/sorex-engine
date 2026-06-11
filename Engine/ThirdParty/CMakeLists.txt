@@ -81,11 +81,11 @@ set(GLFW_INSTALL
 
 # Force to use X11, Debian: `apt-get install xorg-dev` @see GLFW Documentation
 set(GLFW_BUILD_WAYLAND
-    ON
+    OFF
     CACHE BOOL "Build support for Wayland"
 )
 set(GLFW_BUILD_X11
-    OFF
+    ON
     CACHE BOOL "Build support for X11"
 )
 
