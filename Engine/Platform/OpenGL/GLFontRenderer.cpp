@@ -167,7 +167,7 @@ namespace Sorex::Graphics
     }
 
     const float step   = (float)mSdfMetrics.pxlDistScale / scale;
-    const float pixels = std::floorf((float)mSdfMetrics.onedge / step);
+    const float pixels = std::floor((float)mSdfMetrics.onedge / step);
     const uint8 thickness =
       std::min(outline.thickness, static_cast<uint8>(pixels));
 
