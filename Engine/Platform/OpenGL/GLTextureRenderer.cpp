@@ -1,0 +1,210 @@
+/**************************************************************************/
+/*                         This file is part of:                          */
+/*                                SOREX                                   */
+/*                 Simple OpenGL Rendering Engine eXtended                */
+/**************************************************************************/
+/* Copyright (c) 2022 Aleksandr Ershov (Ruffy).                           */
+/*                                                                        */
+/* Permission is hereby granted, free of charge, to any person obtaining  */
+/* a copy of this software and associated documentation files (the        */
+/* "Software"), to deal in the Software without restriction, including    */
+/* without limitation the rights to use, copy, modify, merge, publish,    */
+/* distribute, sublicense, and/or sell copies of the Software, and to     */
+/* permit persons to whom the Software is furnished to do so, subject to  */
+/* the following conditions:                                              */
+/*                                                                        */
+/* The above copyright notice and this permission notice shall be         */
+/* included in all copies or substantial portions of the Software.        */
+/*                                                                        */
+/* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,        */
+/* EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF     */
+/* MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. */
+/* IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY   */
+/* CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,   */
+/* TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE      */
+/* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
+/**************************************************************************/
+
+#include "GLTextureRenderer.h"
+#include "GLRenderDevice.h"
+
+namespace Sorex::Graphics
+{
+  GLTextureRenderer::GLTextureRenderer(GLRenderDevice& glRenderDevice,
+                                       size_t          maxQuadNumber)
+    : mQuadBatch(glRenderDevice, maxQuadNumber)
+    , mActiveTexture(nullptr)
+    , mPencil(nullptr)
+  {}
+
+  Status GLTextureRenderer::Initialize() SRX_NOEXCEPT
+  {
+    SRX_CLSFUN_TRACE();
+
+    Status status = SRX_STATUS(EStatusCode::Invalid_State);
+    if (const auto glDevice = GetRenderDevice())
+    {
+      mShaderProgram =
+        GLShaderProgram::Create(*glDevice,
+                                OpenGL::Shader::kTextureVertexShaderSource,
+                                OpenGL::Shader::kTextureFragmentShaderSource,
+                                status);
+    }
+
+    mRenderTechnique.program = mShaderProgram.get();
+    return status;
+  }
+
+  Status GLTextureRenderer::Activate(const CanvasPencil* pencil) SRX_NOEXCEPT
+  {
+    GLRenderDevice* glDevice = GetRenderDevice();
+    if (!glDevice || !mShaderProgram)
+      return SRX_STATUS(EStatusCode::Invalid_Format);
+
+    Reset();
+
+    mPencil                    = pencil;
+    mRenderTechnique.blendMode = mPencil ? mPencil->blendMode : BlendMode::None;
+    return glDevice->ApplyRenderTechnique(mRenderTechnique);
+  }
+
+  void GLTextureRenderer::Flush() SRX_NOEXCEPT
+  {
+    if (auto status = mQuadBatch.Flush(); !status.Ok())
+      SRX_WARN("[GLTextureRenderer] Missed draw call: {}", status.ToString());
+  }
+
+  void GLTextureRenderer::Reset() SRX_NOEXCEPT
+  {
+    mActiveTexture = nullptr;
+    mQuadBatch.Clear();
+  }
+
+  void GLTextureRenderer::DrawTexture(const Texture2D* texture,
+                                      const Point&     position,
+                                      Color            color) SRX_NOEXCEPT
+  {
+    if (texture == nullptr)
+      return;
+
+    Rect rect = texture->GetContentRect();
+    rect.ToArray(mTexPoints);
+
+    rect.SetLocation(position);
+    rect.ToArray(mScreenPoints);
+
+    DrawQuad(texture, color);
+  }
+
+  void GLTextureRenderer::DrawTexture(const Texture2D* texture,
+                                      const Point&     position,
+                                      const Vec2&      scale,
+                                      EAnchorPoint     anchor,
+                                      scalar_t         rotation,
+                                      Color            color) SRX_NOEXCEPT
+  {
+    if (!texture)
+      return;
+
+    Rect rect = texture->GetContentRect();
+    rect.ToArray(mTexPoints);
+
+    rect.SetLocation(0.f, 0.f);
+    rect.ToArray(mScreenPoints);
+
+    const Vec2  anchorVec = Graphics::Utils::ToVec2(anchor);
+    const Point shift(anchorVec.x * rect.width, anchorVec.y * rect.height);
+    const Mat3  m = Mat3::Create(Vec2(position.x + shift.x * scale.x,
+                                     position.y + shift.y * scale.y),
+                                Math::Radians(rotation),
+                                scale)
+                   * Mat3::Translation(-shift.x, -shift.y);
+
+    for (Point& sp : mScreenPoints)
+      sp = Mat3::Transform(m, sp);
+
+    DrawQuad(texture, color);
+  }
+
+  void GLTextureRenderer::DrawTexture(const Texture2D* texture,
+                                      const Rect&      texRect,
+                                      const Point&     position,
+                                      Color            color) SRX_NOEXCEPT
+  {
+    if (!texture || !texture->GetContentRect().Contains(texRect))
+    {
+      SRX_NOENTRY("invalid texture region");
+      return;
+    }
+
+    texRect.ToArray(mTexPoints);
+    Rect(position, texRect.GetSize()).ToArray(mScreenPoints);
+
+    DrawQuad(texture, color);
+  }
+
+  /*void GLTextureRenderer::DrawSprite(const Sprite* sprite)
+  {
+     const Graphics::Texture2D* texture =
+      sprite ? sprite->GetTexture() : nullptr;
+    if (texture == nullptr)
+      return;
+
+    const Point pos     = sprite->GetPosition();
+    const Vec2& scale   = sprite->GetScale();
+    const Rect& texRect = sprite->GetContentRect();
+    texRect.ToArray(_texPoints);
+    Rect(Point(0.f, 0.f), texRect.GetSize()).ToArray(_screenPoints);
+
+    RFY_CHECK(texture->GetContentRect() == texRect
+              || texture->GetContentRect().Contains(texRect));
+    RFY_CHECK(scale != Vec2::Zero());
+
+    Mat3 transform;
+    if (const float rotation = sprite->GetRotation())
+    {
+      const Vec2 anchor = Ruffy::Utils::ToVector(sprite->GetAnchorPoint());
+      const Vec2 offset(anchor.x * texRect.width, anchor.y * texRect.height);
+      transform = Mat3::Create(Vec2(pos.x + offset.x * scale.x,
+                                    pos.y + offset.y * scale.y),
+                               Math::Radians(rotation),
+                               scale)
+                  * Mat3::Translation(-offset.x, -offset.y);
+    }
+    else
+    {
+      transform = Mat3::Identity();
+      transform.Translate(pos.x, pos.y);
+      transform.Scale(scale);
+    }
+
+    for (Point& sp : _screenPoints)
+      sp = Mat3::Transform(transform, sp);
+
+    DrawQuad(texture, sprite->GetColor());
+  }  */
+
+  void GLTextureRenderer::DrawQuad(const Texture2D* texture, Color color)
+  {
+    if (mActiveTexture != texture)
+    {
+      Flush();
+
+      // TODO: Adjust sampler without changing texture.
+      const TextureSampler* sampler = mPencil ? &mPencil->texSampler : nullptr;
+      if (texture && mShaderProgram->SetTexture(0, *texture, sampler).Ok())
+        mActiveTexture = texture;
+      else
+        mActiveTexture = nullptr;
+    }
+
+    if (mPencil && mPencil->transform.has_value())
+    {
+      for (Point& sp : mScreenPoints)  // cppcheck-suppress useStlAlgorithm
+        sp = Mat3::Transform(*(mPencil->transform), sp);
+    }
+
+    SRX_CHECK_MSG(mActiveTexture, "no texture to draw");
+    mQuadBatch.Draw(mTexPoints, mScreenPoints, color);
+  }
+}  // namespace

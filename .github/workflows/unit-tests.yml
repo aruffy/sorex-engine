@@ -1,0 +1,116 @@
+name: Engine Unit Tests
+
+permissions:
+  contents: read
+  checks: write
+
+on:
+  pull_request:
+    branches: ["main", "release/**"]
+  push:
+    branches: ["main", "develop"]
+
+env:
+  CI_ENGINE_GTEST_EXE: SorexEngineUnitTests
+
+jobs:
+  unit-tests-unix:
+    runs-on: ubuntu-latest
+
+    env:
+      CI_BUILD_TEST_PRESET: "unit_tests"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+            submodules: recursive
+
+      - name: Set up Clang
+        run: |
+          sudo apt-get update
+          sudo apt-get -y install clang cmake libgtest-dev libgmock-dev xorg-dev
+
+      - name: Configure CMake Preset
+        run: |
+          mkdir ./build
+          cmake --preset ${{ env.CI_BUILD_TEST_PRESET }}
+
+      - name: Build Unit Tests
+        run: cmake --build ./build/${{ env.CI_BUILD_TEST_PRESET }}
+
+      - name: Run Tests
+        run: ctest --test-dir ./build/${{ env.CI_BUILD_TEST_PRESET }}
+
+      - name: Upload Test Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gtest-result-linux
+          path: ./gtest-result.xml
+
+      - name: Publish test report
+        if: always()
+        uses: mikepenz/action-junit-report@v4
+        with:
+          report_paths: '**/gtest-result/*.xml'
+          check_name: 'Unit Tests Report (Ubuntu)'
+
+  unit-tests-windows:
+    runs-on: windows-latest
+
+    env:
+      CI_WIN_X64_RUNTIME_VERSION: "14.0"
+      CI_CONFIG_TEST_PRESET: "win_x64_unit_tests"
+      CI_BUILD_TEST_PRESET: "win_x64_unit_tests_build"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Verify Preinstalled VC++ Runtime
+        shell: pwsh
+        run: |
+          reg query "HKLM\SOFTWARE\Microsoft\VisualStudio\${{ env.CI_WIN_X64_RUNTIME_VERSION }}\VC\Runtimes\x64" /v Version || echo "VC++ Runtime ${{ env.CI_WIN_X64_RUNTIME_VERSION }} not found!"
+
+      - name: Set up Visual Studio environment
+        shell: pwsh
+        run: |
+          echo "Setting up Visual Studio environment"
+          Install-Module -Name VSSetup -Force -Scope CurrentUser
+          Import-Module VSSetup
+          $vs = Get-VSSetupInstance -All | Select-Object -First 1
+          & "$($vs.InstallationPath)\VC\Auxiliary\Build\vcvars64.bat"
+          echo "%SystemRoot%\System32\VCRUNTIME140.dll"
+          echo "%SystemRoot%\System32\MSVCP140.dll"
+
+      - name: Configure CMake Preset
+        shell: cmd
+        run: |
+          mkdir build
+          cmake --preset ${{ env.CI_CONFIG_TEST_PRESET }}
+
+      - name: Build Unit Tests
+        shell: cmd
+        run: cmake --build --preset ${{ env.CI_BUILD_TEST_PRESET }}
+
+      - name: Run Tests
+        shell: cmd
+        run: |
+          ctest --output-on-failure -C Release --test-dir build\${{ env.CI_CONFIG_TEST_PRESET }}\
+
+      - name: Upload Test Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gtest-result-win32
+          path: gtest-result.xml
+
+      - name: Publish test report
+        if: always()
+        uses: mikepenz/action-junit-report@v4
+        with:
+          report_paths: 'build\${{ env.CI_CONFIG_TEST_PRESET }}\gtest-result\*.xml'
+          check_name: 'Unit Tests Report (Windows)'

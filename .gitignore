@@ -8,6 +8,7 @@
 
 build/
 install/
+tmp/
 
 CMakeLists.txt.user
 compile_commands.json

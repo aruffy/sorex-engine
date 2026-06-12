@@ -1,0 +1,290 @@
+#include "GLRenderContext.h"
+
+
+#include "GLRenderDevice.h"
+
+namespace
+{
+  using namespace Sorex::Graphics;
+  GLenum ConvBlendFactor(const BlendMode::EFactor factor)
+  {
+    switch (factor)
+    {
+    case BlendMode::EFactor::Zero:
+      return GL_ZERO;
+    case BlendMode::EFactor::One:
+      return GL_ONE;
+    case BlendMode::EFactor::Src_Color:
+      return GL_SRC_COLOR;
+    case BlendMode::EFactor::One_Minus_Src_Color:
+      return GL_ONE_MINUS_SRC_COLOR;
+    case BlendMode::EFactor::Dst_Color:
+      return GL_DST_COLOR;
+    case BlendMode::EFactor::One_Minus_Dst_Color:
+      return GL_ONE_MINUS_DST_COLOR;
+    case BlendMode::EFactor::Src_Alpha:
+      return GL_SRC_ALPHA;
+    case BlendMode::EFactor::One_Minus_Src_Alpha:
+      return GL_ONE_MINUS_SRC_ALPHA;
+    case BlendMode::EFactor::Dst_Alpha:
+      return GL_DST_ALPHA;
+    case BlendMode::EFactor::One_Minus_Dst_Alpha:
+      return GL_ONE_MINUS_DST_ALPHA;
+    case BlendMode::EFactor::Const_Color:
+      return GL_CONSTANT_COLOR;
+    case BlendMode::EFactor::One_Minus_Const_Color:
+      return GL_ONE_MINUS_CONSTANT_COLOR;
+    case BlendMode::EFactor::Const_Alpha:
+      return GL_CONSTANT_ALPHA;
+    case BlendMode::EFactor::One_Minus_Const_Alpha:
+      return GL_ONE_MINUS_CONSTANT_ALPHA;
+    default:
+      SRX_NOENTRY("invalid blend factor");
+      return GL_ZERO;
+    }
+  }
+
+  GLenum ConvBlendOperation(const BlendMode::EOperation op)
+  {
+    switch (op)
+    {
+    case BlendMode::EOperation::Add:
+      return GL_FUNC_ADD;
+    case BlendMode::EOperation::Subtract:
+      return GL_FUNC_SUBTRACT;
+    case BlendMode::EOperation::Reverse_Subtract:
+      return GL_FUNC_REVERSE_SUBTRACT;
+    case BlendMode::EOperation::Min:
+      return GL_MIN;
+    case BlendMode::EOperation::Max:
+      return GL_MAX;
+    default:
+      SRX_NOENTRY("invalid blend operation");
+      return GL_FUNC_ADD;
+    }
+  }
+  const TextureSampler kDefaultTexSampler(ETextureWrapping::Repeat,
+                                          ETextureFilter::Linear,
+                                          ETextureFilter::Linear);
+
+  inline GLenum ConvTexFilter(ETextureFilter filter)
+  {
+    SRX_CHECK(filter == ETextureFilter::Nearest
+              || filter == ETextureFilter::Linear);
+    return (filter == ETextureFilter::Linear) ? GL_LINEAR : GL_NEAREST;
+  }
+
+  inline GLenum ConvTexMipmapFilter(ETextureFilter texel, ETextureFilter mipmap)
+  {
+    if (texel == ETextureFilter::Linear)
+      return (mipmap == ETextureFilter::Linear) ? GL_LINEAR_MIPMAP_LINEAR
+                                                : GL_NEAREST_MIPMAP_LINEAR;
+    else
+      return (mipmap == ETextureFilter::Linear) ? GL_LINEAR_MIPMAP_NEAREST
+                                                : GL_NEAREST_MIPMAP_NEAREST;
+  }
+
+  GLenum ConvTexWrap(ETextureWrapping wrap)
+  {
+    switch (wrap)
+    {
+    case ETextureWrapping::Repeat:
+      return GL_REPEAT;
+    case ETextureWrapping::Mirrored_Repeat:
+      return GL_MIRRORED_REPEAT;
+    case ETextureWrapping::Clamp_To_Edge:
+      return GL_CLAMP_TO_EDGE;
+    case ETextureWrapping::Clamp_To_Border:
+      // FIMXE: OpenGL ES 2.0 does not support GL_CLAMP_TO_BORDER
+      // return GL_CLAMP_TO_BORDER;
+      [[fallthrough]];
+    default:
+      SRX_NOENTRY("invalide texture wrapping");
+      return GL_REPEAT;
+    }
+  }
+}
+
+namespace Sorex::Graphics
+{
+  GLRenderContext::GLRenderContext(const GLRenderDevice& renderDevice)
+    SRX_NOEXCEPT
+    : mDevice(renderDevice)
+    , mColor(Color(0x1D, 0x18, 0x1D))
+  {
+    GLint maxTextureUnits = 0;
+    SRX_OPENGL_CALL(
+      glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &maxTextureUnits));
+
+    mTextures.resize(maxTextureUnits);
+    Reset();
+  }
+
+  void GLRenderContext::Reset() SRX_NOEXCEPT
+  {
+    /*    std::fill(_textures.begin(),
+                 _textures.end(),
+                 TextureSample{ nullptr, kDefaultTextureSampler, true });
+    */
+
+    const Vec4 color = mColor.ToVector();
+    glClearColor(color.x, color.y, color.z, color.w);
+
+    // Blend
+    // _blend.mode = BlendMode();
+    // color = _blend.color.ToVector();
+    glDisable(GL_BLEND);
+    glBlendColor(color.x, color.y, color.z, color.w);
+    glBlendEquationSeparate(GL_FUNC_ADD, GL_FUNC_ADD);
+    glBlendFuncSeparate(GL_ONE, GL_ZERO, GL_ONE, GL_ZERO);
+
+    // Depth testing
+    glDisable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LESS);
+    glDepthMask(GL_FALSE);
+    glClearDepthf(1.f);
+
+    // Binding
+    glBindVertexArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+    glActiveTexture(GL_TEXTURE0);
+    // ApplyTextureSampler(GL_TEXTURE_2D, kDefaultTextureSampler, false);
+  }
+
+  void GLRenderContext::Clear() SRX_NOEXCEPT
+  {
+    // TODO: clear other
+    glClear(GL_COLOR_BUFFER_BIT);
+  }
+
+
+  void GLRenderContext::Apply(const GLRenderTechnique& technique) SRX_NOEXCEPT
+  {
+    ApplyBlendMode(technique.blendMode);
+  }
+
+  void GLRenderContext::ApplyBlendMode(BlendMode mode)
+  {
+    if (mBlend.mode == mode)
+      return;
+
+    mBlend.mode = mode;
+    if (mode == BlendMode::None)
+    {
+      glDisable(GL_BLEND);
+      return;
+    }
+
+    glEnable(GL_BLEND);
+
+    const auto [srcBlendAlpha, dstBlendAlpha] = mode.GetAlphaFactors();
+    const GLenum alphaOp  = ConvBlendOperation(mode.GetAlphaOperation());
+    const GLenum srcAlpha = ConvBlendFactor(srcBlendAlpha);
+    const GLenum dstAlpha = ConvBlendFactor(dstBlendAlpha);
+
+    if (mode.IsSeparate())
+    {
+      const auto [srcBlendColor, dstBlendColor] = mode.GetColorFactors();
+      const GLenum colorOp  = ConvBlendOperation(mode.GetColorOperation());
+      const GLenum srcColor = ConvBlendFactor(srcBlendColor);
+      const GLenum dstColor = ConvBlendFactor(dstBlendColor);
+
+      glBlendFuncSeparate(srcColor, dstColor, srcAlpha, dstAlpha);
+      glBlendEquationSeparate(colorOp, alphaOp);
+    }
+    else
+    {
+      glBlendFunc(srcAlpha, dstAlpha);
+      glBlendEquation(alphaOp);
+    }
+  }
+
+  void GLRenderContext::ApplyTextureSampler(GLenum                target,
+                                            const TextureSampler& sampler,
+                                            bool                  bMipmaps)
+  {
+    const auto [wS, wT] = sampler.GetWrap();
+    const GLenum s      = ConvTexWrap(wS);
+    const GLenum t      = ConvTexWrap(wT);
+
+    SRX_OPENGL_CALL(glTexParameteri(target, GL_TEXTURE_WRAP_S, s));
+    SRX_OPENGL_CALL(glTexParameteri(target, GL_TEXTURE_WRAP_T, t));
+
+    /* if (s == GL_CLAMP_TO_BORDER || t == GL_CLAMP_TO_BORDER)
+    {
+      const Vec4 color = sampler.GetBorderColor().ToVector();
+      SRX_OPENGL_CALL(
+        glTexParameterfv(target, GL_TEXTURE_BORDER_COLOR, &color.data[0]));
+    } */
+
+    const GLenum minf =
+      bMipmaps ? ConvTexMipmapFilter(
+                   sampler.GetFilter(TextureSampler::EFilterType::Minifying),
+                   sampler.GetFilter(TextureSampler::EFilterType::Mipmap))
+               : ConvTexFilter(
+                   sampler.GetFilter(TextureSampler::EFilterType::Minifying));
+    const GLenum magf =
+      ConvTexFilter(sampler.GetFilter(TextureSampler::EFilterType::Magnifying));
+
+    SRX_OPENGL_CALL(glTexParameteri(target, GL_TEXTURE_MIN_FILTER, minf));
+    SRX_OPENGL_CALL(glTexParameteri(target, GL_TEXTURE_MAG_FILTER, magf));
+  }
+
+  Status GLRenderContext::SetTexture(size_t                slot,
+                                     const GLTexture2D&    texture,
+                                     const TextureSampler* sampler)
+  {
+    if (slot >= mTextures.size())
+      return SRX_STATUS_MSG(EStatusCode::Out_Of_Range,
+                            "texture sample slot {} is out of range",
+                            slot);
+
+    mTextures[slot].texture = &texture;
+
+    if (sampler == nullptr)
+      sampler = &kDefaultTexSampler;
+
+    if (mTextures[slot].sampler != sampler)
+    {
+      mTextures[slot].sampler = sampler;
+      mTextures[slot].state |= TextureSample::EState::Sampler_Changed;
+    }
+
+    return SRX_OK;
+  }
+
+  Status GLRenderContext::ActivateTexture(GLenum slot)
+  {
+    if (slot >= mTextures.size())
+      return SRX_STATUS(EStatusCode::Out_Of_Range);
+
+    const TextureSample& texSlot = mTextures[slot];
+    const GLResource*    texture =
+      texSlot.texture
+           ? mDevice.GetDeviceResource(texSlot.texture->GetResourceToken())
+           : nullptr;
+
+    if (texture == nullptr || texture->type != GLResourceType::Texture2D
+        || !texture->inited)
+    {
+      SRX_NOENTRY("render context invalid texture");
+      return SRX_STATUS_MSG(EStatusCode::Invalid_State,
+                            "invalid texture state");
+    }
+
+    SRX_OPENGL_CALL(glActiveTexture(GL_TEXTURE0 + slot));
+    SRX_OPENGL_CALL(glBindTexture(texture->target, texture->id));
+
+    /*     if (texSlot.bUpdateSampler)
+     *texSlot.texture->HasMipmaps()
+     */
+
+    SRX_CHECK(texSlot.sampler != nullptr);
+    // FIXME: mipmaps
+    ApplyTextureSampler(texture->target, *texSlot.sampler, false);
+
+    return SRX_OK;
+  }
+
+}  // namespace

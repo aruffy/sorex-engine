@@ -1,0 +1,92 @@
+/**************************************************************************/
+/*                         This file is part of:                          */
+/*                                SOREX                                   */
+/*                 Simple OpenGL Rendering Engine eXtended                */
+/**************************************************************************/
+/* Copyright (c) 2022 Aleksandr Ershov (Ruffy).                           */
+/*                                                                        */
+/* Permission is hereby granted, free of charge, to any person obtaining  */
+/* a copy of this software and associated documentation files (the        */
+/* "Software"), to deal in the Software without restriction, including    */
+/* without limitation the rights to use, copy, modify, merge, publish,    */
+/* distribute, sublicense, and/or sell copies of the Software, and to     */
+/* permit persons to whom the Software is furnished to do so, subject to  */
+/* the following conditions:                                              */
+/*                                                                        */
+/* The above copyright notice and this permission notice shall be         */
+/* included in all copies or substantial portions of the Software.        */
+/*                                                                        */
+/* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,        */
+/* EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF     */
+/* MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. */
+/* IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY   */
+/* CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,   */
+/* TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE      */
+/* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
+/**************************************************************************/
+
+#include "GLResourceToken.h"
+
+#include "GLRenderDevice.h"
+
+namespace Sorex::Graphics
+{
+  String ToString(const GLResourceType type) SRX_NOEXCEPT
+  {
+    switch (type)
+    {
+    case GLResourceType::Idle:
+      return "Idle";
+    case GLResourceType::Texture2D:
+      return "Texture 2D";
+    case GLResourceType::VertexArray:
+      return "Vertex Array";
+    case GLResourceType::VertexBuffer:
+      return "Vertex Buffer";
+    case GLResourceType::IndexBuffer:
+      return "Index Buffer";
+    case GLResourceType::ShaderProgram:
+      return "Shader Program";
+    case GLResourceType::VertexShader:
+      return "Vertex Shader";
+    case GLResourceType::FragmentShader:
+      return "Fragment Shader";
+    default:
+      return "Unknown";
+    }
+  }
+
+  GLResourceReference::GLResourceReference(GLRenderDevice* glDevice,
+                                           GLResource* glResource) SRX_NOEXCEPT
+    : mRenderDevice(glDevice)
+    , mResource(glResource)
+  {
+    if (glResource)
+    {
+      SRX_CHECK(!glResource->reference);
+      glResource->reference = this;
+    }
+  }
+
+
+  void GLResourceReference::MakeExpired() SRX_NOEXCEPT
+  {
+    mResource     = nullptr;
+    mRenderDevice = nullptr;
+  }
+
+  GLResourceReference::~GLResourceReference()
+  {
+    if (IsValid())
+      mRenderDevice->Deallocate(this);
+  }
+
+  SRX_NODISCARD GLResourceToken AllocateResource(GLRenderDevice* glRenderDevice,
+                                                 GLResourceType  type)
+    SRX_NOEXCEPT
+  {
+    auto token = glRenderDevice ? glRenderDevice->Allocate(type) : nullptr;
+    SRX_CHECK_MSG(token, "GLResource allocation failed");
+    return token;
+  }
+}  // namespace

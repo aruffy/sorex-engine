@@ -27,18 +27,28 @@ endif()
 function(sorex_target_compile_definitions TARGET_NAME)
   message(
     STATUS
-      "[${TARGET_NAME}] Configuring compile definitions (${CMAKE_SYSTEM_NAME})")
+      "[${TARGET_NAME}] Configuring compile definitions (${CMAKE_SYSTEM_NAME})"
+  )
 
   target_compile_definitions(
-    ${TARGET_NAME} PUBLIC ${TARGET_PLATFORM}=1 $<$<CONFIG:Debug>:_DEBUG>
-                          $<$<CONFIG:Release>:NDEBUG>)
+    ${TARGET_NAME}
+    PUBLIC
+      ${TARGET_PLATFORM}=1
+      $<$<CONFIG:Debug>:$<$<BOOL:${TRACE}>:SOREX_DEBUG_MODE=3>$<$<NOT:$<BOOL:${TRACE}>>:SOREX_DEBUG_MODE=2>>
+      $<$<CONFIG:Debug>:_DEBUG>
+      $<$<CONFIG:Release>:NDEBUG>
+      $<$<CONFIG:Release>:SOREX_DEBUG_MODE=1>
+      $<$<CONFIG:RelMinSize>:NDEBUG>
+      $<$<CONFIG:RelMinSize>:SOREX_DEBUG_MODE=0>
+  )
 endfunction(sorex_target_compile_definitions)
 
 function(sorex_target_compile_options TARGET_NAME)
-
+  # TODO:Disable rtti
+  # TODO: Dissable exceptions
   if(MSVC)
     add_compile_options("/permissive-")
-    target_compile_options(${TARGET_NAME} PRIVATE "/WX")
+    target_compile_options(${TARGET_NAME} PRIVATE "/WX" "/FS" "/utf-8")
   endif()
 
   if(UNIX)
@@ -47,12 +57,14 @@ function(sorex_target_compile_options TARGET_NAME)
       target_compile_options(
         ${TARGET_NAME}
         PRIVATE "-g3"
+                "-gdwarf-4"
                 "-O0"
                 "-Wall"
                 "-Werror"
                 "-Wextra"
                 "-fno-omit-frame-pointer"
-                "-Wno-unused-parameter")
+                "-Wno-unused-parameter"
+      )
     endif()
   endif()
 

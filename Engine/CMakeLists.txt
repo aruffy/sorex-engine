@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.8.0)
 
 include(BuildTools)
 include(TargetPlatform)
+include(GenerateExportHeader)
 
 if(WIN32)
   set(ENGINE_TARGET "Sorex")
@@ -9,48 +10,68 @@ else()
   set(ENGINE_TARGET "sorex")
 endif()
 
+option(SOREX_STATIC_LIBRARY "Compile Sorex engine as static library" OFF)
 option(SRXENG_ADDRESS_SANITIZER "Enable address sanitizer for engine code" OFF)
-option(SRXENG_OPENGL_DEBUG_OUTPUT "Enable OpenGL Debug Output features" OFF)
-option(SRXENG_DISABLE_CHECK
-       "Disable engine check macros: useful for unit tests" OFF)
-option(SRXENG_DISABLE_LOGGING "Disable engine logging" OFF)
+option(SRXENG_BUILD_PIC "Build position independent code (-fPIC)" OFF)
+
+set(SRXENG_ENVIRONMENT "PROD" CACHE STRING "Set engine environment")
+set_property(CACHE SRXENG_ENVIRONMENT PROPERTY STRINGS "PROD" "DEV")
+
+option(SRXENG_DISABLE_CHECK "Disable engine check macros: useful for tests" OFF)
+
+if(SRXENG_BUILD_PIC)
+  set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+endif()
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-add_library(${ENGINE_TARGET} STATIC "")
-set_target_properties(${ENGINE_TARGET} PROPERTIES LINKER_LANGUAGE CXX)
+set(CMAKE_EXPORTS_H "${CMAKE_CURRENT_BINARY_DIR}/CMakeSorexExports.h")
 
+if(SOREX_STATIC_LIBRARY)
+  add_library(${ENGINE_TARGET} STATIC ${CMAKE_EXPORTS_H})
+  target_compile_definitions(${ENGINE_TARGET} PUBLIC SOREX_STATIC_LIB)
+else()
+  add_library(${ENGINE_TARGET} SHARED ${CMAKE_EXPORTS_H})
+  target_compile_definitions(${ENGINE_TARGET} PUBLIC SOREX_EXPORT_API)
+endif()
+
+add_library(Sorex::Sorex ALIAS ${ENGINE_TARGET})
+set_target_properties(${ENGINE_TARGET} PROPERTIES LINKER_LANGUAGE CXX)
+target_include_directories(${ENGINE_TARGET} PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
+
+generate_export_header(
+  ${ENGINE_TARGET}
+  EXPORT_MACRO_NAME
+  SRX_API
+  EXPORT_FILE_NAME
+  ${CMAKE_EXPORTS_H}
+  STATIC_DEFINE
+  SOREX_STATIC_LIB
+)
 # ##############################################################################
 # Compile Options
 # ##############################################################################
 sorex_target_compile_options(${ENGINE_TARGET})
 get_target_property(compile_flags ${ENGINE_TARGET} COMPILE_OPTIONS)
 
-message(STATUS "[${ENGINE_TARGET}]  Compile options: ${compile_flags}")
+message(STATUS "[${ENGINE_TARGET}] Compile options: ${compile_flags}")
 
 # ##############################################################################
 # Preprocessor Definitions
 # ##############################################################################
 sorex_target_compile_definitions(${ENGINE_TARGET})
-# TODO: Add Debug level to trace logging
-target_compile_definitions(${ENGINE_TARGET}
-                           PUBLIC $<$<CONFIG:Debug>:SOREX_DEBUG=1>)
-
-if(SRXENG_OPENGL_DEBUG_OUTPUT)
-  target_compile_definitions(
-    ${ENGINE_TARGET} PUBLIC $<$<CONFIG:Debug>:ENGINE_OPENGL_DEBUG_OUTPUT>)
-endif()
-
 if(SRXENG_ADDRESS_SANITIZER)
   message(STATUS "[${ENGINE_TARGET}] Enable AddressSanitizer")
 
   if(MSVC)
     target_compile_options(${ENGINE_TARGET} PUBLIC /fsanitize=address)
-    target_compile_definitions(${ENGINE_TARGET}
-                               PUBLIC _DISABLE_VECTOR_ANNOTATION)
-    target_compile_definitions(${ENGINE_TARGET}
-                               PUBLIC _DISABLE_STRING_ANNOTATION)
+    target_compile_definitions(
+      ${ENGINE_TARGET} PUBLIC _DISABLE_VECTOR_ANNOTATION
+    )
+    target_compile_definitions(
+      ${ENGINE_TARGET} PUBLIC _DISABLE_STRING_ANNOTATION
+    )
   else()
     target_compile_options(${ENGINE_TARGET} PUBLIC -fsanitize=address)
     target_compile_options(${ENGINE_TARGET} PUBLIC -fsanitize=undefined)
@@ -63,32 +84,64 @@ if(SRXENG_DISABLE_CHECK)
   message(STATUS "[${ENGINE_TARGET}] Disable check macros")
   target_compile_definitions(${ENGINE_TARGET} PUBLIC SOREX_DISABLE_CHECK)
 endif()
-if(SRXENG_DISABLE_LOGGING)
-  message(STATUS "[${ENGINE_TARGET}] Disable logging macros")
-  target_compile_definitions(${ENGINE_TARGET} PUBLIC SOREX_DISABLE_LOGGING)
+
+if(${SRXENG_ENVIRONMENT} MATCHES "DEV")
+  message(STATUS "[${ENGINE_TARGET}] Enable development tools")
+  target_compile_definitions(${ENGINE_TARGET} PRIVATE SOREX_ENVIRONMENT_DEVELOPMENT)
 endif()
 
 target_precompile_headers(
   ${ENGINE_TARGET} PUBLIC
-  "$<$<COMPILE_LANGUAGE:CXX>:${CMAKE_SOURCE_DIR}/Precompiled/Precompiled.h>")
+  "$<$<COMPILE_LANGUAGE:CXX>:${CMAKE_SOURCE_DIR}/Precompiled/Precompiled.h>"
+)
 
-target_include_directories(${ENGINE_TARGET}
-                           PUBLIC "${CMAKE_CURRENT_LIST_DIR}/Include")
-target_include_directories(${ENGINE_TARGET}
-                           PRIVATE "${CMAKE_CURRENT_LIST_DIR}/Source")
+target_include_directories(
+  ${ENGINE_TARGET} PUBLIC "${CMAKE_CURRENT_LIST_DIR}/Include"
+)
+target_include_directories(
+  ${ENGINE_TARGET} PRIVATE "${CMAKE_CURRENT_LIST_DIR}/Source"
+)
 
 sorex_target_source(${ENGINE_TARGET} "${CMAKE_CURRENT_LIST_DIR}/Source")
 sorex_target_source(${ENGINE_TARGET} "${CMAKE_CURRENT_LIST_DIR}/Include")
 
 # ##############################################################################
+# Include ThirdParty Libraries
+# ##############################################################################
+set(THIRD_PARTY_LIBS_PATH "${CMAKE_CURRENT_LIST_DIR}/ThirdParty")
+set(ENGINE_THIRD_PARTY_PUBLIC_LIBS "")
+set(ENGINE_THIRD_PARTY_LIBRARIES "")
+
+add_subdirectory(${THIRD_PARTY_LIBS_PATH})
+message(
+  STATUS
+    "[${ENGINE_TARGET}] third-party public libs: ${ENGINE_THIRD_PARTY_PUBLIC_LIBS}"
+)
+
+target_link_libraries(${ENGINE_TARGET} PUBLIC ${ENGINE_THIRD_PARTY_PUBLIC_LIBS})
+
+if(ENGINE_THIRD_PARTY_LIBRARIES)
+  message(
+    STATUS
+      "[${ENGINE_TARGET}] third-party libs: ${ENGINE_THIRD_PARTY_LIBRARIES}"
+  )
+  target_link_libraries(
+    ${ENGINE_TARGET} PRIVATE ${ENGINE_THIRD_PARTY_LIBRARIES}
+  )
+endif()
+
+# ##############################################################################
 # Platform Code
 # ##############################################################################
-# add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/Platform")
+add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/Platform")
 
-# ## Create IDE source tree
+# ##############################################################################
+# Create IDE source tree
+# ##############################################################################
 get_property(
   src_files
   TARGET ${ENGINE_TARGET}
-  PROPERTY SOURCES)
+  PROPERTY SOURCES
+)
 
-source_group(TREE "${CMAKE_CURRENT_LIST_DIR}" FILES ${src_files})
+# source_group(TREE "${CMAKE_CURRENT_LIST_DIR}" FILES ${src_files})

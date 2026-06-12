@@ -2,9 +2,45 @@
   "version": 2,
   "configurePresets": [
     {
-      "name": "linux_debug",
-      "displayName": "Linux (Debug)",
-      "description": "Using compilers for Linux",
+      "name": "win_x64_debug",
+      "displayName": "Windows x64 (Debug)",
+      "description": "Windows x64 build with MSVC generator",
+      "generator": "Visual Studio 17 2022",
+      "binaryDir": "${sourceDir}/build",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_C_COMPILER": "cl.exe",
+        "CMAKE_CXX_COMPILER": "cl.exe",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "SOREX_STATIC_LIBRARY": "ON",
+        "SRXENG_ENVIRONMENT": "DEV",
+        "TRACE": "ON"
+      }
+    },
+    {
+      "name": "win_x64_unit_tests",
+      "displayName": "Windows x64 (Unit Tests)",
+      "description": "Engine unit tests for Visual Studio 17 2022",
+      "generator": "Visual Studio 17 2022",
+      "toolset": "host=x64",
+      "architecture": "x64",
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_C_COMPILER": "cl.exe",
+        "CMAKE_CXX_COMPILER": "cl.exe",
+        "SOREX_STATIC_LIBRARY": "ON",
+        "SRXENG_DISABLE_CHECK": "ON",
+        "SRXENG_ADDRESS_SANITIZER": "OFF",
+        "SOREX_BUILD_SANDBOX": "OFF",
+        "SOREX_BUILD_TESTS": "ON"
+      }
+    },
+    {
+      "name": "unix_debug",
+      "hidden": true,
+      "displayName": "Unix Base (Debug)",
+      "description": "Debug build preset for Unix based operating systems",
       "generator": "Unix Makefiles",
       "binaryDir": "${sourceDir}/build",
       "cacheVariables": {
@@ -12,21 +48,70 @@
         "CMAKE_C_COMPILER": "/usr/bin/clang",
         "CMAKE_CXX_COMPILER": "/usr/bin/clang++",
         "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
-        "SRXENG_OPENGL_DEBUG_OUTPUT": "ON",
-        "SRXENG_ADDRESS_SANITIZER": "ON"
+        "SRXENG_ADDRESS_SANITIZER": "ON",
+        "SRXENG_ENVIRONMENT": "DEV",
+        "TRACE": "ON"
       }
     },
     {
-      "name": "linux_tests",
-      "displayName": "Linux (Tests)",
-      "description": "Engine unit tests for Linux",
+      "name": "linux_debug",
+      "displayName": "Linux (Debug)",
+      "description": "Debug Linux build",
+      "inherits": "unix_debug"
+    },
+    {
+      "name": "macos_debug",
+      "displayName": "MacOS (Debug)",
+      "description": "Debug MacOS build",
+      "inherits": "unix_debug"
+    },
+    {
+      "name": "unit_tests",
+      "displayName": "Sorex Unit Tests",
+      "description": "Engine unit tests",
       "generator": "Unix Makefiles",
       "binaryDir": "${sourceDir}/build/${presetName}",
       "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "SRXENG_ADDRESS_SANITIZER": "ON",
         "SRXENG_DISABLE_CHECK": "ON",
-        "SRXENG_DISABLE_LOGGING": "ON",
-        "SOREX_BUILD_TESTS": "ON",
-        "SOREX_BUILD_SANDBOX": "OFF"
+        "SOREX_BUILD_SANDBOX": "OFF",
+        "SOREX_BUILD_TESTS": "ON"
+      }
+    },
+    {
+      "name": "Custom configure preset",
+      "displayName": "Custom configure preset",
+      "description": "Sets Ninja generator, build and install directory",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/out/build/${presetName}",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "win_x64_unit_tests_build",
+      "displayName": "Build Win x64 (Unit Tests)",
+      "description": "Build config for unit tests on Windows platform",
+      "configurePreset": "win_x64_unit_tests",
+      "configuration": "Release"
+    }
+  ],
+  "testPresets": [
+    {
+      "name": "unit_tests_run",
+      "displayName": "Run Unit Tests (Linux)",
+      "description": "Run the engine unit tests",
+      "configurePreset": "unit_tests",
+      "output": {
+        "outputOnFailure": true
+      },
+      "execution": {
+        "stopOnFailure": true
       }
     }
   ]

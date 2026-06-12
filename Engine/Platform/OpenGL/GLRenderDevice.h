@@ -1,0 +1,229 @@
+/**************************************************************************/
+/*                         This file is part of:                          */
+/*                                SOREX                                   */
+/*                 Simple OpenGL Rendering Engine eXtended                */
+/**************************************************************************/
+/* Copyright (c) 2022 Aleksandr Ershov (Ruffy).                           */
+/*                                                                        */
+/* Permission is hereby granted, free of charge, to any person obtaining  */
+/* a copy of this software and associated documentation files (the        */
+/* "Software"), to deal in the Software without restriction, including    */
+/* without limitation the rights to use, copy, modify, merge, publish,    */
+/* distribute, sublicense, and/or sell copies of the Software, and to     */
+/* permit persons to whom the Software is furnished to do so, subject to  */
+/* the following conditions:                                              */
+/*                                                                        */
+/* The above copyright notice and this permission notice shall be         */
+/* included in all copies or substantial portions of the Software.        */
+/*                                                                        */
+/* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,        */
+/* EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF     */
+/* MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. */
+/* IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY   */
+/* CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,   */
+/* TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE      */
+/* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
+/**************************************************************************/
+
+#pragma once
+
+#include <Sorex/Graphics/SxRenderDevice.h>
+#include <Sorex/Graphics/SxVertex.h>
+
+#include "GLTypes.h"
+#include "GLResourceToken.h"
+#include "GLShader.h"
+#include "GLShaderProgram.h"
+#include "GLUniform.h"
+#include "GLRenderContext.h"
+#include "GLVertexArray.h"
+#include "GLExtensions.h"
+#include "GLTexture2D.h"
+
+#ifdef SOREX_MONITORING
+#  include "GLStatisticsProvider.h"
+#endif
+
+namespace Sorex::Graphics
+{
+  class GLRenderDevice final: public RenderDevice
+  {
+    SRX_RTTI(Graphics::GLRenderDevice, Graphics::RenderDevice);
+
+public:
+    GLRenderDevice() SRX_NOEXCEPT;
+    virtual ~GLRenderDevice() override;
+
+    GLRenderDevice(const GLRenderDevice& other)            = delete;
+    GLRenderDevice& operator=(const GLRenderDevice& other) = delete;
+
+    // Interface Director::Component
+    virtual Status Initialize() override;
+    virtual void   Shutdown() override;
+
+    // Interface RenderDevice
+    virtual void                      Cleanup() override;
+    virtual TUniquePointer<Texture2D> CreateTexture2D(Path path) override;
+    // cppcheck-suppress functionConst
+    Status InitializeTexture(const GLTexture2D& texture, bool bMinmaps = false);
+    Status SetTexture2D(GLuint                index,
+                        const Texture2D*      texture,
+                        const TextureSampler* sampler = nullptr);
+
+    /**
+     * @brief Allocate new OpenGL resource.
+     *
+     * @param type - type of resource
+     * @return resource token
+     */
+    GLResourceToken Allocate(GLResourceType type) SRX_NOEXCEPT;
+
+    /**
+     * @brief Deallocate OpenGL resource.
+     *
+     * @param glResource - resource reference
+     */
+    void Deallocate(GLResourceReference* glResource) SRX_NOEXCEPT;
+
+    GLExtensions* GetExtensions() const { return mExtensions.get(); }
+
+    template<typename VertexType, typename IndexType>
+    Status Draw(const GLVertexArray<VertexType, IndexType>& vtxArray)
+      SRX_NOEXCEPT;
+
+    GLShaderPtr GetOrCreateShader(const GLShaderSource& shaderSource)
+      SRX_NOEXCEPT;
+
+    Status BuildShaderProgram(const GLShaderProgram& shaderProgram,
+                              TVector<GLUniform>&    uniforms) SRX_NOEXCEPT;
+    Status ApplyRenderTechnique(const GLRenderTechnique& technique)
+      SRX_NOEXCEPT;
+
+    SRX_INLINE const GLResource* GetDeviceResource(
+      const GLResourceReference* glResourceReference) const SRX_NOEXCEPT
+    {
+      return GetResource(glResourceReference);
+    }
+
+protected:
+    virtual Renderer* CreateRenderer(const RuntimeClass& cls,
+                                     ssize_t capacity) SRX_NOEXCEPT override;
+
+private:
+    Status LoadUniforms(GLResource&         program,
+                        TVector<GLUniform>& uniforms) SRX_NOEXCEPT;
+
+    GLResource* GetResource(
+      const GLResourceReference* glResourceReference) const SRX_NOEXCEPT;
+    bool IsValidResourceReference(const GLResourceReference* glResource) const
+      SRX_NOEXCEPT;
+    void DeallocateResource(GLResource& resource) SRX_NOEXCEPT;
+
+    Status CompileShader(const GLShaderPtr& shader,
+                         GLuint&            shaderId) const SRX_NOEXCEPT;
+
+    template<typename VertexType, typename IndexType>
+    Status BindVertexArray(
+      const GLVertexArray<VertexType, IndexType>& vtxArray) const SRX_NOEXCEPT;
+
+    Status ActivateShaderProgram(GLenum& mode) SRX_NOEXCEPT;
+
+    Status        Bind(const OpenGL::Buffer& buffer) const SRX_NOEXCEPT;
+    static Status InitializeBuffer(GLResource&         resource,
+                                   const GLBufferData& buffer) SRX_NOEXCEPT;
+    static Status UpdateBufferData(const GLResource&   resource,
+                                   const GLBufferData& data) SRX_NOEXCEPT;
+    static void   EnableVertexAttributes(const VertexLayout& vtxLayout)
+      SRX_NOEXCEPT;
+
+#ifdef SOREX_OPENGL_DEBUG_OUTPUT
+    static bool EnableDebugOutput(GLRenderDevice& glRenderDevice) SRX_NOEXCEPT;
+#endif
+
+private:
+    TLinkedList<GLResource>       mResources;
+    THashMap<hash_t, GLShaderPtr> mShaders;
+
+    TUniquePointer<GLRenderContext> mRenderContext;
+    GLShaderProgram*                mActiveShaderProgram;
+
+    TUniquePointer<GLExtensions> mExtensions;
+
+#ifdef SOREX_MONITORING
+    GLStatisticsProvider* mStats = nullptr;
+#endif
+  };
+
+  template<OpenGL::Concept::IndexType IndexType>
+  constexpr GLenum ConvertIndexType() SRX_NOEXCEPT
+  {
+    if constexpr (std::is_same_v<IndexType, GLbyte>)
+      return GL_UNSIGNED_BYTE;
+    else if constexpr (std::is_same_v<IndexType, GLushort>)
+      return GL_UNSIGNED_SHORT;
+
+    return GL_UNSIGNED_INT;
+  }
+
+  template<typename VertexType, typename IndexType>
+  Status GLRenderDevice::Draw(
+    const GLVertexArray<VertexType, IndexType>& vtxArray) SRX_NOEXCEPT
+  {
+    GLenum mode;
+    Status status = ActivateShaderProgram(mode);
+    if (!status.Ok())
+      return status;
+
+    status = BindVertexArray(vtxArray);
+    if (!status.Ok())
+      return status;
+
+    if (const GLIndexBuffer<IndexType>* indexBuffer = vtxArray.GetIndexBuffer())
+    {
+      SRX_OPENGL_CALL(
+        glDrawElements(mode,
+                       static_cast<GLsizei>(indexBuffer->GetSize()),
+                       ConvertIndexType<IndexType>(),
+                       (const GLvoid*)0));
+    }
+    else if (const GLVertexBuffer<VertexType>* vtxBuffer =
+               vtxArray.GetVertexBuffer())
+    {
+      SRX_OPENGL_CALL(
+        glDrawArrays(mode, 0, static_cast<GLsizei>(vtxBuffer->GetSize())));
+    }
+
+#ifdef SOREX_MONITORING
+    mStats->OnDrawCall();
+#endif
+
+    SRX_OPENGL_CALL(glBindVertexArray(0));
+    return status;
+  }
+
+  template<typename VertexType, typename IndexType>
+  Status GLRenderDevice::BindVertexArray(
+    const GLVertexArray<VertexType, IndexType>& vtxArray) const SRX_NOEXCEPT
+  {
+    GLResource* vao = GetResource(vtxArray.GetResourceToken());
+    const GLVertexBuffer<VertexType>* vtxBuffer = vtxArray.GetVertexBuffer();
+    if (vao == nullptr || vtxBuffer == nullptr)
+      return SRX_STATUS_MSG(
+        EStatusCode::Invalid_Argument,
+        "{} has invalid state or expired resource reference",
+        ToString(GLResourceType::VertexArray));
+
+    SRX_OPENGL_CALL(glBindVertexArray(vao->id));
+    Status status = Bind(*vtxBuffer);
+    if (!status.Ok())
+      return status;
+
+    // @TODO: VAO store this info, should be in Binding methond
+    EnableVertexAttributes(vtxBuffer->GetVertexLayout());
+
+    if (const GLIndexBuffer<IndexType>* indxBuffer = vtxArray.GetIndexBuffer())
+      status = Bind(*indxBuffer);
+
+    return status;
+  }
+}  // namespace
